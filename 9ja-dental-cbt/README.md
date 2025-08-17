@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+App features
+1. Authentication and user dashboard that will contain progress on each clinical subspeacialty
+2. Demo mode for free users with access to 180 questions total i.e. 20/specialty
+3. Sub-based mode (basic and premium) with access to full question bank and AI insights into questions failed or passed
+basic - full access QB and quiz mode
+premium - all basic features + AI insights + study mode
+4. Point-based system where every question passed add to total number of tokens and questions failed lead to point deductions
+5. Leaderboard will be linked to total points and across entire system
+6. Two modes - quiz modes and study mode
 
-## Getting Started
 
-First, run the development server:
+Color Palette (light mode)
+primary - #3ab286 (58,178,134) - logo hgihlights, nav bacr, CTA buttons
+secondary - #3a66b2 (58,102,178) - headers, links, dashboard sidebar, alternative button style
+accent - #3aa2b2 (58,162,178) - hover states, progress bars, charts, icons
+background #ffffff (255,255,255) 
+neutral/support - #dde4e5 (221,228,229) - for cards, test containers, or dashboard panels 
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Color Palette (dark mode)
+primary -  #3ab286 (58,178,134) - logo hgihlights, nav bacr, CTA buttons
+secondary -  #3aa2b2 (58,162,178) 
+accent -  #3a66b2 (58,102,178) 
+background -  #1a1a1a
+neutral/support - #2a2a2a for cards, #dde4e5 for muted text/icons
+text - #ffffff for main text, #dde4e5 for secondary text.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Fonts
+Headings - "Merriweather bold", serif;
+Body - "Inter", sans-serif;
+Accent - font-family: "Roboto Mono", monospace; - for timers, scores, percentages, etc

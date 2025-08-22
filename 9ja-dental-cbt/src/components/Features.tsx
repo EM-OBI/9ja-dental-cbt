@@ -21,7 +21,7 @@ export default function Features() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
           {/* Feature 1 */}
-          <div className="dark:bg-white/5 bg:white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
+          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
             <div className="mb-6">
               <div className="bg-gradient-to-tr from-blue-500 to-pink-500 p-4 rounded-full">
                 <svg
@@ -46,7 +46,7 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-shadow-gray-900 text-gray-500">
+            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
               Full Question Bank
             </h3>
             <p className="dark:text-gray-400 text-black text-base">
@@ -58,7 +58,7 @@ export default function Features() {
           </div>
 
           {/* Feature 2 */}
-          <div className="dark:bg-white/5 bg:white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
+          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
             <div className="mb-6">
               <div className="bg-gradient-to-tr from-blue-500 to-green-400 p-4 rounded-full">
                 <svg
@@ -77,7 +77,7 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-shadow-gray-900 text-gray-500">
+            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
               Smart Learning Modes
             </h3>
             <p className="dark:text-gray-400 text-black text-base">
@@ -88,7 +88,7 @@ export default function Features() {
           </div>
 
           {/* Feature 3 */}
-          <div className="dark:bg-white/5 bg:white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
+          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
             <div className="mb-6">
               <div className="bg-gradient-to-tr from-pink-500 to-yellow-400 p-4 rounded-full">
                 <svg
@@ -106,7 +106,7 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-shadow-gray-900 text-gray-500">
+            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
               Progress Tracking & Leaderboard
             </h3>
             <p className="dark:text-gray-400 text-black text-base">

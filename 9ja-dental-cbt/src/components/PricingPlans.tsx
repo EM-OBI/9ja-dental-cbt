@@ -236,7 +236,7 @@ export default function PricingPlans() {
                   <button
                     type="button"
                     disabled
-                    className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-green-300 hover:bg-amber-300 text-black transition-colors duration-300"
+                    className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
                   >
                     Coming soon
                   </button>

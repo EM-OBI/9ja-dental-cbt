@@ -12,15 +12,17 @@ export default function PricingPlans() {
 
   const plans = [
     {
-      name: "Free",
-      monthlyPrice: "$0",
-      annualPrice: "$0",
+      name: "Demo",
+      monthlyPrice: "₦0",
+      annualPrice: "₦0",
       description: "Try core quizzes and basic tracking.",
       features: [
-        "50 questions / month",
-        "Core specialties (Endo, Prostho, Ortho)",
-        "Basic performance summary",
-        "Community support",
+        "20 questions / specialty",
+        "Core Specialties only (Conservative, Prosthodontics, and Maxillofacial Surgery)",
+        "Basic quiz mode (timed practice)",
+        "Basic progress tracking (scores, % correct)",
+        "Demo-only leaderboard",
+        "Community access (forums, peer Q&A)"
       ],
       badge: "Starter",
       icon: (
@@ -38,18 +40,21 @@ export default function PricingPlans() {
           />
         </svg>
       ),
-      cta: "Start free",
+      cta: "Start demo",
     },
     {
-      name: "Student",
-      monthlyPrice: "$19",
-      annualPrice: "$15",
+      name: "Basic",
+      monthlyPrice: "₦3000",
+      annualPrice: "₦2400",
       description: "Full question bank + exam-mode.",
       features: [
-        "Unlimited practice questions",
-        "Custom timed exams",
-        "Progress & weak-topic reports",
-        "Offline review downloads",
+        "Full access to all questions (unlimited)",
+        "All dental specialties includeds",
+        "Full quiz mode (timed + customizable)",
+        "Detailed performance dashboard",
+        "Earn tokens with points system",
+        "Global leaderboard access",
+        "Community support with priority response",
       ],
       badge: "Most popular",
       icon: (
@@ -70,17 +75,21 @@ export default function PricingPlans() {
       cta: "Start 7‑day trial",
     },
     {
-      name: "Clinic",
-      monthlyPrice: "$99",
-      annualPrice: "$79",
-      description: "Team seats, reporting & admin tools.",
+      name: "Advanced",
+      monthlyPrice: "₦6000",
+      annualPrice: "₦4800",
+      description: "Study notes and AI insights",
       features: [
-        "Up to 10 seats (add more)",
-        "Institution performance dashboard",
-        "Single-sign on & API access",
-        "Priority onboarding & support",
+        "All basic features",
+        "Study mode with explanations & notes",
+        "AI insights (strengths, weaknesses, trends)",
+        "Personalized revision recommendations",
+        "Enhanced points system with bonus challenges",
+        "Global leaderboard + premium-only tiers",
+        "Early access to new features & updates",
+        "Premium priority support",
       ],
-      badge: "For teams",
+      badge: "For study groups",
       icon: (
         <svg
           className="w-5 h-5 text-blue-500"
@@ -223,36 +232,35 @@ export default function PricingPlans() {
                     </ul>
                   </div>
 
-                  {plan.name === "Clinic" ? (
-                    <button
-                      type="button"
-                      disabled
-                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-green-300 hover:bg-amber-300 text-black transition-colors duration-300"
-                    >
-                      Coming soon
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        router.push(
-                          `/signup?plan=${encodeURIComponent(
-                            plan.name.toLowerCase()
-                          )}`
-                        )
-                      }
-                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-green-300 hover:bg-amber-300 text-black transition-colors duration-300"
-                    >
-                      {plan.cta}
-                    </button>
-                  )}
-                </div>
-                <div className="absolute inset-0 -z-10 rounded-2xl p-px bg-gradient-to-br from-transparent via-blue-100/40 to-transparent dark:via-blue-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {plan.name === "Advanced" ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-green-300 hover:bg-amber-300 text-black transition-colors duration-300"
+                  >
+                    Coming soon
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(
+                        `/signup?plan=${encodeURIComponent(
+                          plan.name.toLowerCase()
+                        )}`
+                      )
+                    }
+                    className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
+                  >
+                    {plan.cta}
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
+              <div className="absolute inset-0 -z-10 rounded-2xl p-px bg-gradient-to-br from-transparent via-blue-100/40 to-transparent dark:via-blue-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+          ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

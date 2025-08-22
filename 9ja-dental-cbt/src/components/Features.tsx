@@ -7,7 +7,7 @@ export default function Features() {
             Our Features
           </h2>
           <p className="dark:text-gray-400 text-gray-900 text-lg md:text-xl max-w-2xl mx-auto">
-            9ja Dental CBT is desisgned to make exam preparation smarter and
+            9ja Dental CBT is designed to make exam preparation smarter and
             more engaging for clinical dental students. With secure
             authentication and a personalized dashboard, users can track their
             progress across all specialties in dentistry.

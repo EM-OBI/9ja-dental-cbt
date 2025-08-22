@@ -8,7 +8,14 @@
 body {
   font-family: var(--body-font);
 }
+  background-color: #fff;
+}
 
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #000;
+  }
+}
 .heading-font {
   font-family: var(--heading-font);
 }

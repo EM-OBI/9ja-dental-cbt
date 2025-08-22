@@ -101,7 +101,6 @@ export default function PricingPlans() {
   ];
 
   return (
-    <section id="pricing">
     <div className="bg-gray-50 dark:bg-neutral-950 min-h-screen antialiased flex items-center justify-center">
       <div className="w-full max-w-5xl px-4 py-12">
         {/* Pricing header section */}
@@ -253,6 +252,5 @@ export default function PricingPlans() {
         </div>
       </div>
     </div>
-    </section>
   );
 }

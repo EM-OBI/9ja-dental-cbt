@@ -77,7 +77,7 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-shadow-gray-900 text-gray-500">
+            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
               Smart Learning Modes
             </h3>
             <p className="dark:text-gray-400 text-black text-base">

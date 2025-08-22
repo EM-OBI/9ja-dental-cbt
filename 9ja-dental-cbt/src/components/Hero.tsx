@@ -1,5 +1,4 @@
 import Link from "next/link";
-
 export default function Hero() {
   return (
     <div className="relative z-10 flex flex-col items-center justify-center px-6 pt-32 pb-32 md:pt-40 md:pb-40 text-center min-h-screen">
@@ -20,17 +19,17 @@ export default function Hero() {
 
       <div className="mt-12 flex flex-col sm:flex-row gap-4">
         <Link
-          href="/login"
-          className="px-8 py-3 bg-white text-black font-medium rounded-full hover:bg-gray-200 transition-all duration-300 shadow-lg hover:shadow-xl"
+          href="/dashboard"
+          className="px-8 py-3 bg-green-300 text-black font-medium rounded-full hover:bg-amber-300 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
-          Get Started
+          Dashboard
         </Link>
-        <a
+        <Link
           href="#"
           className="px-8 py-3 glass-effect text-white font-medium rounded-full hover:bg-opacity-20 transition-all duration-300 border border-white border-opacity-20"
         >
           Learn More
-        </a>
+        </Link>
       </div>
     </div>
   );

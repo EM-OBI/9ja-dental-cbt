@@ -60,12 +60,11 @@ export default function Header() {
               </a>
             ))}
             <Link
-              href="#"
-              className="bg-white text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
+              href="/login"
+              className="bg-green-300 hover:bg-amber-400 text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
             >
               Dashboard
             </Link>
-            
           </nav>
 
           {/* Right Icons */}

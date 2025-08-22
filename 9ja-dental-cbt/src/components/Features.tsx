@@ -7,10 +7,10 @@ export default function Features() {
             Our Features
           </h2>
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime
-            blanditiis unde necessitatibus reprehenderit eius voluptate repellat
-            officia temporibus beatae quaerat quo dolorum, maiores perferendis
-            incidunt modi, molestias vero qui sunt!
+            9ja Dental CBT is desisgned to make exam preparation smarter and more engaging for clinical dental students. With secure authentication and a personalized dashboard, users can track their progress across all specialties in dentistry. 
+          </p>
+          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">
+            A free demo mode gives access to sample questions, while subscription plans unlock the full question bank, advanced quiz and study modes, and AI-powered insights that highlight strengths and weaknesses. 
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
@@ -41,13 +41,10 @@ export default function Features() {
               </div>
             </div>
             <h3 className="text-xl font-semibold mb-3 tracking-wide">
-              Heading
+            Full Question Bank
             </h3>
             <p className="text-gray-400 text-base">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Non eum
-              deserunt nostrum corporis distinctio minus velit perspiciatis
-              mollitia facere exercitationem, illo minima excepturi voluptate
-              at. Facere error quod similique ut.
+            Access a wide range of dentistry MCQs across all clinical specialties. From demo mode with sample questions to full subscription plans, you can practice with curated content tailored to your exam needs.
             </p>
           </div>
 
@@ -72,13 +69,10 @@ export default function Features() {
               </div>
             </div>
             <h3 className="text-xl font-semibold mb-3 tracking-wide">
-              Heading
+            Smart Learning Modes
             </h3>
             <p className="text-gray-400 text-base">
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam,
-              nesciunt. Est blanditiis explicabo iure! Aperiam laborum error
-              facilis accusamus magnam, laboriosam eveniet distinctio fuga
-              officiis cumque excepturi consequuntur numquam accusantium?
+            Choose between quiz mode to test your speed and accuracy or study mode to learn at your own pace. Premium users also enjoy AI-driven insights that identify weak areas and guide targeted revision.
             </p>
           </div>
 
@@ -102,13 +96,10 @@ export default function Features() {
               </div>
             </div>
             <h3 className="text-xl font-semibold mb-3 tracking-wide">
-              Heading
+            Progress Tracking & Leaderboard
             </h3>
             <p className="text-gray-400 text-base">
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Modi
-              reprehenderit molestias debitis illum? Dolorem, possimus cumque.
-              Vero velit ad laboriosam vitae consequatur. Libero eum culpa dolor
-              minima, porro non dolorum.{" "}
+            Monitor your performance with a personalized dashboard, track progress in each specialty, and stay motivated through a points-based system and leaderboards that encourage healthy competition.
             </p>
           </div>
         </div>

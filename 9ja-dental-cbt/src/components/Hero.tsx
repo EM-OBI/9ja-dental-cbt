@@ -12,20 +12,23 @@ export default function Hero() {
       </span>
 
       <h1 className="md:text-6xl max-w-4xl leading-tight text-4xl font-medium tracking-tighter">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+      Ace Your Dental Exams with Confidence
       </h1>
 
       <p className="md:text-xl max-w-2xl text-lg text-neutral-300 mt-6">
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Porro optio
-        facere accusantium,
+      Learn, compete, and grow with Nigeria’s most comprehensive dental CBT prep platform.
+      </p>
+      <p className="md:text-xl max-w-2xl text-lg text-neutral-300 mt-6">
+      Learning tool created for dentists by dentists
       </p>
 
       <div className="mt-12 flex flex-row sm:flex-row gap-4">
         <Link
-          href="/dashboard"
-          className="px-8 py-3 bg-green-600 text-black font-medium rounded-full hover:bg-amber-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+
+          href="/login"
+          className="px-8 py-3 bg-[#3ab286] text-black font-medium rounded-full hover:bg-amber-300 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
-          Dashboard
+          Get started
         </Link>
         <Link
           href="#"

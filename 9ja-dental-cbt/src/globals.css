@@ -7,6 +7,7 @@
 
 body {
   font-family: var(--body-font);
+  background-color: #000;
 }
 
 .heading-font {
@@ -14,7 +15,7 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+  background: linear-gradient(135deg, #080808 0%, #a3a3a3 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

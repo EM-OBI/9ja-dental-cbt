@@ -38,21 +38,21 @@ export default function Header() {
           <a
             href="#"
             className={clsx(
-              "text-lg font-medium tracking-tight heading-font gradient-text transition ml-2",
-              menuOpen && "text-white !bg-none"
+              "text-lg font-medium tracking-tight heading-font transition ml-2 text-black dark:text-white",
+              menuOpen && " !bg-none"
             )}
           >
             CBT-logo
           </a>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-6 text-xs text-gray-300 ml-8">
+          <nav className="hidden md:flex items-center space-x-6 text-xs text-gray-900 dark:text-gray-300 ml-8">
             {navLinks.map((link, i) => (
               <a
                 key={link.href}
                 href={link.href}
                 className={clsx(
-                  "hover:text-white transition-colors fade-in",
+                  "hover:text-gray-700 dark:hover:text-gray-200 transition-colors fade-in",
                   `fade-in-delay-${i + 1}`
                 )}
               >
@@ -60,7 +60,6 @@ export default function Header() {
               </a>
             ))}
             <Link
-
               href="/dashboard"
               className="bg-[#3ab286] hover:bg-amber-600 text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
             >

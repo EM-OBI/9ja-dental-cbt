@@ -22,7 +22,7 @@ export default function PricingPlans() {
         "Basic quiz mode (timed practice)",
         "Basic progress tracking (scores, % correct)",
         "Demo-only leaderboard",
-        "Community access (forums, peer Q&A)"
+        "Community access (forums, peer Q&A)",
       ],
       badge: "Starter",
       icon: (
@@ -111,7 +111,7 @@ export default function PricingPlans() {
 
   return (
     <section id="pricing">
-      <div className="bg-gray-50 dark:bg-neutral-950 min-h-screen antialiased flex items-center justify-center">
+      <div className="bg-gray-200 dark:bg-neutral-950 min-h-screen antialiased flex items-center justify-center">
         <div className="w-full max-w-5xl px-4 py-12">
           {/* Pricing header section */}
           <div className="flex flex-col items-center text-center mb-12">
@@ -232,36 +232,36 @@ export default function PricingPlans() {
                     </ul>
                   </div>
 
-                {plan.name === "Advanced" ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
-                  >
-                    Coming soon
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/signup?plan=${encodeURIComponent(
-                          plan.name.toLowerCase()
-                        )}`
-                      )
-                    }
-                    className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
-                  >
-                    {plan.cta}
-                  </button>
-                )}
+                  {plan.name === "Advanced" ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
+                    >
+                      Coming soon
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/signup?plan=${encodeURIComponent(
+                            plan.name.toLowerCase()
+                          )}`
+                        )
+                      }
+                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
+                    >
+                      {plan.cta}
+                    </button>
+                  )}
+                </div>
+                <div className="absolute inset-0 -z-10 rounded-2xl p-px bg-gradient-to-br from-transparent via-blue-100/40 to-transparent dark:via-blue-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
-              <div className="absolute inset-0 -z-10 rounded-2xl p-px bg-gradient-to-br from-transparent via-blue-100/40 to-transparent dark:via-blue-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
   );
 }

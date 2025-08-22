@@ -88,7 +88,7 @@ export default function Features() {
           </div>
 
           {/* Feature 3 */}
-          <div className="dark:bg-white/5 bg:white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
+          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
             <div className="mb-6">
               <div className="bg-gradient-to-tr from-pink-500 to-yellow-400 p-4 rounded-full">
                 <svg

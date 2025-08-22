@@ -21,7 +21,7 @@ export default function Features() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
           {/* Feature 1 */}
-          <div className="dark:bg-white/5 bg:white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
+          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
             <div className="mb-6">
               <div className="bg-gradient-to-tr from-blue-500 to-pink-500 p-4 rounded-full">
                 <svg

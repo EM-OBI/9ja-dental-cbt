@@ -78,9 +78,9 @@ export default function Header() {
               )}
             >
               {menuOpen ? (
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-black dark:text-white" />
               ) : (
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 text-black dark:text-white" />
               )}
             </button>
           </div>

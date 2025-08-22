@@ -231,7 +231,7 @@ export default function PricingPlans() {
                   </ul>
                 </div>
 
-                {plan.name === "Clinic" ? (
+                {plan.name === "Advanced" ? (
                   <button
                     type="button"
                     disabled

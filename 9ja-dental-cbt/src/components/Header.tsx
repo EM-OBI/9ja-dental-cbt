@@ -60,10 +60,10 @@ export default function Header() {
               </a>
             ))}
             <Link
-              href="/login"
+              href="/dashboard"
               className="bg-[#3ab286] hover:bg-amber-400 text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
             >
-              Get Started
+              Dashboard
             </Link>
           </nav>
 

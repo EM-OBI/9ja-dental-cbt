@@ -21,7 +21,7 @@ export default function Hero() {
 
       <div className="mt-12 flex flex-col sm:flex-row gap-4">
         <Link
-          href="#"
+          href="/login"
           className="px-8 py-3 bg-[#3ab286] text-black font-medium rounded-full hover:bg-amber-300 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
           Get started

@@ -1,7 +1,10 @@
 import Link from "next/link";
 export default function Hero() {
   return (
-    <div id="aboutUs" className="relative z-10 flex flex-col items-center justify-center px-6 pt-32 pb-32 md:pt-40 md:pb-40 text-center min-h-screen">
+    <div
+      id="aboutUs"
+      className="relative z-10 flex flex-col items-center justify-center px-6 pt-32 pb-32 md:pt-40 md:pb-40 text-center min-h-screen  dark:bg-black bg-gray-50"
+    >
       <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-white opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
 
       <span className="px-3 py-1 text-xs font-medium text-white glass-effect rounded-full mb-8 border border-white border-opacity-20">
@@ -17,10 +20,10 @@ export default function Hero() {
         facere accusantium,
       </p>
 
-      <div className="mt-12 flex flex-col sm:flex-row gap-4">
+      <div className="mt-12 flex flex-row sm:flex-row gap-4">
         <Link
           href="/dashboard"
-          className="px-8 py-3 bg-green-300 text-black font-medium rounded-full hover:bg-amber-300 transition-all duration-300 shadow-lg hover:shadow-xl"
+          className="px-8 py-3 bg-green-600 text-black font-medium rounded-full hover:bg-amber-600 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
           Dashboard
         </Link>

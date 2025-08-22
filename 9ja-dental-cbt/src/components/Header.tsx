@@ -61,7 +61,7 @@ export default function Header() {
             ))}
             <Link
               href="/login"
-              className="bg-green-300 hover:bg-amber-400 text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
+              className="bg-green-600 hover:bg-amber-600 text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
             >
               Get Started
             </Link>

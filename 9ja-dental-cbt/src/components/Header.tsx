@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 import MobileMenu from "./MobileMenu";
 import clsx from "clsx";
 import Link from "next/link";
 
 const navLinks = [
-  { href: "#aboutUs", label: "About Us" },
+  { href: "#aboutUs", label: "About" },
   { href: "#features", label: "Features" },
   { href: "#pricing", label: "Pricing" },
-  { href: "#testimonials", label: "Testimonials" },
 ];
 
 export default function Header() {
@@ -32,27 +31,28 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 glass-effect rounded-full">
-        <div className="flex items-center justify-between px-4 py-3">
+      <header className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-sm rounded-full">
+        <div className="flex items-center justify-between px-6 py-3">
           {/* Logo */}
-          <a
-            href="#"
-            className={clsx(
-              "text-lg font-medium tracking-tight heading-font transition ml-2 text-black dark:text-white",
-              menuOpen && " !bg-none"
-            )}
-          >
-            CBT-logo
-          </a>
+          <div className="flex items-center">
+            <a
+              href="/"
+              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent flex items-center"
+            >
+              9jaDentalCBT
+            </a>
+          </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-6 text-xs text-gray-900 dark:text-gray-300 ml-8">
+          <nav className="hidden md:flex items-center space-x-1 ml-12">
             {navLinks.map((link, i) => (
               <a
                 key={link.href}
                 href={link.href}
                 className={clsx(
-                  "hover:text-gray-700 dark:hover:text-gray-200 transition-colors fade-in",
+                  "flex items-center px-4 py-2 text-sm font-medium rounded-full transition-all",
+                  "text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400",
+                  "hover:bg-gray-100 dark:hover:bg-gray-800",
                   `fade-in-delay-${i + 1}`
                 )}
               >
@@ -61,26 +61,24 @@ export default function Header() {
             ))}
             <Link
               href="/dashboard"
-              className="bg-[#3ab286] hover:bg-amber-600 text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-opacity-90 transition-all"
+              className="ml-4 flex items-center px-5 py-2.5 text-sm font-medium rounded-full transition-all bg-gradient-to-r from-blue-600 to-emerald-500 text-white hover:shadow-lg hover:shadow-blue-500/20 hover:from-blue-700 hover:to-emerald-600 transform"
             >
+              <LogIn className="w-4 h-4 mr-2" />
               Dashboard
             </Link>
           </nav>
 
           {/* Right Icons */}
-          <div className="flex items-center space-x-3 ml-8 relative">
-            {/* Menu Toggle */}
+          <div className="md:hidden ml-4">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className={clsx(
-                "flex items-center text-sm tracking-wide font-medium uppercase transition fade-in md:hidden",
-                menuOpen ? "text-white" : "hover:opacity-80"
-              )}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle menu"
             >
               {menuOpen ? (
-                <X className="w-5 h-5 text-black dark:text-white" />
+                <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               ) : (
-                <Menu className="w-5 h-5 text-black dark:text-white" />
+                <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               )}
             </button>
           </div>

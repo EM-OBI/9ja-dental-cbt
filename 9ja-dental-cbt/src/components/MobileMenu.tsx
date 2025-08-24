@@ -9,10 +9,9 @@ interface Props {
 
 export default function MobileMenu({ open, onClose }: Props) {
   const navLinks = [
-    { href: "#aboutUs", label: "About Us" },
+    { href: "#aboutUs", label: "About" },
     { href: "#features", label: "Features" },
     { href: "#pricing", label: "Pricing" },
-    { href: "#testimonials", label: "Testimonials" },
   ];
 
   return (

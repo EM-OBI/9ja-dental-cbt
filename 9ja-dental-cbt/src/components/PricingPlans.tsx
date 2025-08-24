@@ -112,11 +112,11 @@ export default function PricingPlans() {
   return (
     <section id="pricing">
       <div className="bg-gray-200 dark:bg-neutral-950 min-h-screen antialiased flex items-center justify-center">
-        <div className="w-full max-w-5xl px-4 py-12">
+        <div className="w-full max-w-7xl px-8 py-12">
           {/* Pricing header section */}
           <div className="flex flex-col items-center text-center mb-12">
-            <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Dental Specialty Quiz —
+            <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 dark:text-white gradient-text">
+              Dental Specialty Quiz,
               <span className="text-blue-600 dark:text-blue-400"> Plans</span>
             </h1>
             <p className="mb-8 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
@@ -129,6 +129,7 @@ export default function PricingPlans() {
                 Monthly
               </span>
               <button
+                title="Toggle Billing"
                 onClick={toggleBilling}
                 className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 role="switch"
@@ -162,11 +163,11 @@ export default function PricingPlans() {
           </div>
 
           {/* Pricing cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 ms-center w-full">
             {plans.map((plan, index) => (
               <div
                 key={index}
-                className="group relative p-6 rounded-2xl overflow-hidden transition-all duration-300 border border-gray-100/80 dark:border-white/10 bg-white dark:bg-black hover:shadow-2xl will-change-transform shadow dark:shadow-lg mx-auto md:max-w-[360px] min-h-[520px]"
+                className="group relative p-8 rounded-2xl overflow-hidden transition-all duration-300 border border-gray-100/80 dark:border-white/10 bg-white dark:bg-black hover:shadow-2xl will-change-transform shadow dark:shadow-lg w-full max-w-[400px] min-h-[520px]"
               >
                 <div className="relative flex flex-col space-y-6 h-full justify-between">
                   <div>
@@ -236,7 +237,7 @@ export default function PricingPlans() {
                     <button
                       type="button"
                       disabled
-                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
+                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-gray-800 dark:text-gray-200 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-300 border border-gray-200 dark:border-gray-700 cursor-not-allowed shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
                     >
                       Coming soon
                     </button>
@@ -250,7 +251,7 @@ export default function PricingPlans() {
                           )}`
                         )
                       }
-                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold bg-[#3ab286] hover:bg-amber-300 text-black transition-colors duration-300"
+                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-gray-800 dark:text-gray-200 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-300 border border-gray-200 dark:border-gray-700 cursor-pointer shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
                     >
                       {plan.cta}
                     </button>

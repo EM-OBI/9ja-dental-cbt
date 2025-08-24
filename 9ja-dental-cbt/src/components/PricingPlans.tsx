@@ -129,6 +129,7 @@ export default function PricingPlans() {
                 Monthly
               </span>
               <button
+                title="Toggle Billing"
                 onClick={toggleBilling}
                 className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 role="switch"

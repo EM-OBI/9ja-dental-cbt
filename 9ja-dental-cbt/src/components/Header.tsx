@@ -35,12 +35,12 @@ export default function Header() {
         <div className="flex items-center justify-between px-6 py-3">
           {/* Logo */}
           <div className="flex items-center">
-            <a
+            <Link
               href="/"
               className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent flex items-center"
             >
               9jaDentalCBT
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Nav */}

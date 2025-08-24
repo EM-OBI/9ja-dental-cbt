@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, MessageSquare, BookOpen, Award, Instagram } from "lucide-react";
+import { Heart, MessageSquare, BookOpen, Award } from "lucide-react";
 
 const socialIcons = [
   {

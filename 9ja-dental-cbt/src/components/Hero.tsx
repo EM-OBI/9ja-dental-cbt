@@ -69,8 +69,8 @@ export default function Hero() {
       </h1>
 
       <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-6 whitespace-normal relative z-20">
-        Learn, compete, and grow with Nigeria's most comprehensive dental CBT
-        prep platform.
+        Learn, compete, and grow with Nigeria&apos;s most comprehensive dental
+        CBT prep platform.
       </p>
       <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-5 whitespace-normal relative z-20">
         Learning tool created for dentists by dentists

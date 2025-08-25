@@ -64,8 +64,9 @@ export default function Hero() {
         Testing Software
       </span>
 
-      <h1 className="md:text-6xl max-w-4xl leading-tight text-4xl font-medium tracking-tighter dark:text-white text-gray-900 relative z-20">
-        Ace Your Dental Exams with Confidence
+      <h1 className="max-w-4xl text-4xl md:text-6xl font-medium leading-tight tracking-tighter text-gray-900 dark:text-white relative z-20">
+        Ace Your Dental Exams with{" "}
+        <span className="cursive-font text-6xl md:text-7xl">Confidence</span>
       </h1>
 
       <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-6 whitespace-normal relative z-20">
@@ -83,7 +84,22 @@ export default function Hero() {
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             <span>Get started</span>
-            <MoveRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              data-lucide="arrow-right"
+              className="lucide lucide-arrow-right w-4 h-4 group-hover:translate-x-1 transition-transform"
+              strokeWidth={1.5}
+            >
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
           </span>
           <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>

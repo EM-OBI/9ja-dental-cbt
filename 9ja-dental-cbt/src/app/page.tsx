@@ -1,9 +1,9 @@
 "use client";
-import Header from "../components/Header";
-import Hero from "../components/Hero";
-import Features from "../components/Features";
-import PricingPlans from "../components/PricingPlans";
-import Footer from "@/components/Footer";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import Features from "./components/Features";
+import PricingPlans from "./components/PricingPlans";
+import Footer from "@/app/components/Footer";
 export default function Page() {
   return (
     <div className="relative min-h-screen overflow-hidden">

@@ -3,6 +3,8 @@
 :root {
   --heading-font: "Playfair Display", serif;
   --body-font: "Inter", sans-serif;
+  --cursive-font: "Dancing Script", cursive;
+  --cursive-font-two: "Allura", cursive;
 }
 
 body {
@@ -11,7 +13,12 @@ body {
 .heading-font {
   font-family: var(--heading-font);
 }
-
+.cursive-font {
+  font-family: var(--cursive-font);
+}
+.cursive-font-two {
+  font-family: var(--cursive-font-two);
+}
 .gradient-text {
   background: linear-gradient(135deg, #080808 0%, #a3a3a3 100%);
   -webkit-background-clip: text;

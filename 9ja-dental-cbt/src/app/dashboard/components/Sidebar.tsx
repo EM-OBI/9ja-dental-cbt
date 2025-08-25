@@ -58,7 +58,7 @@ export default function Sidebar() {
             <TowerControl className="h-5 w-5" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            DentaQuiz
+            9JA DENTAL QUIZ
           </span>
         </div>
 

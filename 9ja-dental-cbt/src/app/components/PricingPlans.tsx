@@ -111,7 +111,7 @@ export default function PricingPlans() {
 
   return (
     <section id="pricing">
-      <div className="bg-gray-200 dark:bg-neutral-950 min-h-screen antialiased flex items-center justify-center">
+      <div className="bg-gray-200 dark:bg-black min-h-screen antialiased flex items-center justify-center">
         <div className="w-full max-w-7xl px-8 py-12">
           {/* Pricing header section */}
           <div className="flex flex-col items-center text-center mb-12">

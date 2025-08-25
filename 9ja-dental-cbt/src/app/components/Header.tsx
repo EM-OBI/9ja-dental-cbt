@@ -61,7 +61,7 @@ export default function Header() {
             ))}
             <Link
               href="/dashboard"
-              className="ml-4 flex items-center px-5 py-2.5 text-sm font-medium rounded-full transition-all bg-gradient-to-r from-blue-600 to-emerald-500 text-white hover:shadow-lg hover:shadow-blue-500/20 hover:from-blue-700 hover:to-emerald-600 transform"
+              className="ml-4 flex items-center px-5 py-2.5 text-sm font-medium rounded-full transition-all bg-blue-600/70 text-white hover:shadow-lg hover:shadow-blue-500/20 hover:bg-blue-700/90 transform"
             >
               <LogIn className="w-4 h-4 mr-2" />
               Dashboard

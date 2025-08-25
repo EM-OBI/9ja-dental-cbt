@@ -44,7 +44,7 @@ export default function StatsSection() {
   // Stat items configuration
   const statItems: StatItem[] = [
     {
-      title: "Completed Questions",
+      title: "Completed Quiz",
       value: `${formatNumber(stats.questions)}+`,
       icon: <UsersIcon />,
       position: "top-right",

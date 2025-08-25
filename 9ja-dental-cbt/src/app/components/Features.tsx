@@ -1,9 +1,6 @@
 export default function Features() {
   return (
-    <section
-      id="features"
-      className="w-full py-24 bg-gray-200 dark:bg-neutral-950"
-    >
+    <section id="features" className="w-full py-24 bg-gray-200 dark:bg-black">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight gradient-text text-gray-900 ">

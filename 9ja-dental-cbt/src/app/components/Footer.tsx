@@ -56,7 +56,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <footer className="bg-gray-100 dark:bg-gray-950 border-t border-gray-300 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
           {/* Brand Section */}
@@ -101,7 +101,7 @@ export default function Footer() {
                 { name: "Features", href: "#features" },
                 { name: "Pricing", href: "#pricing" },
                 { name: "Leaderboard", href: "#leaderboard" },
-                { name: "About Us", href: "#about" },
+                { name: "About Us", href: "#aboutUs" },
               ].map((item) => (
                 <li key={item.name}>
                   <Link
@@ -158,7 +158,7 @@ export default function Footer() {
                 Phone: +234 800 000 0000
               </p>
               <div className="mt-4">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white dark:text-black dark:bg-gray-100 dark:hover:bg-gray-300 bg-neutral-900 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white dark:text-black dark:bg-gray-100 dark:hover:bg-gray-400 bg-neutral-900 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                   Get in touch
                 </button>
               </div>

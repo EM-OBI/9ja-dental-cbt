@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import StatsSection from "./Stats";
-import { MoveRight } from "lucide-react";
+import SocialProof from "./SocialProof";
 
 export default function Hero() {
   return (
@@ -66,7 +66,9 @@ export default function Hero() {
 
       <h1 className="max-w-4xl text-4xl md:text-6xl font-medium leading-tight tracking-tighter text-gray-900 dark:text-white relative z-20">
         Ace Your Dental Exams with{" "}
-        <span className="cursive-font text-6xl md:text-7xl">Confidence</span>
+        <span className="cursive-font-two text-6xl md:text-7xl">
+          Confidence
+        </span>
       </h1>
 
       <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-6 whitespace-normal relative z-20">
@@ -128,6 +130,8 @@ export default function Hero() {
           <span className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>
       </div>
+
+      <SocialProof />
       <StatsSection />
     </div>
   );

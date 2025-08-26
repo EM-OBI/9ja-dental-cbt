@@ -12,3 +12,8 @@ export interface StatsData {
   satisfactionRate: string;
   countries: number;
 }
+
+export interface HeaderVariant {
+  title: string;
+  headline: string;
+}

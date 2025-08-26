@@ -1,4 +1,5 @@
 import Sidebar from "@/app/dashboard/components/Sidebar";
+import BottomNav from "./components/bottom-nav";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <Sidebar />
       </div>
       <div className="flex-grow md:overflow-y-auto">{children}</div>
+      <BottomNav />
     </div>
   );
 }

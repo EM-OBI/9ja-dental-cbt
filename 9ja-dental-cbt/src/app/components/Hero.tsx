@@ -79,7 +79,7 @@ export default function Hero() {
         Learning tool created for dentists by dentists
       </p>
 
-      <div className="mt-12 flex flex-col sm:flex-row gap-4 relative z-20">
+      <div className="mt-12 flex flex-row sm:flex-row gap-4 relative z-20">
         <Link
           href="/login"
           className="group relative px-7 py-3.5 font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
@@ -130,7 +130,6 @@ export default function Hero() {
           <span className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>
       </div>
-
       <SocialProof />
       <StatsSection />
     </div>

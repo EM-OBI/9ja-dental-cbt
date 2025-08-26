@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 
 const links = [
   {
-    name: "Dashboard",
+    name: "Home",
     icon: <LayoutDashboard className="h-4 w-4" />,
     href: "/dashboard",
   },

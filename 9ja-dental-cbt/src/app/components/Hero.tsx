@@ -78,7 +78,6 @@ export default function Hero() {
       <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-5 whitespace-normal relative z-20">
         Learning tool created for dentists by dentists
       </p>
-      <SocialProof />
 
       <div className="mt-12 flex flex-row sm:flex-row gap-4 relative z-20">
         <Link
@@ -131,7 +130,7 @@ export default function Hero() {
           <span className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>
       </div>
-
+      <SocialProof />
       <StatsSection />
     </div>
   );

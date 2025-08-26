@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, TowerControl, Plus } from "lucide-react";
 import NavLinks from "./nav-links";
+import Link from "next/link";
 
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function Sidebar() {
             <TowerControl className="h-5 w-5" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            9JA DENTAL QUIZ
+            <Link href="/">9JA DENTAL QUIZ</Link>
           </span>
         </div>
         <button className="flex items-center justify-between gap-3 text-sm font-medium bg-blue-600/20 hover:bg-blue-600/30 transition p-3 rounded-lg">

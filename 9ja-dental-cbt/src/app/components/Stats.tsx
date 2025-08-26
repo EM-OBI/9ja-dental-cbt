@@ -73,7 +73,7 @@ export default function StatsSection() {
           {statItems.map((item, index) => (
             <div
               key={index}
-              className={`bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 ${item.delay}`}
+              className={`bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 ${item.delay}`}
             >
               <div className="flex items-start space-x-4">
                 {item.icon}

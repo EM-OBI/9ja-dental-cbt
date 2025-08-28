@@ -10,7 +10,7 @@ export default function DashboardHeader({
   setIsMobileMenuOpen,
 }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900/30 backdrop-blur-lg">
+    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900/30 backdrop-blur-lg fixed w-full">
       <div className="flex items-center gap-4">
         <div className="lg:hidden w-8"></div>
         <div>

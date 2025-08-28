@@ -33,7 +33,7 @@ export default function Sidebar() {
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
-        }`}
+        } overflow-scroll`}
       >
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">

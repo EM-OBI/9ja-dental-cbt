@@ -33,23 +33,16 @@ export default function Sidebar() {
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
-        } overflow-scroll`}
+        } overflow-y-auto lg:overflow-visible`}
       >
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
             <TowerControl className="h-5 w-5" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            <Link href="/">9JA DENTAL QUIZ</Link>
+            <Link href="/">DENTAL QUIZ</Link>
           </span>
         </div>
-        <button className="flex items-center justify-between gap-3 text-sm font-medium bg-blue-600/20 hover:bg-blue-600/30 transition p-3 rounded-lg">
-          <span className="flex items-center gap-3">
-            <Plus className="h-4 w-4" />
-            New Quiz Session
-          </span>
-          <kbd className="text-xs text-white/60 hidden sm:block">⌘N</kbd>
-        </button>
         <NavLinks />
         <div className="mt-auto bg-gradient-to-br from-blue-600/20 to-cyan-600/20 p-4 rounded-xl">
           <p className="text-sm leading-snug">

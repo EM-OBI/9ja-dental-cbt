@@ -16,6 +16,13 @@ const pageTitles: Record<string, string> = {
 const pageHeadlines: Record<string, string> = {
   "/dashboard": "Level up, create quizzes and study",
   "/dashboard/quiz": "Create your quiz",
+  "/dashboard/settings": "Manage your account settings",
+  "/dashboard/leaderboard": "See how you rank among your peers",
+  "/dashboard/profile": "View and edit your profile",
+  "/dashboard/study": "Study and review materials",
+  "/dashboard/specialities": "Explore dental specialities",
+  "/dashboard/subscription": "Manage your subscription",
+  "/dashboard/progress": "Track your learning progress",
 };
 
 export default function DesktopHeader() {
@@ -30,10 +37,7 @@ export default function DesktopHeader() {
         <div className="lg:hidden w-8"></div>
         <div>
           <h1 className="text-base lg:text-lg font-medium">{title}</h1>
-          <p className="text-xs lg:text-sm text-white/60">
-            {/* Level up, create quizes and study{" "} */}
-            {headline}
-          </p>
+          <p className="text-xs lg:text-sm text-white/60">{headline}</p>
         </div>
       </div>
       <div className="flex items-center gap-3">

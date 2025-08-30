@@ -22,14 +22,14 @@ export default function Sidebar() {
         aria-label="Toggle mobile menu"
         type="button"
         onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-800/80 backdrop-blur-lg rounded-lg border border-white/10"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-800 backdrop-blur-lg rounded-lg border border-white/10"
       >
         <Menu className="h-5 w-5" />
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out flex flex-col gap-6 border-r border-white/10 bg-slate-900/50 backdrop-blur-lg p-6 h-full ${
+        className={`fixed lg:relative inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out flex flex-col gap-6 border-r border-white/10 bg-slate-900 backdrop-blur-lg p-6 h-full ${
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"

@@ -1,10 +1,10 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { Bell, HelpCircle } from "lucide-react";
+import { Bell, HelpCircle, Flame } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/dashboard/quiz": "Quiz",
+  "/dashboard/quiz": "Quiz Mode",
   "/dashboard/settings": "Settings",
   "/dashboard/leaderboard": "Leaderboard",
   "/dashboard/profile": "Profile",
@@ -14,27 +14,28 @@ const pageTitles: Record<string, string> = {
   "/dashboard/progress": "Progress",
 };
 
-export default function DesktopHeader() {
+export default function MobileHeader() {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Dashboard";
 
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900/30 backdrop-blur-lg">
+    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900 backdrop-blur-lg">
       <div className="flex items-center gap-4">
         <div className="lg:hidden w-8"></div>
         <div>
           <h1 className="text-base lg:text-lg font-medium">{title}</h1>
-          <p className="text-xs lg:text-sm text-white/60">
-            Level up, create quizes and study{" "}
-          </p>
         </div>
       </div>
       <div className="flex items-center gap-3">
+        <div className="flex flex-row gap-2 items-center">
+          <Flame className="h-5 w-5 " />
+          <span className="text-base text-gray-600 dark:text-gray-300">0</span>
+        </div>
+
         <button className="relative " type="button" title="Bell Icon">
           <Bell className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-cyan-500"></span>
         </button>
-        <HelpCircle className="h-5 w-5 " />
         <div
           className="h-8 w-8 rounded-full bg-cover bg-center"
           style={{

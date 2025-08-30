@@ -46,7 +46,7 @@ export default function BottomNav() {
   };
 
   return (
-    <div className="fixed bottom-0 w-full py-4 z-10 bg-zinc-100 dark:bg-zinc-950 border-t dark:border-zinc-800 border-zinc-200 shadow-lg sm:hidden">
+    <div className="fixed bottom-0 w-full py-2 z-10 bg-zinc-100 dark:bg-zinc-950 border-t dark:border-zinc-800 border-zinc-200 shadow-lg sm:hidden">
       <div className="flex flex-row justify-around items-center bg-transparent w-full">
         {links.map((link) => (
           <Link

@@ -27,7 +27,7 @@ export default function MobileHeader() {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <div className="flex flex-row gap-2 items-center-safe">
+        <div className="flex flex-row gap-2 items-center">
           <Flame className="h-5 w-5 " />
           <span className="text-base text-gray-600 dark:text-gray-300">0</span>
         </div>

@@ -2,6 +2,10 @@
 import { usePathname } from "next/navigation";
 import { Bell, HelpCircle } from "lucide-react";
 
+interface DesktopHeaderProps {
+  isDesktopCollapsed?: boolean;
+}
+
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/quiz": "Quiz Mode",
@@ -25,7 +29,9 @@ const pageHeadlines: Record<string, string> = {
   "/dashboard/progress": "Track your learning progress",
 };
 
-export default function DesktopHeader() {
+export default function DesktopHeader({
+  isDesktopCollapsed = false,
+}: DesktopHeaderProps) {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Dashboard";
   const headline =
@@ -34,6 +40,12 @@ export default function DesktopHeader() {
   return (
     <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900 backdrop-blur-lg">
       <div className="flex items-center gap-4">
+        {/* Space for toggle button when sidebar is collapsed */}
+        <div
+          className={`transition-all duration-300 ${
+            isDesktopCollapsed ? "lg:w-12" : "lg:w-0"
+          }`}
+        ></div>
         <div className="lg:hidden w-8"></div>
         <div>
           <h1 className="text-base lg:text-lg font-medium">{title}</h1>

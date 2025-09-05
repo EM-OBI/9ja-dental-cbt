@@ -1,14 +1,26 @@
+"use client";
+
+import { useState } from "react";
 import Sidebar from "@/app/dashboard/components/Sidebar";
 import BottomNav from "./components/bottom-nav";
 import DesktopHeader from "./components/header/DesktopHeader";
 import MobileHeader from "./components/header/MobileHeader";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
+
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-gray-950">
       {/* Sidebar - Hidden on mobile and tablet, visible on large screens and up */}
-      <div className="w-full flex-none md:w-64">
-        <Sidebar />
+      <div
+        className={`w-full flex-none transition-all duration-300 ${
+          isDesktopCollapsed ? "lg:w-0" : "md:w-64"
+        }`}
+      >
+        <Sidebar
+          isDesktopCollapsed={isDesktopCollapsed}
+          setIsDesktopCollapsed={setIsDesktopCollapsed}
+        />
       </div>
 
       {/* Main Content Area */}
@@ -17,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <header className="bg-white shadow-sm z-10">
           {/* For Desktop Screen Only */}
           <div className="hidden lg:block">
-            <DesktopHeader />
+            <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />
           </div>
           {/* For Mobile Screen Only */}
           <div className="block lg:hidden">
@@ -26,7 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 scrollbar-hide">
           {children}
         </main>
       </div>

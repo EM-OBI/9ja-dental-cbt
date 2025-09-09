@@ -7,7 +7,7 @@ export default function Hero() {
   return (
     <div
       id="aboutUs"
-      className="relative z-10 flex flex-col items-center justify-center px-6 pt-32 pb-32 md:pt-40 md:pb-40 text-center min-h-screen bg-gray-200 bg-no-repeat bg-[radial-gradient(circle_at_top_center,rgba(173,109,244,0.5),transparent_70%)] dark:bg-black dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)] overflow-hidden"
+      className="relative z-10 flex flex-col items-center justify-center px-6 pt-32 pb-32 md:pt-40 md:pb-40 text-center min-h-screen bg-gray-200  dark:bg-black dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)] overflow-hidden"
     >
       {/* Left floating dental icons */}
       {/* <div className="absolute left-5 md:left-10 top-1/4 animate-float">
@@ -60,7 +60,7 @@ export default function Hero() {
       </div> */}
 
       {/* Content */}
-      <span className="px-3 py-1 text-xs font-medium text-black dark:text-white glass-effect rounded-full mb-4 border border-white border-opacity-20 relative z-20">
+      <span className="px-3 py-1 text-xs font-medium text-white glass-effect rounded-full mb-4 border border-white border-opacity-20 relative z-20">
         Testing Software
       </span>
 

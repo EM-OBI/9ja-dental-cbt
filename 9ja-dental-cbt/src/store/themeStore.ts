@@ -31,11 +31,17 @@ interface ThemeActions {
 
 type ThemeStore = ThemeState & ThemeActions;
 
-// Initial state
+// Initial state - SSR-safe defaults
 const getInitialState = (): Omit<ThemeState, "isInitialized"> => {
   const mode: ThemeMode = "system";
-  const resolvedMode = getResolvedTheme(mode);
-  const config = getThemeConfig(mode);
+
+  // Use safe defaults during SSR, will be resolved during initialization
+  const resolvedMode: "light" | "dark" =
+    typeof window === "undefined" ? "light" : getResolvedTheme(mode);
+  const config =
+    typeof window === "undefined"
+      ? getThemeConfig("light")
+      : getThemeConfig(mode);
 
   return {
     mode,
@@ -97,9 +103,16 @@ export const useThemeStore = create<ThemeStore>()(
         const fontScale = getFontScalePreference();
         const reducedMotion = prefersReducedMotion();
 
+        // Resolve the actual theme now that we're on the client
+        const currentMode = get().mode;
+        const resolvedMode = getResolvedTheme(currentMode);
+        const config = getThemeConfig(currentMode);
+
         set({
           fontScale,
           reducedMotion,
+          resolvedMode,
+          config,
           isInitialized: true,
         });
 

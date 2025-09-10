@@ -6,6 +6,7 @@ import {
   Dancing_Script,
 } from "next/font/google";
 import "../globals.css";
+import { AppStateProvider } from "@/store/AppStateProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,7 +42,9 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} ${allura.variable} ${dancing.variable}`}
     >
-      <body className=" text-white min-h-screen">{children}</body>
+      <body className="bg-background text-foreground min-h-screen antialiased">
+        <AppStateProvider>{children}</AppStateProvider>
+      </body>
     </html>
   );
 }

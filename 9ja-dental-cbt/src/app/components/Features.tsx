@@ -22,6 +22,9 @@ export default function Features() {
                   stroke="currentColor"
                   strokeWidth="2"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                  role="img"
                 >
                   <path
                     strokeLinecap="round"
@@ -57,6 +60,9 @@ export default function Features() {
                   stroke="currentColor"
                   strokeWidth="2"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                  role="img"
                 >
                   <path
                     strokeLinecap="round"
@@ -86,6 +92,9 @@ export default function Features() {
                   stroke="currentColor"
                   strokeWidth="2"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                  role="img"
                 >
                   <path
                     strokeLinecap="round"

@@ -82,7 +82,7 @@ export default function Hero() {
       <div className="mt-12 flex flex-row sm:flex-row gap-4 relative z-20">
         <Link
           href="/login"
-          className="group relative px-5 sm:px-7 py-3.5 font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
+          className="group relative px-5 sm:px-7 py-3.5 font-medium text-white bg-blue-600/70  hover:bg-blue-800 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             <span>Get started</span>

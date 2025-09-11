@@ -18,7 +18,7 @@ export default function MobileMenu({ open, onClose }: Props) {
   return (
     <div
       className={clsx(
-        "mobile-menu fixed inset-0 z-40 bg-black/95 backdrop-blur-lg transform transition-transform duration-300",
+        "mobile-menu fixed inset-0 z-40 bg-background/95 backdrop-blur-lg transform transition-transform duration-300",
         open && "open"
       )}
     >
@@ -28,7 +28,7 @@ export default function MobileMenu({ open, onClose }: Props) {
             key={link.href}
             href={link.href}
             onClick={onClose}
-            className="hover:text-emerald-300 transition text-white"
+            className="hover:text-primary transition text-foreground"
           >
             {link.label}
           </a>
@@ -37,15 +37,18 @@ export default function MobileMenu({ open, onClose }: Props) {
       <div className="fixed bottom-8 left-0 right-0 flex justify-center">
         <button
           onClick={onClose}
-          className="glass-effect p-3 rounded-full flex items-center justify-center hover:bg-opacity-80 transition-all"
+          className="glass-effect p-3 rounded-full flex items-center justify-center hover:bg-muted transition-all"
           aria-label="Close menu"
         >
           <svg
-            className="w-6 h-6 text-white"
+            className="w-6 h-6 text-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+            role="img"
           >
             <path
               strokeLinecap="round"

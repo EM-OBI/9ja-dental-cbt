@@ -27,11 +27,14 @@ export default function PricingPlans() {
       badge: "Starter",
       icon: (
         <svg
-          className="w-5 h-5 text-blue-500"
+          className="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           strokeWidth="2"
+          aria-hidden="true"
+          focusable="false"
+          role="img"
         >
           <path
             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
@@ -59,11 +62,14 @@ export default function PricingPlans() {
       badge: "Most popular",
       icon: (
         <svg
-          className="w-5 h-5 text-blue-500"
+          className="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           strokeWidth="2"
+          aria-hidden="true"
+          focusable="false"
+          role="img"
         >
           <path
             d="M13 10V3L4 14h7v7l9-11h-7z"
@@ -92,11 +98,14 @@ export default function PricingPlans() {
       badge: "For study groups",
       icon: (
         <svg
-          className="w-5 h-5 text-blue-500"
+          className="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           strokeWidth="2"
+          aria-hidden="true"
+          focusable="false"
+          role="img"
         >
           <path
             d="M13 10V3L4 14h7v7l9-11h-7z"
@@ -172,7 +181,7 @@ export default function PricingPlans() {
                 <div className="relative flex flex-col space-y-6 h-full justify-between">
                   <div>
                     <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 group-hover:bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 transition-all duration-300">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 group-hover:bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 transition-all duration-300 text-blue-500 dark:text-blue-400">
                         {plan.icon}
                       </div>
                       <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 transition-colors duration-300 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40">
@@ -220,6 +229,9 @@ export default function PricingPlans() {
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                             strokeWidth="2"
+                            aria-hidden="true"
+                            focusable="false"
+                            role="img"
                           >
                             <path
                               d="M5 13l4 4L19 7"

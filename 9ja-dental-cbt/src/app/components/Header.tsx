@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LogIn } from "lucide-react";
 import MobileMenu from "./MobileMenu";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import Link from "next/link";
 
 const navLinks = [
@@ -92,7 +91,7 @@ export default function Header() {
             >
               <Link
                 href="/"
-                className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent flex items-center"
+                className="text-2xl font-bold dark:bg-gray-50 bg-gray-900 bg-clip-text text-transparent flex items-center"
               >
                 DentalCBT
               </Link>
@@ -132,10 +131,6 @@ export default function Header() {
             className="flex items-center space-x-3"
             variants={itemVariants}
           >
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <ThemeToggle />
-            </motion.div>
-
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/dashboard"
@@ -149,7 +144,7 @@ export default function Header() {
             {/* Mobile menu button */}
             <motion.button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="md:hidden p-2 text-foreground hover:text-primary transition-colors"
               variants={itemVariants}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

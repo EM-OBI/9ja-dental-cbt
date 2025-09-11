@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { Heart, MessageSquare, BookOpen, Award } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const socialIcons = [
   {
+    name: "Twitter/X",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        x="0px"
-        y="0px"
-        width="100"
-        height="100"
         viewBox="0 0 30 30"
         fill="currentColor"
+        className="w-full h-full"
       >
         <path d="M 6 4 C 4.895 4 4 4.895 4 6 L 4 24 C 4 25.105 4.895 26 6 26 L 24 26 C 25.105 26 26 25.105 26 24 L 26 6 C 26 4.895 25.105 4 24 4 L 6 4 z M 8.6484375 9 L 13.259766 9 L 15.951172 12.847656 L 19.28125 9 L 20.732422 9 L 16.603516 13.78125 L 21.654297 21 L 17.042969 21 L 14.056641 16.730469 L 10.369141 21 L 8.8945312 21 L 13.400391 15.794922 L 8.6484375 9 z M 10.878906 10.183594 L 17.632812 19.810547 L 19.421875 19.810547 L 12.666016 10.183594 L 10.878906 10.183594 z"></path>
       </svg>
@@ -19,15 +18,13 @@ const socialIcons = [
     href: "#",
   },
   {
+    name: "Facebook",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        x="0px"
-        y="0px"
-        width="100"
-        height="100"
         viewBox="0 0 30 30"
         fill="currentColor"
+        className="w-full h-full"
       >
         <path d="M15,3C8.373,3,3,8.373,3,15c0,6.016,4.432,10.984,10.206,11.852V18.18h-2.969v-3.154h2.969v-2.099c0-3.475,1.693-5,4.581-5 c1.383,0,2.115,0.103,2.461,0.149v2.753h-1.97c-1.226,0-1.654,1.163-1.654,2.473v1.724h3.593L19.73,18.18h-3.106v8.697 C22.481,26.083,27,21.075,27,15C27,8.373,21.627,3,15,3z"></path>
       </svg>
@@ -35,17 +32,29 @@ const socialIcons = [
     href: "#",
   },
   {
+    name: "LinkedIn",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        x="0px"
-        y="0px"
-        width="100"
-        height="100"
         viewBox="0 0 30 30"
         fill="currentColor"
+        className="w-full h-full"
       >
         <path d="M24,4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18c1.105,0,2-0.895,2-2V6C26,4.895,25.105,4,24,4z M10.954,22h-2.95 v-9.492h2.95V22z M9.449,11.151c-0.951,0-1.72-0.771-1.72-1.72c0-0.949,0.77-1.719,1.72-1.719c0.948,0,1.719,0.771,1.719,1.719 C11.168,10.38,10.397,11.151,9.449,11.151z M22.004,22h-2.948v-4.616c0-1.101-0.02-2.517-1.533-2.517 c-1.535,0-1.771,1.199-1.771,2.437V22h-2.948v-9.492h2.83v1.297h0.04c0.394-0.746,1.356-1.533,2.791-1.533 c2.987,0,3.539,1.966,3.539,4.522V22z"></path>
+      </svg>
+    ),
+    href: "#",
+  },
+  {
+    name: "Instagram",
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 30 30"
+        fill="currentColor"
+        className="w-full h-full"
+      >
+        <path d="M 9.9980469 3 C 6.1390469 3 3 6.1419531 3 10.001953 L 3 20.001953 C 3 23.860953 6.1419531 27 10.001953 27 L 20.001953 27 C 23.860953 27 27 23.858047 27 19.998047 L 27 9.9980469 C 27 6.1390469 23.858047 3 19.998047 3 L 9.9980469 3 z M 22 7 C 22.552 7 23 7.448 23 8 C 23 8.552 22.552 9 22 9 C 21.448 9 21 8.552 21 8 C 21 7.448 21.448 7 22 7 z M 15 9 C 18.309 9 21 11.691 21 15 C 21 18.309 18.309 21 15 21 C 11.691 21 9 18.309 9 15 C 9 11.691 11.691 9 15 9 z M 15 11 A 4 4 0 0 0 11 15 A 4 4 0 0 0 15 19 A 4 4 0 0 0 19 15 A 4 4 0 0 0 15 11 z"></path>
       </svg>
     ),
     href: "#",
@@ -61,10 +70,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="md:col-span-4">
-            <div className="flex items-center space-x-2 mb-4">
-              <Award className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
-                9ja Dental CBT
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <Award className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-2xl font-bold dark:bg-gray-50 bg-gray-900 bg-clip-text text-transparent">
+                Dental CBT
               </span>
             </div>
             <p className="mt-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
@@ -76,14 +87,13 @@ export default function Footer() {
                 <a
                   key={i}
                   href={link.href}
-                  className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  className="group"
+                  aria-label={link.name}
                 >
-                  <span className="sr-only">Social media icon</span>
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm"
-                  >
-                    {link.icon}
+                  <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-300 transform">
+                    <div className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      {link.icon}
+                    </div>
                   </div>
                 </a>
               ))}
@@ -128,13 +138,14 @@ export default function Footer() {
                 { name: "Tutorials", icon: BookOpen },
                 { name: "Blog", icon: MessageSquare },
               ].map((item) => (
-                <li key={item.name} className="flex items-start">
-                  <item.icon className="flex-shrink-0 h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
-                  <a
-                    href="#"
-                    className="ml-2 text-sm text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors"
-                  >
-                    {item.name}
+                <li key={item.name}>
+                  <a href="#" className="flex items-center group py-1">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-md bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mr-2 group-hover:bg-blue-100 dark:group-hover:bg-blue-800/30 transition-colors">
+                      <item.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {item.name}
+                    </span>
                   </a>
                 </li>
               ))}
@@ -158,7 +169,21 @@ export default function Footer() {
                 Phone: +234 800 000 0000
               </p>
               <div className="mt-4">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white dark:text-black dark:bg-gray-100 dark:hover:bg-gray-400 bg-neutral-900 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white dark:text-black bg-blue-600/70 hover:bg-blue-800 dark:bg-blue-50 dark:hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-1.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
                   Get in touch
                 </button>
               </div>
@@ -169,9 +194,21 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
           <div className="md:flex md:items-center md:justify-between">
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center md:text-left">
-              &copy; {currentYear} 9ja Dental CBT. All rights reserved.
-            </p>
+            <div className="flex flex-col md:flex-row items-center justify-center md:justify-start md:space-x-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-0">
+                &copy; {currentYear} 9ja Dental CBT. All rights reserved.
+              </p>
+              <div className="flex items-center p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-2">
+                  Theme:
+                </span>
+                <ThemeToggle
+                  variant="dropdown"
+                  size="sm"
+                  className="shadow-sm"
+                />
+              </div>
+            </div>
             <div className="mt-4 md:mt-0 flex justify-center md:justify-end space-x-6">
               <Link
                 href="/privacy"

@@ -21,11 +21,6 @@ const links = [
     icon: <Brain />,
   },
   {
-    name: "Specialities",
-    href: "/dashboard/specialities",
-    icon: <Bookmark />,
-  },
-  {
     name: "Leaderboard",
     href: "/dashboard/leaderboard",
     icon: <Trophy />,

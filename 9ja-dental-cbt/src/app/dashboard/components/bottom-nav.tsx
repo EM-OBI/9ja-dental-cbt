@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Brain,
   Trophy,
-  Bookmark,
+  BookOpen,
   BarChart3,
 } from "lucide-react";
 import Link from "next/link";
@@ -19,6 +19,11 @@ const links = [
     name: "Quiz",
     href: "/dashboard/quiz",
     icon: <Brain />,
+  },
+  {
+    name: "Study",
+    href: "/dashboard/study",
+    icon: <BookOpen />,
   },
   {
     name: "Leaderboard",

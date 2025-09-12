@@ -67,7 +67,7 @@ export default function ActivityFeed({
   const displayedActivities = filteredActivities.slice(0, maxItems);
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           Recent Activity

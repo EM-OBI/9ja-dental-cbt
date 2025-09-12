@@ -4,11 +4,8 @@ import {
   BookOpen,
   Brain,
   Trophy,
-  CreditCard,
   User,
-  Settings,
   BarChart3,
-  Bookmark,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,11 +27,6 @@ const links = [
     href: "/dashboard/study",
   },
   {
-    name: "Specialties",
-    icon: <Bookmark className="h-4 w-4" />,
-    href: "/dashboard/specialities",
-  },
-  {
     name: "My Progress",
     icon: <BarChart3 className="h-4 w-4" />,
     href: "/dashboard/progress",
@@ -45,19 +37,9 @@ const links = [
     href: "/dashboard/leaderboard",
   },
   {
-    name: "Subscription",
-    icon: <CreditCard className="h-4 w-4" />,
-    href: "/dashboard/subscription",
-  },
-  {
     name: "Profile",
     icon: <User className="h-4 w-4" />,
     href: "/dashboard/profile",
-  },
-  {
-    name: "Settings",
-    icon: <Settings className="h-4 w-4" />,
-    href: "/dashboard/settings",
   },
 ];
 
@@ -77,7 +59,7 @@ export default function NavLinks() {
           href={link.href}
           className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
             isActiveLink(link.href)
-              ? "bg-blue-600/30 text-white"
+              ? "dark:bg-blue-600/30 bg-blue-600 text-white"
               : "hover:bg-white/10"
           }`}
         >

@@ -3,66 +3,153 @@ import {
   LayoutDashboard,
   Brain,
   Trophy,
-  BookOpen,
   BarChart3,
+  BookOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import useScrollingEffect from "@/hooks/use-scroll";
 
 const links = [
   {
     name: "Home",
     href: "/dashboard",
-    icon: <LayoutDashboard />,
+    icon: LayoutDashboard,
   },
   {
     name: "Quiz",
     href: "/dashboard/quiz",
-    icon: <Brain />,
+    icon: Brain,
   },
   {
     name: "Study",
     href: "/dashboard/study",
-    icon: <BookOpen />,
+    icon: BookOpen,
+  },
+  {
+    name: "Progress",
+    href: "/dashboard/progress",
+    icon: BarChart3,
   },
   {
     name: "Leaderboard",
     href: "/dashboard/leaderboard",
-    icon: <Trophy />,
-  },
-  {
-    name: "My Progress",
-    href: "/dashboard/progress",
-    icon: <BarChart3 />,
+    icon: Trophy,
   },
 ];
 
+const tabVariants = {
+  inactive: {
+    scale: 1,
+    backgroundColor: "transparent",
+    transition: { duration: 0.2 },
+  },
+  active: {
+    scale: 1.1,
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+    transition: { duration: 0.2 },
+  },
+  hover: {
+    scale: 1.05,
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    transition: { duration: 0.15 },
+  },
+  tap: {
+    scale: 0.95,
+    transition: { duration: 0.1 },
+  },
+};
+
+const iconVariants = {
+  inactive: {
+    color: "rgb(107, 114, 128)",
+    transition: { duration: 0.2 },
+  },
+  active: {
+    color: "rgb(59, 130, 246)",
+    transition: { duration: 0.2 },
+  },
+};
+
 export default function BottomNav() {
   const pathname = usePathname();
+  const scrollDirection = useScrollingEffect();
+  const navClass =
+    scrollDirection === "up" ? "translate-y-0" : "translate-y-full";
 
-  //Function to check if a link is active
+  // Function to check if a link is active
   const isActiveLink = (path: string) => {
     return pathname === path;
   };
 
   return (
-    <div className="fixed bottom-0 w-full py-2 z-10 bg-zinc-100 dark:bg-zinc-950 border-t dark:border-zinc-800 border-zinc-200 shadow-lg sm:hidden">
-      <div className="flex flex-row justify-around items-center bg-transparent w-full">
-        {links.map((link) => (
-          <Link
-            key={link.name}
-            href={link.href}
-            className={`flex flex-col items-center text-sm ${
-              isActiveLink(link.href)
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-gray-500 dark:text-gray-400"
-            }`}
-          >
-            <div className="h-6 w-6 mb-1">{link.icon}</div>
-            <span>{link.name}</span>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <motion.div
+      className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 sm:hidden transition-transform duration-300 ${navClass}`}
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <motion.div
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg rounded-full px-4 py-2"
+        whileHover={{
+          boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+          transition: { duration: 0.2 },
+        }}
+      >
+        <div className="flex items-center justify-center space-x-2">
+          {links.map((link) => {
+            const Icon = link.icon;
+            const isActive = isActiveLink(link.href);
+
+            return (
+              <motion.div
+                key={link.name}
+                variants={tabVariants}
+                initial="inactive"
+                animate={isActive ? "active" : "inactive"}
+                whileHover="hover"
+                whileTap="tap"
+                className="relative"
+              >
+                <Link
+                  href={link.href}
+                  className="flex items-center justify-center p-3 rounded-full relative overflow-hidden group"
+                >
+                  <motion.div
+                    variants={iconVariants}
+                    animate={isActive ? "active" : "inactive"}
+                    className="relative z-10"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </motion.div>
+
+                  {/* Active indicator */}
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.span
+                        className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-full"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  {/* Hover effect */}
+                  <motion.span
+                    className="absolute inset-0 bg-gray-100 dark:bg-gray-800/30 rounded-full opacity-0 group-hover:opacity-100"
+                    initial={{ scale: 0 }}
+                    whileHover={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

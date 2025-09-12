@@ -29,7 +29,7 @@ interface QuizResultsProps {
 export default function QuizResults({
   quizAttempts,
   maxItems = 5,
-  title = "Recent Quiz Results",
+  title = "Recent Results",
 }: QuizResultsProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -180,7 +180,7 @@ export default function QuizResults({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {title}
@@ -307,8 +307,6 @@ export default function QuizResults({
               </div>
             )}
           </div>
-
-          <Brain className="w-5 h-5 text-blue-500" />
         </div>
       </div>
 

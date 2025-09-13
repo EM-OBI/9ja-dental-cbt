@@ -86,12 +86,12 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <DashboardCard
           title="Quizzes Completed"
           value={stats.completedQuizzes}
           subtitle={`${completionRate}% of ${stats.totalQuizzes} total`}
-          icon={<Brain className="w-5 h-5 text-blue-500" />}
+          icon={<Brain className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />}
           trend={{
             value: 12,
             isPositive: true,
@@ -103,7 +103,7 @@ export default function Dashboard() {
           title="Average Score"
           value={`${stats.averageScore}%`}
           subtitle="Across all quizzes"
-          icon={<Target className="w-5 h-5 text-green-500" />}
+          icon={<Target className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />}
           trend={{
             value: 5.2,
             isPositive: true,
@@ -115,7 +115,7 @@ export default function Dashboard() {
           title="Study Time"
           value={`${Math.round(stats.totalStudyTime / 60)}h`}
           subtitle={`${stats.totalStudyTime % 60}m total`}
-          icon={<Clock className="w-5 h-5 text-purple-500" />}
+          icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />}
           trend={{
             value: 8,
             isPositive: true,
@@ -127,7 +127,7 @@ export default function Dashboard() {
           title="Current Streak"
           value={`${stats.currentStreak} days`}
           subtitle={`Best: ${stats.longestStreak} days`}
-          icon={<Flame className="w-5 h-5 text-orange-500" />}
+          icon={<Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />}
           trend={{
             value: stats.currentStreak > 0 ? 100 : -50,
             isPositive: stats.currentStreak > 0,
@@ -137,14 +137,14 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Desktop */}
-      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
         {/* Quiz Results */}
         <div className="xl:col-span-2">
           <QuizResults quizAttempts={quizAttempts} maxItems={4} />
         </div>
 
         {/* Activity Feed */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           <ActivityFeed
             activities={stats.recentActivity}
             maxItems={4}
@@ -161,13 +161,13 @@ export default function Dashboard() {
         <MobileTabs
           quizAttempts={quizAttempts}
           activities={stats.recentActivity}
-          maxItems={4}
+          maxItems={3}
         />
 
         {/* Streak Calendar for Mobile */}
-        {/* <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <StreakCalendar />
-        </div> */}
+        </div>
       </div>
 
       {/* Bottom Section */}

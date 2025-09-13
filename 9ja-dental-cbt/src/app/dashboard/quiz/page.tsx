@@ -72,7 +72,7 @@ interface TimerOption {
 interface Question {
   id: number;
   specialty: string;
-  type: "multiple-choice" | "true-false" | "image-based";
+  type: "mcq" | "true-false" | "image-based";
   question: string;
   options: string[];
   answer: string;
@@ -205,7 +205,7 @@ export default function QuizPage() {
     {
       id: 1,
       specialty: "Oral Surgery",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "Which nerve is most commonly injured during third molar extraction?",
       options: [
@@ -223,7 +223,7 @@ export default function QuizPage() {
     {
       id: 2,
       specialty: "Oral Surgery",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the most important factor in preventing dry socket?",
       options: [
         "Antibiotics",
@@ -253,7 +253,7 @@ export default function QuizPage() {
     {
       id: 4,
       specialty: "Oral Surgery",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the primary indication for apicoectomy?",
       options: [
         "Periapical lesion with failed endodontic treatment",
@@ -285,7 +285,7 @@ export default function QuizPage() {
     {
       id: 6,
       specialty: "Endodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "What is the most effective irrigant for dissolving organic tissue?",
       options: ["EDTA", "Sodium hypochlorite", "Saline", "Hydrogen peroxide"],
@@ -298,7 +298,7 @@ export default function QuizPage() {
     {
       id: 7,
       specialty: "Endodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question: "Which file system is best for curved canals?",
       options: [
         "Stainless steel files",
@@ -329,7 +329,7 @@ export default function QuizPage() {
     {
       id: 9,
       specialty: "Periodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the primary cause of gingivitis?",
       options: [
         "Genetic factors",
@@ -346,7 +346,7 @@ export default function QuizPage() {
     {
       id: 10,
       specialty: "Periodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "What is the most reliable clinical sign of periodontal disease progression?",
       options: [
@@ -377,7 +377,7 @@ export default function QuizPage() {
     {
       id: 12,
       specialty: "Periodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "Which bacteria is most associated with aggressive periodontitis?",
       options: [
@@ -410,7 +410,7 @@ export default function QuizPage() {
     {
       id: 14,
       specialty: "Prosthodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the ideal taper for crown preparation?",
       options: [
         "2-5 degrees",
@@ -427,7 +427,7 @@ export default function QuizPage() {
     {
       id: 15,
       specialty: "Prosthodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "Which impression material provides the highest accuracy for crown and bridge work?",
       options: ["Alginate", "Polyvinyl siloxane", "Polyether", "Polysulfide"],
@@ -455,7 +455,7 @@ export default function QuizPage() {
     {
       id: 17,
       specialty: "Orthodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "What is the ideal time to start interceptive orthodontic treatment?",
       options: [
@@ -473,7 +473,7 @@ export default function QuizPage() {
     {
       id: 18,
       specialty: "Orthodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What characterizes a Class II malocclusion?",
       options: [
         "Normal molar relationship",
@@ -503,7 +503,7 @@ export default function QuizPage() {
     {
       id: 20,
       specialty: "Orthodontics",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the normal overjet measurement?",
       options: ["1-2 mm", "2-4 mm", "4-6 mm", "6-8 mm"],
       answer: "2-4 mm",
@@ -517,7 +517,7 @@ export default function QuizPage() {
     {
       id: 21,
       specialty: "Pediatric Dentistry",
-      type: "multiple-choice",
+      type: "mcq",
       question: "At what age do the first primary teeth typically erupt?",
       options: ["4-6 months", "6-8 months", "8-10 months", "10-12 months"],
       answer: "6-8 months",
@@ -541,7 +541,7 @@ export default function QuizPage() {
     {
       id: 23,
       specialty: "Pediatric Dentistry",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "What is the most common site for Early Childhood Caries (ECC)?",
       options: [
@@ -561,7 +561,7 @@ export default function QuizPage() {
     {
       id: 24,
       specialty: "Oral Pathology & Oral Medicine",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the most common malignant tumor of the oral cavity?",
       options: [
         "Adenocarcinoma",
@@ -590,7 +590,7 @@ export default function QuizPage() {
     {
       id: 26,
       specialty: "Oral Pathology & Oral Medicine",
-      type: "multiple-choice",
+      type: "mcq",
       question: "Which virus is associated with oral hairy leukoplakia?",
       options: ["HSV-1", "HPV", "EBV", "CMV"],
       answer: "EBV",
@@ -604,7 +604,7 @@ export default function QuizPage() {
     {
       id: 27,
       specialty: "Community Dentistry",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "What is the optimal fluoride concentration in public water supplies?",
       options: ["0.5-1.0 ppm", "0.7-1.2 ppm", "1.0-1.5 ppm", "1.5-2.0 ppm"],
@@ -632,7 +632,7 @@ export default function QuizPage() {
     {
       id: 29,
       specialty: "Radiology",
-      type: "multiple-choice",
+      type: "mcq",
       question:
         "What is the most common radiographic appearance of periapical abscess?",
       options: [
@@ -665,7 +665,7 @@ export default function QuizPage() {
     {
       id: 31,
       specialty: "General Dentistry",
-      type: "multiple-choice",
+      type: "mcq",
       question: "What is the most common cause of tooth loss in adults?",
       options: [
         "Dental caries",
@@ -940,7 +940,7 @@ export default function QuizPage() {
     });
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 text-center">
             <div className="mb-6">
@@ -990,7 +990,7 @@ export default function QuizPage() {
             </div>
 
             {/* Performance Breakdown */}
-            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-6 mb-6">
+            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 mb-6">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Performance Breakdown
               </h3>
@@ -1036,7 +1036,7 @@ export default function QuizPage() {
             {/* Wrong Answers Summary (for Challenge/Exam modes) */}
             {getCurrentModeSettings()?.showSummaryAtEnd &&
               quizState.wrongAnswers.length > 0 && (
-                <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-6 mb-6">
+                <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 mb-6">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center">
                     <XCircle className="w-5 h-5 text-red-500 mr-2" />
                     Review Incorrect Answers
@@ -1121,15 +1121,14 @@ export default function QuizPage() {
     );
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <div className="max-w-4xl mx-auto">
           {/* Quiz Header */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-slate-600 dark:text-slate-400">
-                  Question {quizState.currentQuestion + 1} of{" "}
-                  {questionsToUse.length}
+                  {quizState.currentQuestion + 1} of {questionsToUse.length}
                 </div>
                 <div className="text-sm font-medium text-blue-500">
                   {currentQuestion.specialty}
@@ -1175,10 +1174,10 @@ export default function QuizPage() {
           {/* Question Card */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4">
             <div className="mb-8">
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center justify-between space-x-2 mb-4">
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    currentQuestion.type === "multiple-choice"
+                    currentQuestion.type === "mcq"
                       ? "bg-blue-100 text-blue-600 dark:bg-blue-900/20"
                       : currentQuestion.type === "true-false"
                       ? "bg-green-100 text-green-600 dark:bg-green-900/20"
@@ -1251,7 +1250,7 @@ export default function QuizPage() {
 
             {/* Explanation (Practice Mode) */}
             {quizState.showExplanation && selectedAnswer && (
-              <div className="mb-8 p-6 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="mb-8 p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                 <div className="flex items-start space-x-3">
                   <div
                     className={`p-2 rounded-full ${
@@ -1377,7 +1376,7 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-3 sm:p-6">
+    <div className="min-h-screen bg-transparent p-3">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -1423,7 +1422,7 @@ export default function QuizPage() {
         </div>
 
         {/* Main Content Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-8">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-3 sm:p-3">
           {/* Step 0: Choose Mode */}
           {currentStep === 0 && (
             <div>
@@ -1435,7 +1434,7 @@ export default function QuizPage() {
                   <div
                     key={mode.name}
                     onClick={() => setSelectedMode(mode.name)}
-                    className={`p-4 sm:p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    className={`p-3 sm:p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                       selectedMode === mode.name
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                         : "border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500"
@@ -1498,7 +1497,7 @@ export default function QuizPage() {
                   <div
                     key={option.name}
                     onClick={() => setSelectedTimer(option.name)}
-                    className={`p-4 sm:p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 text-center ${
+                    className={`p-4 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 text-center ${
                       selectedTimer === option.name
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                         : "border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500"
@@ -1532,7 +1531,7 @@ export default function QuizPage() {
               </h2>
 
               {/* Quiz Summary */}
-              <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 max-w-md mx-auto">
+              <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4 sm:p-3 mb-6 sm:mb-8 max-w-md mx-auto">
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">
                   Quiz Summary
                 </h3>
@@ -1618,30 +1617,6 @@ export default function QuizPage() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Features List */}
-        <div className="mt-6 sm:mt-8 bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4 text-center">
-            Features
-          </h3>
-          <div className="grid gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              "Detailed explanations after questions in Practice Mode",
-              "Timer & progress bar for real-time tracking",
-              "Leaderboard & badges in Challenge Mode",
-              "Bookmark & review questions",
-              "Dark mode & offline support",
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400"
-              >
-                <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>

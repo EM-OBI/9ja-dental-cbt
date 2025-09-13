@@ -42,17 +42,14 @@ const links = [
 const tabVariants = {
   inactive: {
     scale: 1,
-    backgroundColor: "transparent",
     transition: { duration: 0.2 },
   },
   active: {
     scale: 1.1,
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
     transition: { duration: 0.2 },
   },
   hover: {
     scale: 1.05,
-    backgroundColor: "rgba(59, 130, 246, 0.05)",
     transition: { duration: 0.15 },
   },
   tap: {
@@ -91,7 +88,7 @@ export default function BottomNav() {
       transition={{ duration: 0.5, delay: 0.2 }}
     >
       <motion.div
-        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg rounded-full px-4 py-2"
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg rounded-full px-3 py-1"
         whileHover={{
           boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
           transition: { duration: 0.2 },
@@ -114,7 +111,7 @@ export default function BottomNav() {
               >
                 <Link
                   href={link.href}
-                  className="flex items-center justify-center p-3 rounded-full relative overflow-hidden group"
+                  className="flex items-center justify-center p-2 rounded-full relative overflow-hidden group"
                 >
                   <motion.div
                     variants={iconVariants}

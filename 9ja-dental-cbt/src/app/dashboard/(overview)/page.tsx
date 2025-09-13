@@ -7,6 +7,7 @@ import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import QuizResults from "@/components/dashboard/QuizResults";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import MobileTabs from "@/components/dashboard/MobileTabs";
 
 export default function Dashboard() {
   // Mock user ID - replace with actual user ID from your auth system
@@ -135,8 +136,8 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      {/* Main Content Desktop */}
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Quiz Results */}
         <div className="xl:col-span-2">
           <QuizResults quizAttempts={quizAttempts} maxItems={4} />
@@ -153,6 +154,20 @@ export default function Dashboard() {
             <StreakCalendar />
           </div>
         </div>
+      </div>
+
+      {/* Mobile Tabs - Mobile Only */}
+      <div className="lg:hidden">
+        <MobileTabs
+          quizAttempts={quizAttempts}
+          activities={stats.recentActivity}
+          maxItems={4}
+        />
+
+        {/* Streak Calendar for Mobile */}
+        {/* <div className="mt-6">
+          <StreakCalendar />
+        </div> */}
       </div>
 
       {/* Bottom Section */}

@@ -23,6 +23,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 
 interface QuizMode {
   name: string;
@@ -80,27 +81,6 @@ interface Question {
   difficulty: "easy" | "medium" | "hard";
   timeEstimate: number; // seconds
 }
-
-interface QuizState {
-  currentQuestion: number;
-  answers: Record<number, string>;
-  score: number;
-  timeRemaining: number;
-  isActive: boolean;
-  bookmarkedQuestions: number[];
-  startTime: number;
-  questionStartTime: number;
-  timeSpentPerQuestion: Record<number, number>;
-  shuffledQuestions: Question[];
-  wrongAnswers: Array<{
-    questionIndex: number;
-    userAnswer: string;
-    correctAnswer: string;
-  }>;
-  showExplanation: boolean;
-  isSubmitting: boolean;
-}
-
 interface QuizStats {
   totalTime: number;
   averageTimePerQuestion: number;
@@ -1112,12 +1092,14 @@ export default function QuizPage() {
                 <span>Take Another Quiz</span>
                 <RotateCcw className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => (window.location.href = "/dashboard")}
-                className="px-6 py-3 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors duration-200"
-              >
-                Back to Dashboard
-              </button>
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <button
+                  type="button"
+                  className="px-6 py-3 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors duration-200"
+                >
+                  Back to Dashboard
+                </button>
+              </Link>
             </div>
           </div>
         </div>

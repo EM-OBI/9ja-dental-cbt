@@ -158,7 +158,7 @@ export default function QuizResults({
 
   const displayedAttempts = showAllResults
     ? filteredAttempts
-    : filteredAttempts.slice(0, maxItems);
+    : filteredAttempts.slice(0, 2);
 
   const getScoreColor = (score: number, total: number) => {
     const percentage = (score / total) * 100;

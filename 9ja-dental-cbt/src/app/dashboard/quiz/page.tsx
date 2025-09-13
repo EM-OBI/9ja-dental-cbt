@@ -1376,7 +1376,7 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-3 sm:p-3">
+    <div className="min-h-screen bg-transparent p-3">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -1422,7 +1422,7 @@ export default function QuizPage() {
         </div>
 
         {/* Main Content Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-3">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-3 sm:p-3">
           {/* Step 0: Choose Mode */}
           {currentStep === 0 && (
             <div>
@@ -1434,7 +1434,7 @@ export default function QuizPage() {
                   <div
                     key={mode.name}
                     onClick={() => setSelectedMode(mode.name)}
-                    className={`p-4 sm:p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    className={`p-3 sm:p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                       selectedMode === mode.name
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                         : "border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500"

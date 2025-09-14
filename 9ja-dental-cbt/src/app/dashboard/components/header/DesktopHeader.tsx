@@ -9,23 +9,17 @@ interface DesktopHeaderProps {
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/quiz": "Quiz Mode",
-  "/dashboard/settings": "Settings",
   "/dashboard/leaderboard": "Leaderboard",
   "/dashboard/profile": "Profile",
   "/dashboard/study": "Study",
-  "/dashboard/specialities": "Specialities",
-  "/dashboard/subscription": "Subscription",
   "/dashboard/progress": "Progress",
 };
 const pageHeadlines: Record<string, string> = {
   "/dashboard": "Level up, create quizzes and study",
   "/dashboard/quiz": "Create your quiz",
-  "/dashboard/settings": "Manage your account settings",
   "/dashboard/leaderboard": "See how you rank among your peers",
   "/dashboard/profile": "View and edit your profile",
   "/dashboard/study": "Study and review materials",
-  "/dashboard/specialities": "Explore dental specialities",
-  "/dashboard/subscription": "Manage your subscription",
   "/dashboard/progress": "Track your learning progress",
 };
 

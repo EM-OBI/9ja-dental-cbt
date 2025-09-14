@@ -140,7 +140,7 @@ const generateStreakHistory = () => {
 };
 
 // Calculate current streak from history
-const calculateCurrentStreak = (history: StreakData['streakHistory']) => {
+const calculateCurrentStreak = (history: StreakData["streakHistory"]) => {
   let streak = 0;
   for (let i = history.length - 1; i >= 0; i--) {
     if (history[i].active) {
@@ -153,7 +153,7 @@ const calculateCurrentStreak = (history: StreakData['streakHistory']) => {
 };
 
 // Calculate longest streak from history
-const calculateLongestStreak = (history: StreakData['streakHistory']) => {
+const calculateLongestStreak = (history: StreakData["streakHistory"]) => {
   let longest = 0;
   let current = 0;
 
@@ -172,8 +172,8 @@ const calculateLongestStreak = (history: StreakData['streakHistory']) => {
 const initialStreakHistory = generateStreakHistory();
 const initialStreakData: StreakData = {
   userId: "user-123",
-  currentStreak: calculateCurrentStreak(initialStreakHistory),
-  longestStreak: calculateLongestStreak(initialStreakHistory),
+  currentStreak: 0, // Start with 0 to avoid hydration mismatch
+  longestStreak: 0, // Start with 0 to avoid hydration mismatch
   lastActivityDate: new Date().toISOString().split("T")[0],
   streakHistory: initialStreakHistory,
   weeklyGoal: 5,
@@ -216,6 +216,20 @@ export const useProgressStore = create<ProgressStore>()(
       isLoading: false,
 
       // Actions
+      initializeStreakData: () => {
+        set((state) => ({
+          streakData: {
+            ...state.streakData,
+            currentStreak: calculateCurrentStreak(
+              state.streakData.streakHistory
+            ),
+            longestStreak: calculateLongestStreak(
+              state.streakData.streakHistory
+            ),
+          },
+        }));
+      },
+
       updateStats: () => {
         const user = useUserStore.getState().user;
         const quizStats = getQuizStats();

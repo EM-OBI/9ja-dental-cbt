@@ -234,6 +234,7 @@ export interface StudyActions {
 }
 
 export interface ProgressActions {
+  initializeStreakData: () => void;
   updateStats: () => void;
   updateStreak: (activityType: "quiz" | "study" | "review") => void;
   unlockAchievement: (achievementId: string) => void;

@@ -5,9 +5,11 @@ import Sidebar from "@/app/dashboard/components/Sidebar";
 import BottomNav from "./components/bottom-nav";
 import DesktopHeader from "./components/header/DesktopHeader";
 import MobileHeader from "./components/header/MobileHeader";
+import { StreakCalendarDrawer } from "@/components/StreakCalendarDrawer";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
+  const [isStreakCalendarOpen, setIsStreakCalendarOpen] = useState(false);
 
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-gray-950">
@@ -33,7 +35,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
           {/* For Mobile Screen Only */}
           <div className="block lg:hidden">
-            <MobileHeader />
+            <MobileHeader
+              onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
+            />
           </div>
         </header>
 
@@ -47,6 +51,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden fixed bottom-0 left-0 right-0">
         <BottomNav />
       </div>
+
+      {/* Streak Calendar Drawer */}
+      <StreakCalendarDrawer
+        isOpen={isStreakCalendarOpen}
+        onOpenChange={setIsStreakCalendarOpen}
+      />
     </div>
   );
 }

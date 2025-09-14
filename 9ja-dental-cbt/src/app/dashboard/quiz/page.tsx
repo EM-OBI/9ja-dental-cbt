@@ -703,18 +703,30 @@ export default function QuizPage() {
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (quizState.isActive && quizState.timeRemaining > 0) {
+    const modeSettings = getCurrentModeSettings();
+
+    // Only start timer for modes with time limits (timeRemaining > 0)
+    if (
+      quizState.isActive &&
+      modeSettings?.timeLimit &&
+      quizState.timeRemaining > 0
+    ) {
       interval = setInterval(() => {
         setQuizState((prev) => ({
           ...prev,
           timeRemaining: prev.timeRemaining - 1,
         }));
       }, 1000);
-    } else if (quizState.timeRemaining === 0 && quizState.isActive) {
+    } else if (
+      modeSettings?.timeLimit &&
+      quizState.timeRemaining === 0 &&
+      quizState.isActive
+    ) {
+      // Only auto-complete when timer reaches 0 for timed modes
       handleQuizComplete();
     }
     return () => clearInterval(interval);
-  }, [quizState.isActive, quizState.timeRemaining]);
+  }, [quizState.isActive, quizState.timeRemaining, selectedMode]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -1084,18 +1096,18 @@ export default function QuizPage() {
                 </div>
               )}
 
-            <div className="flex gap-4 flex-col sm:flex-row justify-center">
+            <div className="flex gap-4 flex-col sm:flex-row justify-center items-center">
               <button
                 onClick={restartQuiz}
-                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+                className="w-full sm:w-auto px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform flex items-center justify-center space-x-3"
               >
+                <RotateCcw className="w-5 h-5" />
                 <span>Take Another Quiz</span>
-                <RotateCcw className="w-4 h-4" />
               </button>
               <Link href="/dashboard" className="w-full sm:w-auto">
                 <button
                   type="button"
-                  className="px-6 py-3 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors duration-200"
+                  className="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg font-medium transition-colors duration-200 border border-slate-300 dark:border-slate-600"
                 >
                   Back to Dashboard
                 </button>
@@ -1361,7 +1373,7 @@ export default function QuizPage() {
       score: 0,
       timeRemaining: selectedModeSettings?.timeLimit
         ? (selectedTimerOption?.minutes || 30) * 60
-        : 0,
+        : -1, // Set to -1 for Practice Mode to distinguish from timed modes
       isActive: true,
       bookmarkedQuestions: [],
       startTime: now,

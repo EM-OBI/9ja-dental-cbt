@@ -66,7 +66,7 @@ export default function MobileHeader({
           )}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          // aria-label={`Open streak calendar. Current streak: ${displayStreak} days`}
+          aria-label={`Open streak calendar. Current streak: ${displayStreak} days`}
         >
           <Flame className="h-5 w-5 text-orange-500" />
           <Badge

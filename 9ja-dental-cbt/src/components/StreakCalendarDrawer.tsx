@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { Flame, X, Calendar as CalendarIcon, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -31,7 +31,19 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
   onOpenChange,
   showFloatingTrigger = false,
 }) => {
-  const { streakData, recentActivity } = useProgressStore();
+  const { streakData, recentActivity, initializeStreakData } =
+    useProgressStore();
+  const [mounted, setMounted] = useState(false);
+
+  // Initialize streak data after hydration
+  useEffect(() => {
+    setMounted(true);
+    initializeStreakData();
+  }, [initializeStreakData]);
+
+  // Prevent hydration mismatch by using 0 until mounted
+  const displayStreak = mounted ? streakData.currentStreak : 0;
+  const displayLongestStreak = mounted ? streakData.longestStreak : 0;
 
   // Get activity dates for calendar highlighting
   const activityDates = recentActivity.map(
@@ -40,18 +52,18 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
 
   // Calculate consecutive streak dates
   const getStreakDates = useCallback(() => {
-    if (streakData.currentStreak === 0) return [];
+    if (displayStreak === 0) return [];
 
     const today = new Date();
     const streakDates = [];
 
-    for (let i = 0; i < streakData.currentStreak; i++) {
+    for (let i = 0; i < displayStreak; i++) {
       const date = subDays(today, i);
       streakDates.push(date);
     }
 
     return streakDates;
-  }, [streakData.currentStreak]);
+  }, [displayStreak]);
 
   const streakDates = useMemo(() => getStreakDates(), [getStreakDates]);
   const allHighlightedDates = useMemo(
@@ -131,7 +143,7 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
             <div className="flex flex-col items-center text-center">
               <Flame className="h-6 w-6 md:h-8 md:w-8 text-orange-500 mb-2" />
               <div className="text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {streakData.currentStreak}
+                {displayStreak}
               </div>
               <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 Current
@@ -148,7 +160,7 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
             <div className="flex flex-col items-center text-center">
               <Award className="h-6 w-6 md:h-8 md:w-8 text-yellow-500 mb-2" />
               <div className="text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {streakData.longestStreak}
+                {displayLongestStreak}
               </div>
               <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 Best
@@ -238,19 +250,21 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
             </h3>
           </div>
 
-          <Calendar
-            mode="multiple"
-            selected={allHighlightedDates}
-            modifiers={calendarModifiers}
-            modifiersClassNames={calendarModifiersClassNames}
-            className="w-full"
-            classNames={{
-              months:
-                "flex w-full flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0",
-              month: "space-y-4 w-full",
-              day: "h-7 w-7 md:h-8 md:w-8 text-xs md:text-sm font-medium",
-            }}
-          />
+          <div className="flex justify-center">
+            <Calendar
+              mode="multiple"
+              selected={allHighlightedDates}
+              modifiers={calendarModifiers}
+              modifiersClassNames={calendarModifiersClassNames}
+              className="w-full max-w-sm mx-auto"
+              classNames={{
+                months:
+                  "flex w-full flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0 justify-center",
+                month: "space-y-4 w-full flex flex-col items-center",
+                day: "h-7 w-7 md:h-8 md:w-8 text-xs md:text-sm font-medium",
+              }}
+            />
+          </div>
 
           <div className="mt-3 md:mt-4 flex flex-wrap gap-2 text-xs md:text-sm">
             <div className="flex items-center space-x-1">
@@ -329,7 +343,7 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
                   variant="secondary"
                   className="text-xs bg-white text-orange-600"
                 >
-                  {streakData.currentStreak}
+                  {displayStreak}
                 </Badge>
               </div>
             </motion.button>

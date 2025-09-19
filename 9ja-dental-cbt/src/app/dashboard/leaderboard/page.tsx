@@ -1,18 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, Trophy, Flame, Medal, Crown, Star } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Trophy,
+  Flame,
+  Medal,
+  Crown,
+  Filter,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 // Mock data - In a real app, this would come from an API
 const mockLeaderboardData = [
@@ -112,6 +120,25 @@ const mockLeaderboardData = [
     accuracy: 87.9,
     isCurrentUser: false,
   },
+  // Additional mock data for infinite scroll demonstration
+  ...Array.from({ length: 50 }, (_, i) => ({
+    id: i + 9,
+    rank: i + 9,
+    username: `Dr. User ${i + 9}`,
+    avatar: `/avatars/user${i + 9}.jpg`,
+    score: 18000 - i * 50,
+    streak: Math.floor(Math.random() * 30) + 1,
+    specialty: [
+      "Endodontics",
+      "Prosthodontics",
+      "Orthodontics",
+      "Periodontics",
+      "General",
+    ][i % 5],
+    totalQuizzes: Math.floor(Math.random() * 100) + 20,
+    accuracy: Math.floor(Math.random() * 20) + 80,
+    isCurrentUser: false,
+  })),
 ];
 
 interface LeaderboardEntry {
@@ -292,45 +319,69 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
 export default function LeaderboardPage() {
   const [leaderboardData, setLeaderboardData] =
     useState<LeaderboardEntry[]>(mockLeaderboardData);
-  const [filteredData, setFilteredData] =
-    useState<LeaderboardEntry[]>(mockLeaderboardData);
+  const [displayedData, setDisplayedData] = useState<LeaderboardEntry[]>([]);
   const [timeFilter, setTimeFilter] = useState("All Time");
-  const [specialtyFilter, setSpecialtyFilter] = useState("General");
-  const [sortBy, setSortBy] = useState("By Score");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   const currentUser = leaderboardData.find((entry) => entry.isCurrentUser);
 
-  // Filter and sort data
+  // Load more data for infinite scroll
+  const loadMoreData = useCallback(() => {
+    if (loading || !hasMore) return;
+
+    setLoading(true);
+
+    // Simulate API call delay
+    setTimeout(() => {
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = page * itemsPerPage;
+      const newData = leaderboardData.slice(startIndex, endIndex);
+
+      if (newData.length === 0) {
+        setHasMore(false);
+      } else {
+        setDisplayedData((prev) => [...prev, ...newData]);
+        setPage((prev) => prev + 1);
+      }
+
+      setLoading(false);
+    }, 500);
+  }, [loading, hasMore, page, leaderboardData, itemsPerPage]);
+
+  // Initialize data and handle time filter changes
   useEffect(() => {
     let filtered = [...leaderboardData];
 
-    // Apply specialty filter
-    if (specialtyFilter !== "General") {
-      filtered = filtered.filter(
-        (entry) => entry.specialty === specialtyFilter
-      );
-    }
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      filtered = filtered.filter((entry) =>
-        entry.username.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply sorting
-    if (sortBy === "By Streak") {
-      filtered.sort((a, b) => b.streak - a.streak);
-    } else {
-      filtered.sort((a, b) => b.score - a.score);
-    }
+    // Apply sorting by score (default)
+    filtered.sort((a, b) => b.score - a.score);
 
     // Re-rank after filtering and sorting
     filtered = filtered.map((entry, index) => ({ ...entry, rank: index + 1 }));
 
-    setFilteredData(filtered);
-  }, [leaderboardData, specialtyFilter, searchQuery, sortBy]);
+    // Reset pagination
+    setPage(1);
+    setHasMore(true);
+    setDisplayedData(filtered.slice(0, itemsPerPage));
+    setPage(2);
+  }, [leaderboardData, timeFilter, itemsPerPage]);
+
+  // Infinite scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 100
+      ) {
+        loadMoreData();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadMoreData]);
 
   // Simulate real-time updates
   useEffect(() => {
@@ -363,172 +414,120 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Filters and Search */}
-      <Card className="mb-4 sm:mb-6">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-base sm:text-lg">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Time Filter */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">
-                Time Period
-              </label>
-              <Select value={timeFilter} onValueChange={setTimeFilter}>
-                <SelectTrigger className="h-9 sm:h-10">
-                  <SelectValue placeholder="Select time period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All Time">All Time</SelectItem>
-                  <SelectItem value="This Month">This Month</SelectItem>
-                  <SelectItem value="This Week">This Week</SelectItem>
-                  <SelectItem value="Today">Today</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Specialty Filter */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">
-                Category
-              </label>
-              <Select
-                value={specialtyFilter}
-                onValueChange={setSpecialtyFilter}
-              >
-                <SelectTrigger className="h-9 sm:h-10">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="General">All Categories</SelectItem>
-                  <SelectItem value="Endodontics">Endodontics</SelectItem>
-                  <SelectItem value="Prosthodontics">Prosthodontics</SelectItem>
-                  <SelectItem value="Orthodontics">Orthodontics</SelectItem>
-                  <SelectItem value="Periodontics">Periodontics</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sort By */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">
-                Sort By
-              </label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-9 sm:h-10">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="By Score">By Score</SelectItem>
-                  <SelectItem value="By Streak">By Streak</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Search */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2">
-                Search
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 sm:pl-10 h-9 sm:h-10 text-sm"
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Top 3 Podium */}
-      {filteredData.length >= 3 && (
-        <Card className="mb-4 sm:mb-6">
-          <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-              Top Performers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              {filteredData.slice(0, 3).map((entry, index) => (
-                <div
-                  key={entry.id}
-                  className={`text-center p-3 sm:p-4 rounded-lg ${
-                    index === 0
-                      ? "bg-gradient-to-b from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20"
-                      : index === 1
-                      ? "bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20"
-                      : "bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-900/20"
-                  }`}
-                >
-                  <div className="mb-2 sm:mb-3">
-                    {index === 0 && (
-                      <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 mx-auto mb-1 sm:mb-2" />
-                    )}
-                    {index === 1 && (
-                      <Medal className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-1 sm:mb-2" />
-                    )}
-                    {index === 2 && (
-                      <Medal className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600 mx-auto mb-1 sm:mb-2" />
-                    )}
-                  </div>
-                  <Avatar className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-2 sm:mb-3">
-                    <AvatarImage src={entry.avatar} alt={entry.username} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm sm:text-lg">
-                      {entry.username
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-semibold text-sm sm:text-lg mb-1 truncate px-1">
-                    {entry.username.length > 20
-                      ? `${entry.username.slice(0, 20)}...`
-                      : entry.username}
-                  </h3>
-                  <div className="text-lg sm:text-2xl font-bold text-blue-600 mb-1">
-                    {entry.score > 999
-                      ? `${(entry.score / 1000).toFixed(1)}k`
-                      : entry.score.toLocaleString()}
-                  </div>
-                  <div className="flex items-center justify-center gap-1">
-                    <Flame className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
-                    <span className="text-xs sm:text-sm text-orange-500 font-medium">
-                      {entry.streak} streak
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="flex justify-end mb-4 sm:mb-6">
+        {/* Filters Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="h-10 gap-2">
+              <Filter className="h-4 w-4" />
+              Time Period
+              {timeFilter !== "All Time" && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  1
+                </Badge>
+              )}
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>Time Period</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => setTimeFilter("All Time")}
+              className={
+                timeFilter === "All Time" ? "bg-blue-50 dark:bg-blue-950" : ""
+              }
+            >
+              All Time
+              {timeFilter === "All Time" && (
+                <Badge variant="secondary" className="ml-auto">
+                  ✓
+                </Badge>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTimeFilter("This Month")}
+              className={
+                timeFilter === "This Month" ? "bg-blue-50 dark:bg-blue-950" : ""
+              }
+            >
+              This Month
+              {timeFilter === "This Month" && (
+                <Badge variant="secondary" className="ml-auto">
+                  ✓
+                </Badge>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTimeFilter("This Week")}
+              className={
+                timeFilter === "This Week" ? "bg-blue-50 dark:bg-blue-950" : ""
+              }
+            >
+              This Week
+              {timeFilter === "This Week" && (
+                <Badge variant="secondary" className="ml-auto">
+                  ✓
+                </Badge>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTimeFilter("Today")}
+              className={
+                timeFilter === "Today" ? "bg-blue-50 dark:bg-blue-950" : ""
+              }
+            >
+              Today
+              {timeFilter === "Today" && (
+                <Badge variant="secondary" className="ml-auto">
+                  ✓
+                </Badge>
+              )}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Full Leaderboard */}
       <Card className="mb-20 sm:mb-0">
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-base sm:text-lg">Full Rankings</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Rankings</CardTitle>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-            Showing {filteredData.length}{" "}
-            {filteredData.length === 1 ? "player" : "players"}
+            Showing {displayedData.length}{" "}
+            {displayedData.length === 1 ? "player" : "players"}
+            {hasMore && " (scroll for more)"}
           </p>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 sm:space-y-3">
-            {filteredData.length > 0 ? (
-              filteredData.map((entry) => (
-                <LeaderboardItem
-                  key={entry.id}
-                  entry={entry}
-                  isHighlighted={entry.isCurrentUser}
-                />
-              ))
+            {displayedData.length > 0 ? (
+              <>
+                {displayedData.map((entry) => (
+                  <LeaderboardItem
+                    key={entry.id}
+                    entry={entry}
+                    isHighlighted={entry.isCurrentUser}
+                  />
+                ))}
+
+                {/* Loading indicator */}
+                {loading && (
+                  <div className="flex justify-center py-4">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Loading more players...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* End of list indicator */}
+                {!hasMore && displayedData.length > itemsPerPage && (
+                  <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                    <p className="text-sm">
+                      You&apos;ve reached the end of the leaderboard
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
                 <Trophy className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />

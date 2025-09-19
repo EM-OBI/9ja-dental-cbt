@@ -72,8 +72,6 @@ const iconVariants = {
 export default function BottomNav() {
   const pathname = usePathname();
   const scrollDirection = useScrollingEffect();
-  const navClass =
-    scrollDirection === "up" ? "translate-y-0" : "translate-y-full";
 
   // Function to check if a link is active
   const isActiveLink = (path: string) => {
@@ -82,10 +80,13 @@ export default function BottomNav() {
 
   return (
     <motion.div
-      className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 sm:hidden transition-transform duration-300 ${navClass}`}
+      className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 sm:hidden"
       initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
+      animate={{
+        y: scrollDirection === "up" ? 0 : 100,
+        opacity: scrollDirection === "up" ? 1 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <motion.div
         className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg rounded-full px-3 py-1"

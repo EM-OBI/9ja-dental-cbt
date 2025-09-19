@@ -340,9 +340,13 @@ export const useQuizEngineStore = create<QuizStore>()(
           if (state) {
             // Convert arrays back to Sets
             state.bookmarkedQuestions = new Set(
-              state.bookmarkedQuestions as any
+              Array.isArray(state.bookmarkedQuestions)
+                ? state.bookmarkedQuestions
+                : []
             );
-            state.wrongAnswers = new Set(state.wrongAnswers as any);
+            state.wrongAnswers = new Set(
+              Array.isArray(state.wrongAnswers) ? state.wrongAnswers : []
+            );
           }
         },
       }

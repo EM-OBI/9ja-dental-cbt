@@ -1,9 +1,9 @@
-"use client";
-
 import { useState, useEffect } from "react";
 
-const useScrollingEffect = () => {
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
+export function useScrollDirection() {
+  const [scrollDirection, setScrollDirection] = useState<"up" | "down" | null>(
+    null
+  );
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
@@ -11,24 +11,32 @@ const useScrollingEffect = () => {
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down and past threshold
         setScrollDirection("down");
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
         setScrollDirection("up");
       }
 
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Throttle scroll events for better performance
+    let timeoutId: NodeJS.Timeout;
+    const throttledHandleScroll = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(handleScroll, 16); // ~60fps
+    };
+
+    window.addEventListener("scroll", throttledHandleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", throttledHandleScroll);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [lastScrollY]);
 
   return scrollDirection;
-};
-
-export default useScrollingEffect;
+}

@@ -539,42 +539,6 @@ export default function LeaderboardPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Sticky Bottom Bar - Your Position */}
-      {currentUser && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 sm:hidden shadow-lg">
-          <div className="container mx-auto max-w-4xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-xs text-gray-600 dark:text-gray-400">
-                  Your Rank:
-                </span>
-                <span className="font-bold text-base sm:text-lg">
-                  #{currentUser.rank}
-                </span>
-                <span className="font-medium text-sm truncate max-w-24">
-                  {currentUser.username.length > 12
-                    ? `${currentUser.username.slice(0, 12)}...`
-                    : currentUser.username}
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="font-bold text-sm sm:text-base">
-                  {currentUser.score > 999
-                    ? `${(currentUser.score / 1000).toFixed(1)}k`
-                    : currentUser.score.toLocaleString()}
-                </div>
-                <div className="flex items-center gap-1 justify-end">
-                  <Flame className="h-3 w-3 text-orange-500" />
-                  <span className="text-xs text-orange-500">
-                    {currentUser.streak}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

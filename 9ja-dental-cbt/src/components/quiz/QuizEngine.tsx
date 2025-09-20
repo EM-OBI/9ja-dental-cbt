@@ -321,6 +321,9 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                 </button>
 
                 <button
+                  type="button"
+                  title="Exit Quiz"
+                  aria-labelledby="exit-quiz-button"
                   onClick={onExit}
                   className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
                 >

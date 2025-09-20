@@ -195,9 +195,9 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
           : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
       }`}
     >
-      <CardContent className="p-3 sm:p-4">
+      <CardContent className="p-2 sm:p-3">
         {/* Mobile Layout */}
-        <div className="flex items-center gap-3 sm:hidden">
+        <div className="flex items-center gap-2 sm:gap-3 sm:hidden">
           {/* Rank */}
           <div className="flex-shrink-0 w-8 flex justify-center">
             {getRankIcon(entry.rank)}
@@ -257,9 +257,9 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden sm:flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-3">
           {/* Rank */}
-          <div className="flex-shrink-0 w-12 flex justify-center">
+          <div className="flex-shrink-0 w-10 sm:w-12 flex justify-center">
             {getRankIcon(entry.rank)}
           </div>
 
@@ -399,9 +399,9 @@ export default function LeaderboardPage() {
   }, []);
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-4xl">
+    <div className="container mx-auto p-2 sm:p-4 max-w-4xl">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-3 mb-2">
           <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -414,7 +414,7 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex justify-end mb-4 sm:mb-6">
+      <div className="flex justify-end mb-3 sm:mb-4">
         {/* Filters Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -488,8 +488,8 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Full Leaderboard */}
-      <Card className="mb-20 sm:mb-0">
-        <CardHeader className="pb-3 sm:pb-6">
+      <Card className="mb-16 sm:mb-0 bg-transparent border-0 shadow-none">
+        <CardHeader className="pb-2 sm:pb-3 px-0">
           <CardTitle className="text-base sm:text-lg">Rankings</CardTitle>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Showing {displayedData.length}{" "}
@@ -497,8 +497,8 @@ export default function LeaderboardPage() {
             {hasMore && " (scroll for more)"}
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2 sm:space-y-3">
+        <CardContent className="px-0">
+          <div className="space-y-1 sm:space-y-2">
             {displayedData.length > 0 ? (
               <>
                 {displayedData.map((entry) => (

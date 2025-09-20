@@ -1,11 +1,5 @@
 "use client";
-import {
-  LayoutDashboard,
-  Brain,
-  Trophy,
-  BarChart3,
-  BookOpen,
-} from "lucide-react";
+import { LayoutDashboard, Brain, Trophy, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,11 +21,6 @@ const links = [
     name: "Study",
     href: "/dashboard/study",
     icon: BookOpen,
-  },
-  {
-    name: "Progress",
-    href: "/dashboard/progress",
-    icon: BarChart3,
   },
   {
     name: "Leaderboard",

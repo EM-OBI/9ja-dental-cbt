@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Edit,
-  Save,
-  X,
-  User,
-  Trophy,
-  Settings,
-  CreditCard,
-  AlertTriangle,
-} from "lucide-react";
+import { Edit, Save, X, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +33,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    bio: "", // Add bio field to user type if needed
+    bio: "",
   });
 
   if (!user) {
@@ -153,25 +144,21 @@ export default function ProfilePage() {
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile" className="flex items-center space-x-2">
-            <User className="h-4 w-4" />
             <span>Profile</span>
           </TabsTrigger>
           <TabsTrigger
             value="achievements"
             className="flex items-center space-x-2"
           >
-            <Trophy className="h-4 w-4" />
             <span>Achievements</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center space-x-2">
-            <Settings className="h-4 w-4" />
             <span>Settings</span>
           </TabsTrigger>
           <TabsTrigger
             value="subscription"
             className="flex items-center space-x-2"
           >
-            <CreditCard className="h-4 w-4" />
             <span>Subscription</span>
           </TabsTrigger>
         </TabsList>

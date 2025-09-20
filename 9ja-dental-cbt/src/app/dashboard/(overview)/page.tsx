@@ -7,14 +7,27 @@ import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import QuizResults from "@/components/dashboard/QuizResults";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
 import MobileTabs from "@/components/dashboard/MobileTabs";
 
 export default function Dashboard() {
   // Mock user ID - replace with actual user ID from your auth system
   const userId = "user-123";
   const userName = "Godwin"; // Replace with actual user name from auth
-  const { stats, streak, quizAttempts, isLoading, error, refetch } =
-    useDashboardData(userId);
+
+  // Use unified progress data for consistent field names
+  const { progressData, isLoading, error, refresh } = useUnifiedProgressData(
+    userId,
+    true
+  );
+
+  // Legacy dashboard data for components that haven't been updated yet
+  const { stats, streak, quizAttempts, refetch } = useDashboardData(userId);
+
+  // Refresh both data sources
+  const handleRefresh = async () => {
+    await Promise.all([refresh(), refetch()]);
+  };
 
   // Get current time greeting
   const getGreeting = () => {
@@ -26,21 +39,28 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-500 mb-4"></div>
+        <p className="text-slate-600 dark:text-slate-400 font-medium">
+          Loading your learning dashboard...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <p className="text-red-600 dark:text-red-400">
-          Error loading dashboard: {error}
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 p-8">
+        <div className="text-6xl mb-4">📚</div>
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+          Oops! Learning hiccup
+        </h3>
+        <p className="text-red-600 dark:text-red-400 text-center max-w-md">
+          We encountered an issue loading your progress: {error}
         </p>
         <button
-          onClick={refetch}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          onClick={handleRefresh}
+          className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
         >
           Try Again
         </button>
@@ -48,50 +68,55 @@ export default function Dashboard() {
     );
   }
 
-  if (!stats) {
+  if (!progressData || !stats) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-slate-500 dark:text-slate-400">
-          No dashboard data available
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 p-8">
+        <div className="text-6xl mb-4">🎓</div>
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+          Ready to start learning?
+        </h3>
+        <p className="text-slate-500 dark:text-slate-400 text-center">
+          Your learning journey begins here. Take your first quiz to see your
+          progress!
         </p>
       </div>
     );
   }
 
   const completionRate = Math.round(
-    (stats.completedQuizzes / stats.totalQuizzes) * 100
+    (progressData.completedQuizzes / progressData.totalQuizzes) * 100
   );
 
   return (
-    <div className="space-y-6 p-3">
+    <div className="space-y-8 p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-orange-100 dark:border-slate-700">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {getGreeting()}, {userName}!
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+            {getGreeting()}, {userName}! 📚
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Ready to continue your dental studies?
+          <p className="text-base text-amber-700 dark:text-amber-300 font-medium">
+            Let's continue your journey to dental mastery
           </p>
         </div>
         <button
           title="Refresh Data"
           aria-label="Refresh Data"
           type="button"
-          onClick={refetch}
-          className="px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          onClick={handleRefresh}
+          className="px-4 py-3 text-sm bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
         >
           <RefreshCcw className="w-4 h-4 inline-block" />
         </button>
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <DashboardCard
-          title="Quizzes Completed"
-          value={stats.completedQuizzes}
-          subtitle={`${completionRate}% of ${stats.totalQuizzes} total`}
-          icon={<Brain className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />}
+          title="Knowledge Progress"
+          value={progressData.completedQuizzes}
+          subtitle={`${completionRate}% of ${progressData.totalQuizzes} quizzes mastered`}
+          icon={<Brain className="w-5 h-5 text-emerald-600" />}
           trend={{
             value: 12,
             isPositive: true,
@@ -100,10 +125,10 @@ export default function Dashboard() {
         />
 
         <DashboardCard
-          title="Average Score"
-          value={`${stats.averageScore}%`}
-          subtitle="Across all quizzes"
-          icon={<Target className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />}
+          title="Mastery Level"
+          value={`${progressData.averageScore}%`}
+          subtitle="Average accuracy rate"
+          icon={<Target className="w-5 h-5 text-blue-600" />}
           trend={{
             value: 5.2,
             isPositive: true,
@@ -112,10 +137,10 @@ export default function Dashboard() {
         />
 
         <DashboardCard
-          title="Study Time"
-          value={`${Math.round(stats.totalStudyTime / 60)}h`}
-          subtitle={`${stats.totalStudyTime % 60}m total`}
-          icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />}
+          title="Learning Hours"
+          value={`${Math.round(progressData.totalStudyTime / 60)}h`}
+          subtitle={`${progressData.totalStudyTime % 60}m dedicated study time`}
+          icon={<Clock className="w-5 h-5 text-purple-600" />}
           trend={{
             value: 8,
             isPositive: true,
@@ -124,33 +149,35 @@ export default function Dashboard() {
         />
 
         <DashboardCard
-          title="Current Streak"
-          value={`${stats.currentStreak} days`}
-          subtitle={`Best: ${stats.longestStreak} days`}
-          icon={<Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />}
+          title="Study Streak"
+          value={`${progressData.currentStreak} days`}
+          subtitle={`Personal best: ${progressData.longestStreak} days`}
+          icon={<Flame className="w-5 h-5 text-orange-600" />}
           trend={{
-            value: stats.currentStreak > 0 ? 100 : -50,
-            isPositive: stats.currentStreak > 0,
+            value: progressData.currentStreak > 0 ? 100 : -50,
+            isPositive: progressData.currentStreak > 0,
             period: "yesterday",
           }}
         />
       </div>
 
       {/* Main Content Desktop */}
-      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Quiz Results */}
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
           <QuizResults quizAttempts={quizAttempts} maxItems={4} />
         </div>
 
         {/* Activity Feed */}
-        <div className="space-y-4 lg:space-y-6">
-          <ActivityFeed
-            activities={stats.recentActivity}
-            maxItems={4}
-            showTimestamp={true}
-          />
-          <div>
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+            <ActivityFeed
+              activities={stats.recentActivity}
+              maxItems={4}
+              showTimestamp={true}
+            />
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
             <StreakCalendar />
           </div>
         </div>
@@ -158,23 +185,18 @@ export default function Dashboard() {
 
       {/* Mobile Tabs - Mobile Only */}
       <div className="lg:hidden">
-        <MobileTabs
-          quizAttempts={quizAttempts}
-          activities={stats.recentActivity}
-          maxItems={3}
-        />
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+          <MobileTabs
+            quizAttempts={quizAttempts}
+            activities={stats.recentActivity}
+            maxItems={3}
+          />
+        </div>
 
         {/* Streak Calendar for Mobile */}
-        <div className="mt-4 sm:mt-6">
+        <div className="mt-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
           <StreakCalendar />
         </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Quick Actions */}
-
-        {/* Streak Calendar */}
       </div>
     </div>
   );

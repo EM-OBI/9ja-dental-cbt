@@ -6,6 +6,7 @@ import DashboardCard from "@/components/dashboard/DashboardCard";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import QuizResults from "@/components/dashboard/QuizResults";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
+import { Badge } from "@/components/ui/badge";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
 import MobileTabs from "@/components/dashboard/MobileTabs";

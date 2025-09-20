@@ -52,30 +52,6 @@ export function QuizSetup({ onStartQuiz }: QuizSetupProps) {
     }
   };
 
-  const handleStartQuiz = () => {
-    const selectedTimerOption = timerOptions.find(
-      (t) => t.name === selectedTimer
-    );
-    const selectedModeSettings = quizModes.find(
-      (m) => m.name === selectedMode
-    )?.settings;
-
-    const config: QuizConfig = {
-      mode: selectedMode.includes("Practice")
-        ? "practice"
-        : selectedMode.includes("Challenge")
-        ? "challenge"
-        : "exam",
-      timeLimit: selectedModeSettings?.timeLimit
-        ? (selectedTimerOption?.minutes || 30) * 60
-        : null,
-      specialty: selectedSpecialty,
-      totalQuestions: 20,
-    };
-
-    onStartQuiz(config);
-  };
-
   return (
     <div className="min-h-screen bg-transparent p-3">
       <div className="max-w-4xl mx-auto">
@@ -273,7 +249,29 @@ export function QuizSetup({ onStartQuiz }: QuizSetupProps) {
               </div>
 
               <button
-                onClick={handleStartQuiz}
+                onClick={() => {
+                  const selectedTimerOption = timerOptions.find(
+                    (t) => t.name === selectedTimer
+                  );
+                  const selectedModeSettings = quizModes.find(
+                    (m) => m.name === selectedMode
+                  )?.settings;
+
+                  const config: QuizConfig = {
+                    mode: selectedMode.includes("Practice")
+                      ? "practice"
+                      : selectedMode.includes("Challenge")
+                      ? "challenge"
+                      : "exam",
+                    timeLimit: selectedModeSettings?.timeLimit
+                      ? (selectedTimerOption?.minutes || 30) * 60
+                      : null,
+                    specialty: selectedSpecialty,
+                    totalQuestions: 20,
+                  };
+
+                  onStartQuiz(config);
+                }}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center space-x-2 mx-auto"
               >
                 <Play className="w-5 h-5" />

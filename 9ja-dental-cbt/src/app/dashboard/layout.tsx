@@ -42,7 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 scrollbar-hide">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 scrollbar-hide pb-24 lg:pb-6">
           {children}
         </main>
       </div>

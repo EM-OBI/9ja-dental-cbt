@@ -22,11 +22,16 @@ import { SubscriptionCard } from "@/components/profile/SubscriptionCard";
 import { DeleteAccountDialog } from "@/components/profile/DeleteAccountDialog";
 import { useUserStore } from "@/store/userStore";
 import { useThemeStore } from "@/store/themeStore";
+import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user, updateUser, updatePreferences } = useUserStore();
   const { mode, setMode } = useThemeStore();
+
+  // Get progress data for specialty mastery
+  const userId = user?.id || "user-123";
+  const { progressData } = useUnifiedProgressData(userId, false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -281,7 +286,9 @@ export default function ProfilePage() {
 
         {/* Achievements Tab */}
         <TabsContent value="achievements" className="space-y-6">
-          <AchievementsGrid />
+          <AchievementsGrid
+            specialtyCoverage={progressData?.specialtyCoverage}
+          />
         </TabsContent>
 
         {/* Settings Tab */}

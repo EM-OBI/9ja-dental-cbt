@@ -4,14 +4,26 @@ import React from "react";
 import { Trophy, Flame, Star, Award, Target, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SimpleSpecialtyMastery } from "@/components/profile/SimpleSpecialtyMastery";
 import { useProgressStore } from "@/store/progressStore";
 import { cn } from "@/lib/utils";
 
-interface AchievementsGridProps {
-  className?: string;
+interface SpecialtyData {
+  mastery: string;
+  accuracy: string;
+  questionsAttempted: number;
+  lastAttempted: string;
 }
 
-export function AchievementsGrid({ className }: AchievementsGridProps) {
+interface AchievementsGridProps {
+  className?: string;
+  specialtyCoverage?: Record<string, SpecialtyData>;
+}
+
+export function AchievementsGrid({
+  className,
+  specialtyCoverage,
+}: AchievementsGridProps) {
   const { achievements, streakData } = useProgressStore();
 
   const unlockedAchievements = achievements.filter(
@@ -110,6 +122,19 @@ export function AchievementsGrid({ className }: AchievementsGridProps) {
           })}
         </div>
       </div>
+
+      {/* Specialty Mastery */}
+      {specialtyCoverage && Object.keys(specialtyCoverage).length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Learning Progress</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SimpleSpecialtyMastery
+              specialtyCoverage={specialtyCoverage}
+              className="md:col-span-2"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Unlocked Achievements */}
       <div>

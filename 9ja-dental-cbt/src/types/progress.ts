@@ -63,6 +63,7 @@ export interface PerformanceChart {
   timeSpent: number;
 }
 
+// Legacy interface for backward compatibility
 export interface ProgressData {
   userId: string;
   quizTracking: QuizTracking;
@@ -76,4 +77,55 @@ export interface ProgressData {
   bookmarkedQuestions: BookmarkedQuestion[];
   performanceCharts: PerformanceChart[];
   userLeveling: UserLeveling;
+}
+
+// Unified Progress Data Interface - standardized field names
+export interface UnifiedProgressData {
+  userId: string;
+
+  // Core quiz statistics (standardized naming)
+  totalQuizzes: number; // was: totalQuizzesAttempted
+  completedQuizzes: number; // was: totalQuizzesAttempted (same value)
+  totalQuestionsAnswered: number; // consistent
+  correctAnswers: number; // consistent
+  incorrectAnswers: number; // consistent
+  averageScore: number; // was: accuracyPercentage (decimal format 0-100)
+
+  // Time tracking
+  totalStudyTime: number; // minutes - NEW field for dashboard compatibility
+
+  // Streak data (consistent)
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;
+  streakHistory: { date: string; active: boolean }[];
+
+  // Leveling system
+  currentLevel: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+  experiencePoints: number; // was: points
+  pointsToNextLevel: number; // consistent
+  userRank: number; // was: rank
+  totalUsers: number; // consistent
+
+  // Specialty coverage
+  specialtyCoverage: SpecialtyCoverage;
+
+  // Recent activity
+  recentQuizzes: QuizAttempt[];
+  recentStudySessions?: StudySession[]; // NEW for dashboard compatibility
+
+  // Additional data
+  bookmarkedQuestions: BookmarkedQuestion[];
+  performanceCharts: PerformanceChart[];
+  badges: Badge[];
+}
+
+// Study session interface for unified data
+export interface StudySession {
+  id: string;
+  date: string;
+  specialty: string;
+  timeSpent: number; // minutes
+  topicsStudied: string[];
+  completionPercentage: number;
 }

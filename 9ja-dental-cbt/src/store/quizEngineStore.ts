@@ -210,6 +210,11 @@ export const useQuizEngineStore = create<QuizStore>()(
           const state = get();
           const endTime = Date.now();
 
+          console.log(
+            "Quiz finished! Reason:",
+            state.timeRemaining === 0 ? "Time expired" : "Manual finish"
+          );
+
           if (state.session) {
             const updatedSession = {
               ...state.session,
@@ -225,13 +230,26 @@ export const useQuizEngineStore = create<QuizStore>()(
 
         updateTimer: () => {
           const state = get();
-          if (
-            state.timeRemaining !== null &&
-            state.timeRemaining > 0 &&
-            state.isActive
-          ) {
-            set({ timeRemaining: state.timeRemaining - 1 });
-          } else if (state.timeRemaining === 0 && state.isActive) {
+
+          // Only update if quiz is active and has a time limit
+          if (!state.isActive || state.timeRemaining === null) {
+            return;
+          }
+
+          // If time is up, finish the quiz
+          if (state.timeRemaining <= 0) {
+            console.log("Timer expired! Auto-finishing quiz...");
+            get().finishQuiz();
+            return;
+          }
+
+          // Decrement timer
+          set({ timeRemaining: state.timeRemaining - 1 });
+
+          // Check again after decrementing in case we just hit 0
+          const newState = get();
+          if (newState.timeRemaining !== null && newState.timeRemaining <= 0) {
+            console.log("Timer just reached zero! Auto-finishing quiz...");
             get().finishQuiz();
           }
         },

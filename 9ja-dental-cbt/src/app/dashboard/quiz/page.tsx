@@ -43,6 +43,11 @@ export default function QuizPage() {
     initializeQuiz(questions, configWithSeed);
     setQuizConfig(configWithSeed);
     setIsSetupComplete(true);
+
+    // Start the quiz immediately to avoid double start buttons
+    setTimeout(() => {
+      useQuizEngineStore.getState().startQuiz();
+    }, 0);
   };
 
   const handleRestartQuiz = () => {

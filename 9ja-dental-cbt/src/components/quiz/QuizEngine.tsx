@@ -74,14 +74,19 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isActive && timeRemaining !== null && timeRemaining > 0) {
+    // Only start timer if quiz is active and has a time limit
+    if (isActive && timeRemaining !== null) {
       interval = setInterval(() => {
         useQuizEngineStore.getState().updateTimer();
       }, 1000);
     }
 
-    return () => clearInterval(interval);
-  }, [isActive, timeRemaining]);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isActive]); // Only depend on isActive to avoid recreating interval constantly
 
   const handleAnswerSelect = (optionIndex: number) => {
     if (existingAnswer || !isActive) return;

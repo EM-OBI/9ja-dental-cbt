@@ -113,7 +113,7 @@ export default function Dashboard() {
             {getGreeting()}, {userName}! 📚
           </h1>
           <p className="text-base text-slate-700 dark:text-amber-300 font-medium">
-            Let's continue your journey to dental mastery
+            Let&apos;s continue your journey to dental mastery
           </p>
         </div>
         <div className="flex items-center gap-3">

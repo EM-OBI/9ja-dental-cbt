@@ -4,6 +4,7 @@ import {
   Playfair_Display,
   Allura,
   Dancing_Script,
+  Nunito_Sans,
 } from "next/font/google";
 import "../globals.css";
 import { AppStateProvider } from "@/store/AppStateProvider";
@@ -11,6 +12,13 @@ import { AppStateProvider } from "@/store/AppStateProvider";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--body-font",
+});
+
+// Google Sans alternative (Nunito Sans is very similar to Google Sans)
+const googleSans = Nunito_Sans({
+  subsets: ["latin"],
+  variable: "--google-sans-font",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const playfair = Playfair_Display({
@@ -40,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${allura.variable} ${dancing.variable}`}
+      className={`${inter.variable} ${googleSans.variable} ${playfair.variable} ${allura.variable} ${dancing.variable}`}
     >
       <body className="bg-background text-foreground min-h-screen antialiased">
         <AppStateProvider>{children}</AppStateProvider>

@@ -25,7 +25,7 @@ const links = [
     href: "/dashboard/leaderboard",
   },
   {
-    name: "Profile",
+    name: "Account Settings",
     icon: <User className="h-4 w-4" />,
     href: "/dashboard/profile",
   },
@@ -45,10 +45,10 @@ export default function NavLinks() {
         <Link
           key={link.name}
           href={link.href}
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
             isActiveLink(link.href)
-              ? "dark:bg-blue-600/30 bg-blue-600 text-white"
-              : "hover:bg-white/10"
+              ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm"
+              : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
           }`}
         >
           {link.icon}

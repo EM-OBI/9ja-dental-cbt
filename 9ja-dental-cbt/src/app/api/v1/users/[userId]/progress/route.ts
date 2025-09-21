@@ -12,13 +12,13 @@ import { UnifiedProgressData } from "@/types/progress";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ): Promise<NextResponse<ApiResponse<UnifiedProgressData>>> {
   const startTime = Date.now();
 
   try {
     // Extract and validate userId
-    const { userId } = params;
+    const { userId } = await params;
 
     if (!validateUserId(userId)) {
       return NextResponse.json(

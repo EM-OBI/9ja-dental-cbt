@@ -21,10 +21,10 @@ interface RefreshResponse {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ): Promise<NextResponse<ApiResponse<RefreshResponse>>> {
   const startTime = Date.now();
-  const { userId } = params;
+  const { userId } = await params;
 
   try {
     // Validate user ID

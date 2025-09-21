@@ -19,10 +19,10 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ): Promise<NextResponse<ApiResponse<ProgressSummary>>> {
   const startTime = Date.now();
-  const { userId } = params;
+  const { userId } = await params;
 
   try {
     // Validate user ID

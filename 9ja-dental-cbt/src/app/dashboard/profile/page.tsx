@@ -132,17 +132,17 @@ export default function ProfilePage() {
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-amber-200/50 dark:border-slate-700 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100 font-[family-name:var(--google-sans-font)]">
+              <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">
                 Account Settings
               </h1>
-              <p className="text-amber-700 dark:text-amber-300 mt-2 text-lg font-medium font-[family-name:var(--google-sans-font)]">
+              <p className="text-amber-700 dark:text-amber-300 mt-2 text-lg font-medium">
                 Manage your account, preferences, and achievements
               </p>
             </div>
             <Button
               variant="outline"
               onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center space-x-2 bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-700 hover:text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300 font-[family-name:var(--google-sans-font)]"
+              className="flex items-center space-x-2 bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-700 hover:text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300"
             >
               <Edit className="h-4 w-4" />
               <span>Edit Profile</span>
@@ -156,25 +156,25 @@ export default function ProfilePage() {
             <TabsList className="grid w-full grid-cols-4 bg-transparent gap-1">
               <TabsTrigger
                 value="profile"
-                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-[family-name:var(--google-sans-font)] font-medium rounded-lg"
+                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-medium rounded-lg"
               >
                 <span>Profile</span>
               </TabsTrigger>
               <TabsTrigger
                 value="achievements"
-                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-[family-name:var(--google-sans-font)] font-medium rounded-lg"
+                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-medium rounded-lg"
               >
                 <span>Achievements</span>
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-[family-name:var(--google-sans-font)] font-medium rounded-lg"
+                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-medium rounded-lg"
               >
                 <span>Settings</span>
               </TabsTrigger>
               <TabsTrigger
                 value="subscription"
-                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-[family-name:var(--google-sans-font)] font-medium rounded-lg"
+                className="flex items-center space-x-2 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 dark:data-[state=active]:bg-amber-900/30 dark:data-[state=active]:text-amber-300 font-medium rounded-lg"
               >
                 <span>Subscription</span>
               </TabsTrigger>
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                 {/* Avatar Section */}
                 <div className="md:col-span-1">
                   <div className="space-y-4">
-                    <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 font-[family-name:var(--google-sans-font)]">
+                    <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                       Profile Picture
                     </h3>
                     <AvatarUploader
@@ -201,7 +201,7 @@ export default function ProfilePage() {
 
                 {/* Profile Form */}
                 <div className="md:col-span-2 space-y-6">
-                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 font-[family-name:var(--google-sans-font)]">
+                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                     Personal Information
                   </h3>
                   <div className="space-y-6">
@@ -209,7 +209,7 @@ export default function ProfilePage() {
                       <div className="space-y-3">
                         <Label
                           htmlFor="username"
-                          className="text-amber-700 dark:text-amber-300 font-medium font-[family-name:var(--google-sans-font)]"
+                          className="text-amber-700 dark:text-amber-300 font-medium"
                         >
                           Username
                         </Label>
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                           }
                           disabled={!isEditing}
                           className={cn(
-                            "border-amber-300 focus:border-amber-500 focus:ring-amber-500/20 font-[family-name:var(--google-sans-font)]",
+                            "border-amber-300 focus:border-amber-500 focus:ring-amber-500/20",
                             !isEditing && "bg-amber-50/50 dark:bg-amber-900/10"
                           )}
                         />
@@ -229,7 +229,7 @@ export default function ProfilePage() {
                       <div className="space-y-3">
                         <Label
                           htmlFor="email"
-                          className="text-amber-700 dark:text-amber-300 font-medium font-[family-name:var(--google-sans-font)]"
+                          className="text-amber-700 dark:text-amber-300 font-medium"
                         >
                           Email
                         </Label>

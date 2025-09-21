@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useScrollDirection } from "@/hooks/use-scroll";
+import { useThemeStore } from "@/store/themeStore";
 
 const links = [
   {
@@ -50,11 +51,19 @@ const tabVariants = {
 
 const iconVariants = {
   inactive: {
-    color: "rgb(71, 85, 105)", // slate-600 for better contrast
+    color: "rgb(71, 85, 105)", // slate-600 for light mode
     transition: { duration: 0.2 },
   },
   active: {
-    color: "rgb(30, 41, 59)", // slate-800 for better contrast
+    color: "rgb(30, 41, 59)", // slate-800 for light mode
+    transition: { duration: 0.2 },
+  },
+  darkInactive: {
+    color: "rgb(156, 163, 175)", // gray-400 for dark mode
+    transition: { duration: 0.2 },
+  },
+  darkActive: {
+    color: "rgb(229, 231, 235)", // gray-200 for dark mode
     transition: { duration: 0.2 },
   },
 };
@@ -63,10 +72,27 @@ export default function BottomNav() {
   const pathname = usePathname();
   const scrollDirection = useScrollDirection();
   const [isVisible, setIsVisible] = useState(true);
+  const { mode } = useThemeStore();
+
+  // Check if we're in dark mode
+  const isDarkMode =
+    mode === "dark" ||
+    (mode === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   // Function to check if a link is active
   const isActiveLink = (path: string) => {
     return pathname === path;
+  };
+
+  // Get the correct icon variant based on active state and theme
+  const getIconVariant = (isActive: boolean) => {
+    if (isDarkMode) {
+      return isActive ? "darkActive" : "darkInactive";
+    } else {
+      return isActive ? "active" : "inactive";
+    }
   };
 
   // Handle visibility based on scroll direction
@@ -118,7 +144,7 @@ export default function BottomNav() {
                     >
                       <motion.div
                         variants={iconVariants}
-                        animate={isActive ? "active" : "inactive"}
+                        animate={getIconVariant(isActive)}
                         className="relative z-10"
                       >
                         <Icon className="w-5 h-5" />

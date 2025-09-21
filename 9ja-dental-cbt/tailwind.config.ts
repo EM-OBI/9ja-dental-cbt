@@ -12,6 +12,10 @@ const config: Config = {
         dark: "#000000",
         light: "#ffffff",
         subtle: "rgba(255,255,255,0.1)",
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],

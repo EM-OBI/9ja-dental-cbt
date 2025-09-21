@@ -50,11 +50,11 @@ const tabVariants = {
 
 const iconVariants = {
   inactive: {
-    color: "rgb(107, 114, 128)",
+    color: "rgb(71, 85, 105)", // slate-600 for better contrast
     transition: { duration: 0.2 },
   },
   active: {
-    color: "rgb(59, 130, 246)",
+    color: "rgb(30, 41, 59)", // slate-800 for better contrast
     transition: { duration: 0.2 },
   },
 };
@@ -90,7 +90,7 @@ export default function BottomNav() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           <motion.div
-            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-lg rounded-full px-3 py-2"
+            className="bg-white/95 dark:bg-gray-900/90 backdrop-blur-md border border-slate-300 dark:border-gray-700 shadow-lg rounded-full px-3 py-2"
             whileHover={{
               boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
               transition: { duration: 0.2 },
@@ -128,7 +128,7 @@ export default function BottomNav() {
                       <AnimatePresence>
                         {isActive && (
                           <motion.span
-                            className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-full"
+                            className="absolute inset-0 bg-slate-200 dark:bg-blue-900/30 rounded-full"
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
@@ -139,7 +139,7 @@ export default function BottomNav() {
 
                       {/* Hover effect */}
                       <motion.span
-                        className="absolute inset-0 bg-gray-100 dark:bg-gray-800/30 rounded-full opacity-0 group-hover:opacity-100"
+                        className="absolute inset-0 bg-slate-100 dark:bg-gray-800/30 rounded-full opacity-0 group-hover:opacity-100"
                         initial={{ scale: 0 }}
                         whileHover={{ scale: 1 }}
                         transition={{ duration: 0.2 }}

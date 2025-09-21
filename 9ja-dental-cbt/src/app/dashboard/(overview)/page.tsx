@@ -1,15 +1,20 @@
 "use client";
 
 import React from "react";
-import { Brain, Clock, Target, Flame, RefreshCcw } from "lucide-react";
+import { Brain, Clock, Target, Flame, RefreshCcw, Bell } from "lucide-react";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import QuizResults from "@/components/dashboard/QuizResults";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
 import MobileTabs from "@/components/dashboard/MobileTabs";
+import {
+  addDemoNotifications,
+  addTestNotification,
+} from "@/utils/demoNotifications";
 
 export default function Dashboard() {
   // Mock user ID - replace with actual user ID from your auth system
@@ -24,6 +29,17 @@ export default function Dashboard() {
 
   // Legacy dashboard data for components that haven't been updated yet
   const { stats, streak, quizAttempts, refetch } = useDashboardData(userId);
+
+  // Add welcome notification on first load (demo)
+  React.useEffect(() => {
+    const hasShownWelcome = localStorage.getItem("welcome-notification-shown");
+    if (!hasShownWelcome) {
+      setTimeout(() => {
+        addTestNotification();
+        localStorage.setItem("welcome-notification-shown", "true");
+      }, 2000); // Show after 2 seconds
+    }
+  }, []);
 
   // Refresh both data sources
   const handleRefresh = async () => {
@@ -100,15 +116,36 @@ export default function Dashboard() {
             Let's continue your journey to dental mastery
           </p>
         </div>
-        <button
-          title="Refresh Data"
-          aria-label="Refresh Data"
-          type="button"
-          onClick={handleRefresh}
-          className="px-4 py-3 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-gradient-to-r dark:from-orange-500 dark:to-red-500 text-white rounded-xl hover:dark:from-orange-600 hover:dark:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-        >
-          <RefreshCcw className="w-4 h-4 inline-block" />
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Demo Notification Buttons (for testing) */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addDemoNotifications}
+            className="hidden sm:flex items-center gap-2 text-xs"
+          >
+            <Bell className="w-3 h-3" />
+            Add Demo
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addTestNotification}
+            className="hidden sm:flex items-center gap-2 text-xs"
+          >
+            <Bell className="w-3 h-3" />
+            Test
+          </Button>
+          <button
+            title="Refresh Data"
+            aria-label="Refresh Data"
+            type="button"
+            onClick={handleRefresh}
+            className="px-4 py-3 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-gradient-to-r dark:from-orange-500 dark:to-red-500 text-white rounded-xl hover:dark:from-orange-600 hover:dark:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+          >
+            <RefreshCcw className="w-4 h-4 inline-block" />
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards Grid */}

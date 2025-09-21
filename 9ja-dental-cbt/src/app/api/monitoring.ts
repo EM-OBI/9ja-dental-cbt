@@ -312,7 +312,7 @@ export class PerformanceTracker {
 }
 
 // Request middleware wrapper for automatic logging
-export function withLogging<T extends any[], R>(
+export function withLogging<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   operationName: string
 ) {

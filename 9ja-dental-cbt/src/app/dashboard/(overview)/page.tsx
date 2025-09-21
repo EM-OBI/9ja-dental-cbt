@@ -40,9 +40,9 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-500 mb-4"></div>
-        <p className="text-slate-600 dark:text-slate-400 font-medium">
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 border border-slate-200 dark:border-slate-700">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-300 dark:border-orange-200 border-t-slate-900 dark:border-t-orange-500 mb-4"></div>
+        <p className="text-slate-700 dark:text-slate-400 font-medium">
           Loading your learning dashboard...
         </p>
       </div>
@@ -51,17 +51,17 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 p-8">
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 p-8 border border-slate-200 dark:border-slate-700">
         <div className="text-6xl mb-4">📚</div>
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-200">
           Oops! Learning hiccup
         </h3>
-        <p className="text-red-600 dark:text-red-400 text-center max-w-md">
+        <p className="text-red-700 dark:text-red-400 text-center max-w-md">
           We encountered an issue loading your progress: {error}
         </p>
         <button
           onClick={handleRefresh}
-          className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+          className="px-6 py-3 bg-slate-900 hover:bg-slate-800 dark:bg-gradient-to-r dark:from-orange-500 dark:to-red-500 text-white rounded-xl hover:dark:from-orange-600 hover:dark:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
         >
           Try Again
         </button>
@@ -71,12 +71,12 @@ export default function Dashboard() {
 
   if (!progressData || !stats) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 p-8">
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-2xl m-4 p-8 border border-slate-200 dark:border-slate-700">
         <div className="text-6xl mb-4">🎓</div>
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-200">
           Ready to start learning?
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 text-center">
+        <p className="text-slate-600 dark:text-slate-400 text-center">
           Your learning journey begins here. Take your first quiz to see your
           progress!
         </p>
@@ -89,14 +89,14 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="space-y-8 p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
+    <div className="space-y-8 p-4 bg-slate-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-orange-100 dark:border-slate-700">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
             {getGreeting()}, {userName}! 📚
           </h1>
-          <p className="text-base text-amber-700 dark:text-amber-300 font-medium">
+          <p className="text-base text-slate-700 dark:text-amber-300 font-medium">
             Let's continue your journey to dental mastery
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function Dashboard() {
           aria-label="Refresh Data"
           type="button"
           onClick={handleRefresh}
-          className="px-4 py-3 text-sm bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+          className="px-4 py-3 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-gradient-to-r dark:from-orange-500 dark:to-red-500 text-white rounded-xl hover:dark:from-orange-600 hover:dark:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
         >
           <RefreshCcw className="w-4 h-4 inline-block" />
         </button>
@@ -165,20 +165,20 @@ export default function Dashboard() {
       {/* Main Content Desktop */}
       <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Quiz Results */}
-        <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+        <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
           <QuizResults quizAttempts={quizAttempts} maxItems={4} />
         </div>
 
         {/* Activity Feed */}
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <ActivityFeed
               activities={stats.recentActivity}
               maxItems={4}
               showTimestamp={true}
             />
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <StreakCalendar />
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function Dashboard() {
 
       {/* Mobile Tabs - Mobile Only */}
       <div className="lg:hidden">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
           <MobileTabs
             quizAttempts={quizAttempts}
             activities={stats.recentActivity}
@@ -195,7 +195,7 @@ export default function Dashboard() {
         </div>
 
         {/* Streak Calendar for Mobile */}
-        <div className="mt-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-orange-100 dark:border-slate-700">
+        <div className="mt-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
           <StreakCalendar />
         </div>
       </div>

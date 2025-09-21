@@ -58,19 +58,29 @@ export default function QuizPage() {
 
   // Show results if quiz is completed
   if (session?.endTime) {
-    return <QuizResults onRestart={handleRestartQuiz} />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <QuizResults onRestart={handleRestartQuiz} />
+      </div>
+    );
   }
 
   // Show quiz engine if setup is complete and quiz config exists
   if (isSetupComplete && quizConfig) {
-    return <QuizEngine config={quizConfig} onExit={handleRestartQuiz} />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <QuizEngine config={quizConfig} onExit={handleRestartQuiz} />
+      </div>
+    );
   }
 
   // Show quiz setup by default
   return (
-    <QuizSetup
-      onStartQuiz={handleStartQuiz}
-      onRestartQuiz={handleRestartQuiz}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <QuizSetup
+        onStartQuiz={handleStartQuiz}
+        onRestartQuiz={handleRestartQuiz}
+      />
+    </div>
   );
 }

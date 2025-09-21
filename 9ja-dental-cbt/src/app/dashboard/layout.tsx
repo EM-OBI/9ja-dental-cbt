@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isStreakCalendarOpen, setIsStreakCalendarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row bg-gray-950">
+    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-gray-950">
       {/* Sidebar - Hidden on mobile and tablet, visible on large screens and up */}
       <div
         className={`w-full flex-none transition-all duration-300 ${
@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm z-10">
+        <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 z-10">
           {/* For Desktop Screen Only */}
           <div className="hidden lg:block">
             <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />

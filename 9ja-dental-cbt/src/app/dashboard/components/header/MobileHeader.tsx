@@ -12,7 +12,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/quiz": "Quiz Mode",
   "/dashboard/leaderboard": "Leaderboard",
-  "/dashboard/profile": "Profile",
+  "/dashboard/profile": "Account Settings",
   "/dashboard/study": "Study",
   "/dashboard/progress": "Progress",
 };
@@ -47,11 +47,13 @@ export default function MobileHeader({
   const displayStreak = mounted ? streakData.currentStreak : 0;
 
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900 backdrop-blur-lg">
+    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 backdrop-blur-lg">
       <div className="flex items-center gap-4">
         <div className="lg:hidden w-8"></div>
         <div>
-          <h1 className="text-base lg:text-lg font-medium">{title}</h1>
+          <h1 className="text-base lg:text-lg font-medium text-slate-900 dark:text-white">
+            {title}
+          </h1>
         </div>
       </div>
       <div className="flex items-center gap-3">

@@ -10,7 +10,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/quiz": "Quiz Mode",
   "/dashboard/leaderboard": "Leaderboard",
-  "/dashboard/profile": "Profile",
+  "/dashboard/profile": "Account Settings",
   "/dashboard/study": "Study",
   "/dashboard/progress": "Progress",
 };
@@ -18,7 +18,7 @@ const pageHeadlines: Record<string, string> = {
   "/dashboard": "Level up, create quizzes and study",
   "/dashboard/quiz": "Create your quiz",
   "/dashboard/leaderboard": "See how you rank among your peers",
-  "/dashboard/profile": "View and edit your profile",
+  "/dashboard/profile": "Manage your account and preferences",
   "/dashboard/study": "Study and review materials",
   "/dashboard/progress": "Track your learning progress",
 };
@@ -32,7 +32,7 @@ export default function DesktopHeader({
     pageHeadlines[pathname] || "Level up, create quizzes and study";
 
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-white/10 bg-slate-900 backdrop-blur-lg">
+    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 backdrop-blur-lg">
       <div className="flex items-center gap-4">
         {/* Space for toggle button when sidebar is collapsed */}
         <div
@@ -42,18 +42,31 @@ export default function DesktopHeader({
         ></div>
         <div className="lg:hidden w-8"></div>
         <div>
-          <h1 className="text-base lg:text-lg font-medium">{title}</h1>
-          <p className="text-xs lg:text-sm text-white/60">{headline}</p>
+          <h1 className="text-base lg:text-lg font-medium text-slate-900 dark:text-white">
+            {title}
+          </h1>
+          <p className="text-xs lg:text-sm text-slate-600 dark:text-white/60">
+            {headline}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <button className="relative " type="button" title="Bell Icon">
-          <Bell className="h-5 w-5" />
+        <button
+          className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          type="button"
+          title="Bell Icon"
+        >
+          <Bell className="h-5 w-5 text-slate-700 dark:text-white" />
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-cyan-500"></span>
         </button>
-        <HelpCircle className="h-5 w-5 " />
+        <button
+          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          title="Help"
+        >
+          <HelpCircle className="h-5 w-5 text-slate-700 dark:text-white" />
+        </button>
         <div
-          className="h-8 w-8 rounded-full bg-cover bg-center"
+          className="h-8 w-8 rounded-full bg-cover bg-center border-2 border-slate-300 dark:border-slate-600"
           style={{
             backgroundImage:
               "url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80)",

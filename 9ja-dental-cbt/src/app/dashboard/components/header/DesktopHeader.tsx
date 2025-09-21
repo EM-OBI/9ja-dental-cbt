@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { Bell, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
+import { NotificationPopover } from "@/components/ui/NotificationPopover";
 
 interface DesktopHeaderProps {
   isDesktopCollapsed?: boolean;
@@ -51,14 +52,7 @@ export default function DesktopHeader({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <button
-          className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          type="button"
-          title="Bell Icon"
-        >
-          <Bell className="h-5 w-5 text-slate-700 dark:text-white" />
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-cyan-500"></span>
-        </button>
+        <NotificationPopover />
         <button
           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
           title="Help"

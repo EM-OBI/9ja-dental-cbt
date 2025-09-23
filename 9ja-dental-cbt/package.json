@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:cf": "next build && echo 'Build complete for Cloudflare Pages'",
     "start": "next start",
     "lint": "next lint"
   },

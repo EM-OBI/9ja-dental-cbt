@@ -11,15 +11,11 @@ import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
 import MobileTabs from "@/components/dashboard/MobileTabs";
-import {
-  addDemoNotifications,
-  addTestNotification,
-} from "@/utils/demoNotifications";
 
 export default function Dashboard() {
-  // Mock user ID - replace with actual user ID from your auth system
-  const userId = "user-123";
-  const userName = "Godwin"; // Replace with actual user name from auth
+  // TODO: Replace with actual user ID from your auth system
+  const userId = "user-123"; // This should come from authentication context
+  const userName = "Godwin"; // This should come from user profile data
 
   // Use unified progress data for consistent field names
   const { progressData, isLoading, error, refresh } = useUnifiedProgressData(
@@ -29,17 +25,6 @@ export default function Dashboard() {
 
   // Legacy dashboard data for components that haven't been updated yet
   const { stats, streak, quizAttempts, refetch } = useDashboardData(userId);
-
-  // Add welcome notification on first load (demo)
-  React.useEffect(() => {
-    const hasShownWelcome = localStorage.getItem("welcome-notification-shown");
-    if (!hasShownWelcome) {
-      setTimeout(() => {
-        addTestNotification();
-        localStorage.setItem("welcome-notification-shown", "true");
-      }, 2000); // Show after 2 seconds
-    }
-  }, []);
 
   // Refresh both data sources
   const handleRefresh = async () => {
@@ -117,25 +102,6 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Demo Notification Buttons (for testing) */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addDemoNotifications}
-            className="hidden sm:flex items-center gap-2 text-xs"
-          >
-            <Bell className="w-3 h-3" />
-            Add Demo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addTestNotification}
-            className="hidden sm:flex items-center gap-2 text-xs"
-          >
-            <Bell className="w-3 h-3" />
-            Test
-          </Button>
           <button
             title="Refresh Data"
             aria-label="Refresh Data"

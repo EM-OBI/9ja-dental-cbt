@@ -10,7 +10,6 @@ import {
   Users,
   Clock,
 } from "lucide-react";
-import { getQuestionCountBySpecialty } from "@/data/mockData";
 
 export const quizModes: QuizMode[] = [
   {
@@ -97,12 +96,26 @@ export const specialties: Specialty[] = [
   },
 ];
 
+// Default question counts for specialties
+// These will be updated dynamically when fetching quizzes from the API
+const defaultQuestionCounts: Record<string, number> = {
+  "Oral Surgery": 50,
+  Endodontics: 45,
+  Periodontics: 40,
+  Prosthodontics: 35,
+  Orthodontics: 30,
+  "Pediatric Dentistry": 25,
+  "Oral Pathology & Oral Medicine": 20,
+  "Community Dentistry": 15,
+  Radiology: 25,
+  "General Dentistry": 100,
+};
+
 // Add question counts to specialties
-const questionCounts = getQuestionCountBySpecialty();
 export const specialtiesWithCounts: Specialty[] = specialties.map(
   (specialty) => ({
     ...specialty,
-    count: questionCounts[specialty.name] || 0,
+    count: defaultQuestionCounts[specialty.name] || 0,
   })
 );
 

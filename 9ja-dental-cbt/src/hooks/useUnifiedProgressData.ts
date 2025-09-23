@@ -4,76 +4,34 @@ import {
   ProgressData,
   StudySession,
 } from "@/types/progress";
+import { databaseService } from "@/services/database";
 
-// API service for real backend calls
+// Real API service using proper backend integration
 const apiProgressService = {
   async getUserProgress(
     userId: string,
     options?: { includeHistory?: boolean; limit?: number }
   ): Promise<UnifiedProgressData> {
-    const searchParams = new URLSearchParams();
+    try {
+      // Use the proper database service that calls the Hono backend
+      const data = await databaseService.getUserProgress(userId);
 
-    if (options?.includeHistory !== undefined) {
-      searchParams.set("includeHistory", options.includeHistory.toString());
+      if (!data) {
+        throw new Error("No progress data found for user");
+      }
+
+      // Transform the backend data to unified format
+      return transformProgressDataToUnified(data);
+    } catch (error) {
+      console.error("Failed to fetch user progress:", error);
+      throw error;
     }
-
-    if (options?.limit !== undefined) {
-      searchParams.set("limit", options.limit.toString());
-    }
-
-    const url = `/api/v1/users/${userId}/progress${
-      searchParams.toString() ? `?${searchParams.toString()}` : ""
-    }`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        // In production, add authentication header:
-        // 'Authorization': `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error?.message ||
-          `HTTP ${response.status}: Failed to fetch progress data`
-      );
-    }
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.error?.message || "Failed to fetch progress data");
-    }
-
-    return result.data;
   },
 
   async refreshUserProgress(userId: string): Promise<void> {
-    const response = await fetch(`/api/v1/users/${userId}/progress/refresh`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error?.message ||
-          `HTTP ${response.status}: Failed to refresh progress data`
-      );
-    }
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(
-        result.error?.message || "Failed to refresh progress data"
-      );
-    }
+    // For now, refreshing is handled by re-fetching the data
+    // In the future, this could trigger backend cache refresh
+    console.log(`Refreshing progress data for user ${userId}`);
   },
 };
 
@@ -322,7 +280,7 @@ export interface UseUnifiedProgressDataReturn {
 
 export const useUnifiedProgressData = (
   userId: string,
-  useUnifiedAPI: boolean = false
+  useUnifiedAPI: boolean = true
 ): UseUnifiedProgressDataReturn => {
   const [progressData, setProgressData] = useState<UnifiedProgressData | null>(
     null
@@ -340,12 +298,14 @@ export const useUnifiedProgressData = (
       let data: UnifiedProgressData;
 
       if (useUnifiedAPI) {
+        console.log("✅ Using REAL API for progress data via Hono backend");
         // Use the real unified API
         data = await apiProgressService.getUserProgress(userId, {
           includeHistory: true,
           limit: 10,
         });
       } else {
+        console.warn("⚠️ Using MOCK API for progress data - should be avoided");
         // Use mock service for backward compatibility
         data = await mockUnifiedProgressService.getUserProgress(userId);
       }

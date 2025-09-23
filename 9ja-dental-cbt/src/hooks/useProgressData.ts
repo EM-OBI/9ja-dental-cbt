@@ -1,136 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { ProgressData, QuizAttempt } from "@/types/progress";
+import { databaseService } from "@/services/database";
 
-// Mock API service - replace with real API calls
-const mockProgressService = {
-  async getUserProgress(userId: string): Promise<ProgressData> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    return {
-      userId,
-      quizTracking: {
-        totalQuizzesAttempted: 45,
-        totalQuestionsAnswered: 450,
-        correctAnswers: 383,
-        incorrectAnswers: 67,
-        accuracyPercentage: 85.1,
-        recentQuizzes: [
-          {
-            id: "q1",
-            date: "2025-09-08",
-            mode: "Study Mode",
-            specialty: "Oral Pathology",
-            questionsAttempted: 10,
-            correct: 8,
-            incorrect: 2,
-            score: "80%",
-            timeSpent: 15,
-          },
-          {
-            id: "q2",
-            date: "2025-09-07",
-            mode: "Exam Mode",
-            specialty: "Endodontics",
-            questionsAttempted: 15,
-            correct: 13,
-            incorrect: 2,
-            score: "87%",
-            timeSpent: 25,
-          },
-        ],
-      },
-      streakTracking: {
-        currentStreak: 5,
-        longestStreak: 12,
-        lastActivityDate: "2025-09-08",
-        streakHistory: Array.from({ length: 30 }, (_, i) => ({
-          date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-          active: Math.random() > 0.3,
-        })),
-      },
-      specialtyCoverage: {
-        "Oral Pathology": {
-          questionsAttempted: 150,
-          accuracy: "82%",
-          mastery: "Advanced",
-          lastAttempted: "2025-09-08",
-        },
-        Endodontics: {
-          questionsAttempted: 120,
-          accuracy: "78%",
-          mastery: "Intermediate",
-          lastAttempted: "2025-09-07",
-        },
-      },
-      bookmarkedQuestions: [
-        {
-          id: "Q123",
-          question:
-            "Which lesion is considered premalignant in the oral cavity?",
-          specialty: "Oral Pathology",
-          dateBookmarked: "2025-09-08",
-          difficulty: "Medium",
-          isReviewed: false,
-        },
-      ],
-      performanceCharts: Array.from({ length: 7 }, (_, i) => ({
-        date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        accuracy: 70 + Math.random() * 20,
-        questionsAnswered: 5 + Math.floor(Math.random() * 15),
-        timeSpent: 10 + Math.floor(Math.random() * 30),
-      })),
-      userLeveling: {
-        currentLevel: "Advanced",
-        points: 2450,
-        pointsToNextLevel: 550,
-        rank: 127,
-        totalUsers: 5420,
-        badges: [
-          {
-            id: "b1",
-            name: "First Quiz Completed",
-            description: "Complete your first quiz",
-            icon: "🎯",
-            earnedOn: "2025-08-15",
-            category: "Achievement",
-          },
-        ],
-      },
-    };
-  },
-
-  async updateQuizResult(
-    userId: string,
-    quizResult: QuizAttempt
-  ): Promise<void> {
-    // Update quiz tracking data
-    console.log("Updating quiz result for user:", userId, quizResult);
-  },
-
-  async toggleBookmark(userId: string, questionId: string): Promise<void> {
-    // Toggle bookmark status
-    console.log("Toggling bookmark for user:", userId, "question:", questionId);
-  },
-
-  async exportProgress(userId: string, format: "pdf" | "csv"): Promise<Blob> {
-    // Export progress data
-    const data = await this.getUserProgress(userId);
-    const content =
-      format === "csv"
-        ? "CSV data would be generated here"
-        : "PDF data would be generated here";
-
-    return new Blob([content], {
-      type: format === "csv" ? "text/csv" : "application/pdf",
-    });
-  },
-};
-
+// Hook return type interface
 interface UseProgressDataReturn {
   progressData: ProgressData | null;
   isLoading: boolean;
@@ -150,8 +22,73 @@ export function useProgressData(userId: string): UseProgressDataReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await mockProgressService.getUserProgress(userId);
-      setProgressData(data);
+
+      // Get user progress from the database service
+      const userProgress = await databaseService.getUserProgress(userId);
+      const dashboardStats = await databaseService.getDashboardStats(userId);
+      const quizAttempts = await databaseService.getQuizAttempts(userId, 10);
+      const userStreak = await databaseService.getUserStreak(userId);
+
+      // Transform the data to match the ProgressData interface
+      const progressData: ProgressData = {
+        userId,
+        quizTracking: {
+          totalQuizzesAttempted: dashboardStats.completedQuizzes || 0,
+          totalQuestionsAnswered: quizAttempts.reduce(
+            (total, attempt) => total + attempt.totalQuestions,
+            0
+          ),
+          correctAnswers: quizAttempts.reduce(
+            (total, attempt) =>
+              total +
+              Math.round((attempt.score / 100) * attempt.totalQuestions),
+            0
+          ),
+          incorrectAnswers: quizAttempts.reduce(
+            (total, attempt) =>
+              total +
+              (attempt.totalQuestions -
+                Math.round((attempt.score / 100) * attempt.totalQuestions)),
+            0
+          ),
+          accuracyPercentage: dashboardStats.averageScore || 0,
+          recentQuizzes: quizAttempts.slice(0, 5).map((attempt) => ({
+            id: attempt.id,
+            date: attempt.completedAt.toISOString().split("T")[0],
+            mode: "Study Mode", // Default mode
+            specialty: "General Dentistry", // Could be enhanced with quiz metadata
+            questionsAttempted: attempt.totalQuestions,
+            correct: Math.round((attempt.score / 100) * attempt.totalQuestions),
+            incorrect:
+              attempt.totalQuestions -
+              Math.round((attempt.score / 100) * attempt.totalQuestions),
+            score: `${Math.round(attempt.score)}%`,
+            timeSpent: Math.round(attempt.timeSpent / 60), // Convert to minutes
+          })),
+        },
+        streakTracking: {
+          currentStreak: userStreak.currentStreak,
+          longestStreak: userStreak.longestStreak,
+          lastActivityDate: userStreak.lastActivityDate?.toISOString() || null,
+          streakHistory: (userStreak.streakData || []).map((day) => ({
+            date: day.date.toISOString().split("T")[0],
+            active: day.completed,
+          })),
+        },
+        specialtyCoverage: {}, // Will be enhanced when specialty tracking is implemented
+        bookmarkedQuestions: [], // Will be loaded separately if needed
+        performanceCharts: [], // Will be implemented when chart data is available
+        userLeveling: {
+          currentLevel: "Beginner" as const, // Will be calculated based on stats
+          points: 0, // Will be enhanced
+          pointsToNextLevel: dashboardStats.pointsToNextLevel || 100,
+          badges: [], // Will be implemented when badges are added
+          rank: 1, // Will be calculated
+          totalUsers: 1, // Will be fetched
+        },
+      };
+
+      setProgressData(progressData);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch progress data"
@@ -169,7 +106,15 @@ export function useProgressData(userId: string): UseProgressDataReturn {
 
   const updateQuizResult = async (quizResult: QuizAttempt) => {
     try {
-      await mockProgressService.updateQuizResult(userId, quizResult);
+      // Create a quiz attempt record using the database service
+      const quizAttempt = await databaseService.createQuizAttempt({
+        userId,
+        quizId: quizResult.id,
+        score: parseInt(quizResult.score.replace("%", "")),
+        totalQuestions: quizResult.questionsAttempted,
+        timeSpent: quizResult.timeSpent * 60, // Convert to seconds
+        answers: [], // Would be populated with actual answer data
+      });
       // Refetch data to update the UI
       await fetchProgressData();
     } catch (err) {
@@ -181,7 +126,8 @@ export function useProgressData(userId: string): UseProgressDataReturn {
 
   const toggleBookmark = async (questionId: string) => {
     try {
-      await mockProgressService.toggleBookmark(userId, questionId);
+      // Toggle bookmark using the database service
+      await databaseService.addBookmark("question", questionId);
       // Optimistically update the UI
       if (progressData) {
         const updatedBookmarks = progressData.bookmarkedQuestions.map((q) =>
@@ -201,7 +147,23 @@ export function useProgressData(userId: string): UseProgressDataReturn {
 
   const exportProgress = async (format: "pdf" | "csv"): Promise<Blob> => {
     try {
-      return await mockProgressService.exportProgress(userId, format);
+      // For now, create a simple export since the backend doesn't have export functionality
+      const data = progressData
+        ? JSON.stringify(progressData, null, 2)
+        : "No data available";
+
+      if (format === "csv") {
+        // Convert to CSV format
+        const csvData = `User ID,Total Quizzes,Total Questions,Accuracy,Current Streak\n${userId},${
+          progressData?.quizTracking.totalQuizzesAttempted || 0
+        },${progressData?.quizTracking.totalQuestionsAnswered || 0},${
+          progressData?.quizTracking.accuracyPercentage || 0
+        }%,${progressData?.streakTracking.currentStreak || 0}`;
+        return new Blob([csvData], { type: "text/csv" });
+      } else {
+        // Return as JSON for PDF processing
+        return new Blob([data], { type: "application/json" });
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to export progress"

@@ -7,7 +7,7 @@ import {
   LeaderboardEntry,
   QuizAttempt,
 } from "@/types/dashboard";
-import { dbService } from "@/services/database";
+import { databaseService } from "@/services/database";
 
 interface UseDashboardDataResult {
   stats: DashboardStats | null;
@@ -34,10 +34,10 @@ export function useDashboardData(userId: string): UseDashboardDataResult {
 
       const [statsData, streakData, leaderboardData, quizAttemptsData] =
         await Promise.all([
-          dbService.getDashboardStats(userId),
-          dbService.getUserStreak(userId),
-          dbService.getLeaderboard(10),
-          dbService.getQuizAttempts(userId, 5),
+          databaseService.getDashboardStats(userId),
+          databaseService.getUserStreak(userId),
+          databaseService.getLeaderboard(10),
+          databaseService.getQuizAttempts(userId, 5),
         ]);
 
       setStats(statsData);

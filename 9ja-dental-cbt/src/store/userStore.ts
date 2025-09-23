@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { User, UserActions, UserPreferences } from "./types";
+import { databaseService } from "@/services/database";
 
 interface UserState {
   user: User | null;
@@ -30,19 +31,6 @@ const defaultPreferences: UserPreferences = {
     breakTime: 5,
     soundEffects: true,
   },
-};
-
-// Mock user data for development
-const mockUser: User = {
-  id: "user-123",
-  name: "Alex Johnson",
-  email: "alex.johnson@example.com",
-  avatar: "/avatars/alex.jpg",
-  subscription: "premium",
-  level: 15,
-  xp: 2850,
-  joinedDate: "2024-01-15",
-  preferences: defaultPreferences,
 };
 
 export const useUserStore = create<UserStore>()(
@@ -106,15 +94,33 @@ export const useUserStore = create<UserStore>()(
 );
 
 // Helper functions
-export const initializeUser = () => {
-  // In a real app, this would check for authentication tokens
-  // and load user data from an API
-  const { setUser } = useUserStore.getState();
+export const initializeUser = async () => {
+  // Check for authentication tokens and load user data from API
+  const { setUser, logout } = useUserStore.getState();
 
-  // For development, set mock user
-  setTimeout(() => {
-    setUser(mockUser);
-  }, 1000);
+  try {
+    // For now, we'll skip automatic user initialization since we don't have
+    // authentication tokens implemented yet. This would typically:
+    // 1. Check for stored auth token
+    // 2. Validate token with backend
+    // 3. Load user profile if valid
+
+    // Example implementation:
+    // const token = localStorage.getItem('auth_token');
+    // if (token) {
+    //   const currentUser = await databaseService.getCurrentUser();
+    //   setUser(currentUser);
+    // } else {
+    //   logout();
+    // }
+
+    console.log(
+      "User initialization ready - authentication flow not implemented yet"
+    );
+  } catch (error) {
+    console.error("Failed to initialize user:", error);
+    logout();
+  }
 };
 
 export const getUserLevel = (xp: number): number => {

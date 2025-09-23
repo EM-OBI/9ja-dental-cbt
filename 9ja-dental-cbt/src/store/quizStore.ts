@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { QuizSession, QuizQuestion, QuizActions } from "./types";
 import { addXp } from "./userStore";
+import { databaseService } from "@/services/database";
 
 interface QuizState {
   currentSession: QuizSession | null;
@@ -13,43 +14,9 @@ interface QuizState {
 
 type QuizStore = QuizState & QuizActions;
 
-// Mock questions data (subset of the full database)
-const mockQuestions: QuizQuestion[] = [
-  {
-    id: "q1",
-    question: "Which of the following is the most common cause of tooth pain?",
-    options: [
-      "Dental caries",
-      "Periodontal disease",
-      "Tooth fracture",
-      "Bruxism",
-    ],
-    correctAnswer: "Dental caries",
-    explanation:
-      "Dental caries (tooth decay) is the most common cause of tooth pain as it affects the pulp when it progresses deep into the tooth structure.",
-    difficulty: "easy",
-    specialty: "General Dentistry",
-    tags: ["pain", "diagnosis", "caries"],
-  },
-  {
-    id: "q2",
-    question: "What is the gold standard treatment for irreversible pulpitis?",
-    options: [
-      "Pulp capping",
-      "Root canal therapy",
-      "Tooth extraction",
-      "Antibiotics",
-    ],
-    correctAnswer: "Root canal therapy",
-    explanation:
-      "Root canal therapy is the gold standard for treating irreversible pulpitis, as it removes the infected pulp and preserves the tooth structure.",
-    difficulty: "medium",
-    specialty: "Endodontics",
-    tags: ["pulpitis", "treatment", "endodontics"],
-  },
-  // Add more questions as needed
-];
+// Questions will be loaded from the API instead of mock data
 
+// Available specialties for quiz selection
 const availableSpecialties = [
   "General Dentistry",
   "Oral Pathology",
@@ -68,7 +35,7 @@ export const useQuizStore = create<QuizStore>()(
     (set, get) => ({
       // Initial state
       currentSession: null,
-      questions: mockQuestions,
+      questions: [], // Will be loaded from API
       quizHistory: [],
       isLoading: false,
       availableSpecialties,
@@ -262,17 +229,47 @@ export const useQuizStore = create<QuizStore>()(
         set({ isLoading: true });
 
         try {
-          // In a real app, this would load from a backend
-          // For now, use mock data
-          const mockHistory: QuizSession[] = [];
+          // Load quiz attempts from the database service
+          const userId = "current"; // Replace with actual user ID from auth
+          const quizAttempts = await databaseService.getQuizAttempts(userId);
+
+          // Convert quiz attempts to quiz sessions format for history
+          const quizHistory: QuizSession[] = quizAttempts.map((attempt) => ({
+            id: attempt.id,
+            userId: attempt.userId,
+            specialty: "General", // Default, could be enhanced with quiz metadata
+            mode: "study" as const,
+            questions: [], // Empty for completed sessions
+            currentQuestionIndex: attempt.totalQuestions,
+            answers: {}, // Convert if needed
+            startTime: new Date(
+              attempt.completedAt.getTime() - attempt.timeSpent * 1000
+            ).toISOString(),
+            endTime: attempt.completedAt.toISOString(),
+            timePerQuestion: {},
+            isActive: false,
+            isPaused: false,
+            score: {
+              correct: Math.round(
+                (attempt.score / 100) * attempt.totalQuestions
+              ),
+              incorrect:
+                attempt.totalQuestions -
+                Math.round((attempt.score / 100) * attempt.totalQuestions),
+              percentage: attempt.score,
+            },
+          }));
 
           set({
-            quizHistory: mockHistory,
+            quizHistory,
             isLoading: false,
           });
         } catch (error) {
           console.error("Error loading quiz history:", error);
-          set({ isLoading: false });
+          set({
+            quizHistory: [],
+            isLoading: false,
+          });
         }
       },
     }),

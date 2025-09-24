@@ -1,24 +1,29 @@
 "use client";
 
 import React from "react";
-import { AppError, ErrorType } from "@/utils/errorHandler";
+import {
+  AppError,
+  ErrorType,
+  ErrorHandler,
+  classifyError,
+  ErrorInput,
+} from "@/utils/errorHandler";
 
 // React hook for error handling
 export function useErrorHandler() {
   const errorHandler = React.useMemo(() => {
-    const { ErrorHandler } = require("@/utils/errorHandler");
     return ErrorHandler.getInstance();
   }, []);
 
   const handleError = React.useCallback(
-    (error: any, showNotification = true) => {
+    (error: ErrorInput, showNotification = true) => {
       return errorHandler.handleError(error, showNotification);
     },
     [errorHandler]
   );
 
   const handleAsyncError = React.useCallback(
-    async (asyncFn: () => Promise<any>) => {
+    async (asyncFn: () => Promise<unknown>): Promise<unknown> => {
       try {
         return await asyncFn();
       } catch (error) {
@@ -103,13 +108,16 @@ export class ErrorBoundary extends React.Component<
   }>,
   ErrorBoundaryState
 > {
-  constructor(props: any) {
+  constructor(
+    props: React.PropsWithChildren<{
+      fallback?: React.ComponentType<{ error: AppError; reset: () => void }>;
+    }>
+  ) {
     super(props);
     this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    const { classifyError } = require("@/utils/errorHandler");
     const appError = classifyError(error);
     return {
       hasError: true,
@@ -118,7 +126,6 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    const { ErrorHandler } = require("@/utils/errorHandler");
     const errorHandler = ErrorHandler.getInstance();
     errorHandler.handleError(
       {

@@ -1,5 +1,14 @@
 // API Client for Hono Backend
-import { User, Quiz, QuizAttempt, DashboardStats } from "@/types/dashboard";
+import {
+  User,
+  Quiz,
+  DashboardStats,
+  QuizAttempt,
+  StudySession,
+  UserStreak,
+  RecentActivity,
+} from "@/types/dashboard";
+import { UserPreferences, Question } from "@/types/backendTypes";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -144,7 +153,10 @@ class ApiClient {
     });
   }
 
-  async updateUserPreferences(id: string, preferences: any): Promise<User> {
+  async updateUserPreferences(
+    id: string,
+    preferences: UserPreferences
+  ): Promise<User> {
     return this.request(`/api/users/${id}/preferences`, {
       method: "PUT",
       body: JSON.stringify(preferences),
@@ -182,7 +194,7 @@ class ApiClient {
     mode: "practice" | "challenge" | "exam"
   ): Promise<{
     sessionId: string;
-    questions: any[];
+    questions: Question[];
     timeLimit?: number;
   }> {
     return this.request("/api/quiz-sessions", {
@@ -194,7 +206,7 @@ class ApiClient {
   async submitQuizAnswer(
     sessionId: string,
     questionId: string,
-    answer: any
+    answer: string | number
   ): Promise<{
     correct: boolean;
     explanation?: string;
@@ -210,7 +222,7 @@ class ApiClient {
     totalQuestions: number;
     correctAnswers: number;
     timeSpent: number;
-    results: any[];
+    results: QuizAttempt[];
   }> {
     return this.request(`/api/quiz-sessions/${sessionId}/complete`, {
       method: "POST",
@@ -222,17 +234,17 @@ class ApiClient {
     return this.request("/api/dashboard/stats");
   }
 
-  async getUserProgress(userId: string): Promise<any> {
+  async getUserProgress(userId: string): Promise<DashboardStats> {
     return this.request(`/api/users/${userId}/progress`);
   }
 
   async getLeaderboard(
     period: "daily" | "weekly" | "monthly" = "weekly"
-  ): Promise<any[]> {
+  ): Promise<RecentActivity[]> {
     return this.request(`/api/leaderboard?period=${period}`);
   }
 
-  async getUserStreaks(userId: string): Promise<any> {
+  async getUserStreaks(userId: string): Promise<UserStreak> {
     return this.request(`/api/users/${userId}/streaks`);
   }
 
@@ -241,14 +253,14 @@ class ApiClient {
     specialty: string;
     duration: number;
     topics: string[];
-  }): Promise<any> {
+  }): Promise<DashboardStats> {
     return this.request("/api/study-sessions", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async getStudySessions(userId: string): Promise<any[]> {
+  async getStudySessions(userId: string): Promise<StudySession[]> {
     return this.request(`/api/users/${userId}/study-sessions`);
   }
 
@@ -257,14 +269,16 @@ class ApiClient {
     itemType: string,
     itemId: string,
     notes?: string
-  ): Promise<any> {
+  ): Promise<StudySession> {
     return this.request("/api/bookmarks", {
       method: "POST",
       body: JSON.stringify({ itemType, itemId, notes }),
     });
   }
 
-  async getBookmarks(userId: string): Promise<any[]> {
+  async getBookmarks(
+    userId: string
+  ): Promise<{ id: string; questionId: string; createdAt: Date }[]> {
     return this.request(`/api/users/${userId}/bookmarks`);
   }
 

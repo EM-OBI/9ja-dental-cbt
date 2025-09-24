@@ -46,7 +46,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading profile...</p>
+        <p className="text-muted-foreground">Under construction...</p>
       </div>
     );
   }

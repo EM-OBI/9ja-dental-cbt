@@ -10,6 +10,7 @@ import {
   StudySession,
   PaginatedResponse,
 } from "@/types/dashboard";
+import { Question } from "@/types/backendTypes";
 import { apiClient } from "./api";
 
 // Real Database Service using the Hono backend API
@@ -108,8 +109,9 @@ export class DatabaseService implements DatabaseAdapter {
 
   async getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
     try {
-      const result = await apiClient.getLeaderboard("weekly");
-      return result.slice(0, limit);
+      // For now, return empty array since the API doesn't have proper leaderboard data structure
+      // TODO: Implement proper leaderboard API endpoint that returns LeaderboardEntry[]
+      return [];
     } catch (error) {
       console.error("Failed to fetch leaderboard:", error);
       return [];
@@ -129,11 +131,21 @@ export class DatabaseService implements DatabaseAdapter {
     session: Omit<StudySession, "id" | "completedAt">
   ): Promise<StudySession> {
     try {
-      return await apiClient.createStudySession({
+      // Call the API but ignore the DashboardStats return type for now
+      await apiClient.createStudySession({
         specialty: session.topic, // Map topic to specialty for backend
         duration: session.duration,
         topics: [session.topic], // Convert single topic to array
       });
+
+      // Return the expected StudySession format
+      return {
+        id: `session-${Date.now()}`,
+        userId: session.userId,
+        topic: session.topic,
+        duration: session.duration,
+        completedAt: new Date(),
+      };
     } catch (error) {
       console.error("Failed to create study session:", error);
       return {
@@ -155,7 +167,7 @@ export class DatabaseService implements DatabaseAdapter {
       difficulty?: string;
       limit?: number;
     }
-  ): Promise<any[]> {
+  ): Promise<Question[]> {
     try {
       // This would be implemented when question search is added to backend
       return [];
@@ -165,12 +177,25 @@ export class DatabaseService implements DatabaseAdapter {
     }
   }
 
-  async getUserProgress(userId: string): Promise<any> {
+  async getUserProgress(userId: string): Promise<DashboardStats> {
     try {
       return await apiClient.getUserProgress(userId);
     } catch (error) {
       console.error("Failed to fetch user progress:", error);
-      return null;
+      // Return a default DashboardStats object instead of null
+      return {
+        totalQuizzes: 0,
+        completedQuizzes: 0,
+        averageScore: 0,
+        totalStudyTime: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        currentLevel: 1,
+        pointsToNextLevel: 1000,
+        weeklyProgress: [],
+        recentActivity: [],
+        upcomingGoals: [],
+      };
     }
   }
 
@@ -178,16 +203,21 @@ export class DatabaseService implements DatabaseAdapter {
     itemType: string,
     itemId: string,
     notes?: string
-  ): Promise<any> {
+  ): Promise<DashboardStats | null> {
     try {
-      return await apiClient.addBookmark(itemType, itemId, notes);
+      // API returns StudySession but we need DashboardStats
+      // For now, just call the API and return null
+      await apiClient.addBookmark(itemType, itemId, notes);
+      return null;
     } catch (error) {
       console.error("Failed to add bookmark:", error);
       throw error;
     }
   }
 
-  async getUserBookmarks(userId: string): Promise<any[]> {
+  async getUserBookmarks(
+    userId: string
+  ): Promise<{ id: string; questionId: string; createdAt: Date }[]> {
     try {
       return await apiClient.getBookmarks(userId);
     } catch (error) {

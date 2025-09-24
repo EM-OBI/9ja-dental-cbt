@@ -69,7 +69,7 @@ export interface QuizSession {
   end_time?: string; // ISO string
   time_limit?: number; // seconds
   is_completed: boolean;
-  questions_data?: any; // JSON data
+  questions_data?: Record<string, unknown>; // JSON data
   created_at: string;
   updated_at: string;
 }
@@ -82,7 +82,7 @@ export interface QuizResult {
   score: number;
   total_questions: number;
   time_taken: number; // seconds
-  answers: any; // JSON data
+  answers: Record<string, unknown>; // JSON data
   completed_at: string; // ISO string
   created_at: string;
 }
@@ -113,9 +113,9 @@ export interface Progress {
   total_questions_answered: number;
   correct_answers: number;
   accuracy_rate: number;
-  subjects_progress?: any; // JSON data
-  weekly_goals?: any; // JSON data
-  monthly_goals?: any; // JSON data
+  subjects_progress?: Record<string, unknown>; // JSON data
+  weekly_goals?: Record<string, unknown>; // JSON data
+  monthly_goals?: Record<string, unknown>; // JSON data
   created_at: string;
   updated_at: string;
 }
@@ -127,7 +127,7 @@ export interface StudySession {
   session_type: "focused" | "review" | "practice";
   subject?: string;
   duration: number; // minutes
-  topics_covered?: any; // JSON data
+  topics_covered?: Record<string, unknown>; // JSON data
   notes?: string;
   completed_at: string;
   created_at: string;
@@ -142,7 +142,7 @@ export interface UserStreak {
   best_count: number;
   last_activity_date: string;
   streak_start_date?: string;
-  streak_data?: any; // JSON data
+  streak_data?: Record<string, unknown>; // JSON data
   created_at: string;
   updated_at: string;
   // Legacy properties for compatibility
@@ -203,7 +203,7 @@ export interface Notification {
   title: string;
   message: string;
   is_read: boolean;
-  data?: any; // JSON data
+  data?: Record<string, unknown>; // JSON data
   created_at: string;
   updated_at: string;
 }
@@ -393,7 +393,7 @@ export interface ApiError {
   message: string;
   status: number;
   code?: string;
-  details?: any;
+  details?: string;
 }
 
 // Utility type for converting backend timestamps to frontend dates

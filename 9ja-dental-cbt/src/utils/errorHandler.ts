@@ -17,18 +17,50 @@ export interface AppError {
   message: string;
   status?: number;
   code?: string;
-  details?: any;
+  details?: string;
   timestamp: Date;
 }
 
+// Union type for all possible error inputs
+export type ErrorInput =
+  | Error
+  | ApiError
+  | {
+      status: number;
+      message?: string;
+      code?: string;
+      details?: string;
+      name?: string;
+    }
+  | { message: string }
+  | unknown;
+
+// Type guards
+function hasStatus(error: unknown): error is {
+  status: number;
+  message?: string;
+  code?: string;
+  details?: string;
+} {
+  return typeof error === "object" && error !== null && "status" in error;
+}
+
+function hasMessage(error: unknown): error is { message: string } {
+  return typeof error === "object" && error !== null && "message" in error;
+}
+
+function hasName(error: unknown): error is { name: string; message?: string } {
+  return typeof error === "object" && error !== null && "name" in error;
+}
+
 // Error classification
-export function classifyError(error: any): AppError {
+export function classifyError(error: ErrorInput): AppError {
   const timestamp = new Date();
 
   // Network errors
   if (
-    error.name === "TypeError" ||
-    error.message?.includes("Failed to fetch")
+    (hasName(error) && error.name === "TypeError") ||
+    (hasMessage(error) && error.message?.includes("Failed to fetch"))
   ) {
     return {
       type: ErrorType.NETWORK,
@@ -39,7 +71,7 @@ export function classifyError(error: any): AppError {
   }
 
   // API errors with status codes
-  if (error.status) {
+  if (hasStatus(error)) {
     switch (error.status) {
       case 401:
         return {
@@ -103,7 +135,7 @@ export function classifyError(error: any): AppError {
   }
 
   // Generic errors with message
-  if (error.message) {
+  if (hasMessage(error)) {
     return {
       type: ErrorType.UNKNOWN,
       message: error.message,
@@ -133,7 +165,7 @@ export class ErrorHandler {
   }
 
   // Handle errors with appropriate user feedback
-  handleError(error: any, showNotification = true): AppError {
+  handleError(error: ErrorInput, showNotification = true): AppError {
     const appError = classifyError(error);
 
     // Log error

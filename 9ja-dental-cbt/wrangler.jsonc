@@ -1,0 +1,36 @@
+{
+  "main": ".open-next/worker.js",
+  "name": "dental-cbt",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "dental_data",
+      "database_name": "dental-data",
+      "database_id": "6d4436d9-cd11-4163-a8ef-3953752963f6",
+      "migrations_dir": "./src/drizzle"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV_DENTAL",
+      "id": "5e3d6d1568d1401e80007b73fd3969ee",
+      "preview_id": "e7756c0c03874429bc4bcf680a9fea7c"
+    }
+  ],
+
+  // "r2_buckets": [
+  //   {
+  //     "binding": "STUDY_BUCKET",
+  //     "bucket_name": "dental-study"
+  //   }
+  // ],
+
+  "ai": {
+    "binding": "AI"
+  }
+}

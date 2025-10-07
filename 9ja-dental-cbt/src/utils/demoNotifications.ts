@@ -1,12 +1,21 @@
 import { useNotificationStore } from "@/store/notificationStore";
+import { getCurrentUserId } from "@/store/userStore";
 
 // Demo notifications to populate the system
 export const addDemoNotifications = () => {
   const { addNotification } = useNotificationStore.getState();
+  const userId = getCurrentUserId();
+
+  if (!userId) {
+    console.warn(
+      "Skipping demo notifications because no authenticated user is available"
+    );
+    return;
+  }
 
   // Achievement notification
   addNotification({
-    userId: "user-123",
+    userId,
     type: "achievement",
     title: "🏆 First Quiz Completed!",
     message:
@@ -17,7 +26,7 @@ export const addDemoNotifications = () => {
 
   // Streak notification
   addNotification({
-    userId: "user-123",
+    userId,
     type: "streak",
     title: "🔥 7 Day Streak!",
     message:
@@ -28,7 +37,7 @@ export const addDemoNotifications = () => {
 
   // Study reminder
   addNotification({
-    userId: "user-123",
+    userId,
     type: "reminder",
     title: "⏰ Study Time!",
     message:
@@ -39,7 +48,7 @@ export const addDemoNotifications = () => {
 
   // Progress notification
   addNotification({
-    userId: "user-123",
+    userId,
     type: "progress",
     title: "📊 Weekly Progress Report",
     message:
@@ -50,7 +59,7 @@ export const addDemoNotifications = () => {
 
   // System notification
   addNotification({
-    userId: "user-123",
+    userId,
     type: "system",
     title: "🔔 New Features Available",
     message:
@@ -61,7 +70,7 @@ export const addDemoNotifications = () => {
 
   // Another achievement
   addNotification({
-    userId: "user-123",
+    userId,
     type: "achievement",
     title: "🎯 Perfect Score!",
     message: "Outstanding! You scored 100% on your Periodontics quiz.",
@@ -73,9 +82,17 @@ export const addDemoNotifications = () => {
 // Utility to add a quick test notification
 export const addTestNotification = () => {
   const { addNotification } = useNotificationStore.getState();
+  const userId = getCurrentUserId();
+
+  if (!userId) {
+    console.warn(
+      "Skipping test notification because no authenticated user is available"
+    );
+    return;
+  }
 
   addNotification({
-    userId: "user-123",
+    userId,
     type: "system",
     title: "🧪 Test Notification",
     message: `Test notification sent at ${new Date().toLocaleTimeString()}`,

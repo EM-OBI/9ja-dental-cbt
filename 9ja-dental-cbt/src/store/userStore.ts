@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { User, UserActions, UserPreferences } from "./types";
 import { databaseService } from "@/services/database";
+import { authClient } from "@/modules/auth/utils/auth-client";
 
 interface UserState {
   user: User | null;
@@ -98,29 +99,205 @@ export const initializeUser = async () => {
   // Check for authentication tokens and load user data from API
   const { setUser, logout } = useUserStore.getState();
 
-  try {
-    // For now, we'll skip automatic user initialization since we don't have
-    // authentication tokens implemented yet. This would typically:
-    // 1. Check for stored auth token
-    // 2. Validate token with backend
-    // 3. Load user profile if valid
+  const cloneDefaultPreferences = (): UserPreferences => ({
+    theme: defaultPreferences.theme,
+    notifications: { ...defaultPreferences.notifications },
+    quiz: { ...defaultPreferences.quiz },
+    study: { ...defaultPreferences.study },
+  });
 
-    // Example implementation:
-    // const token = localStorage.getItem('auth_token');
-    // if (token) {
-    //   const currentUser = await databaseService.getCurrentUser();
-    //   setUser(currentUser);
-    // } else {
-    //   logout();
-    // }
+  const mergeUserPreferences = (rawPreferences: unknown): UserPreferences => {
+    const merged = cloneDefaultPreferences();
 
-    console.log(
-      "User initialization ready - authentication flow not implemented yet"
+    if (!rawPreferences || typeof rawPreferences !== "object") {
+      return merged;
+    }
+
+    const prefs = rawPreferences as Record<string, unknown>;
+
+    if (
+      typeof prefs.theme === "string" &&
+      ["light", "dark", "system"].includes(prefs.theme)
+    ) {
+      merged.theme = prefs.theme as UserPreferences["theme"];
+    }
+
+    const notificationSource = prefs.notifications;
+    if (typeof notificationSource === "boolean") {
+      merged.notifications.studyReminders = notificationSource;
+      merged.notifications.streakAlerts = notificationSource;
+      merged.notifications.progressReports = notificationSource;
+      merged.notifications.achievements = notificationSource;
+    } else if (notificationSource && typeof notificationSource === "object") {
+      const notifications = notificationSource as Record<string, unknown>;
+      if (typeof notifications.studyReminders === "boolean") {
+        merged.notifications.studyReminders = notifications.studyReminders;
+      }
+      if (typeof notifications.streakAlerts === "boolean") {
+        merged.notifications.streakAlerts = notifications.streakAlerts;
+      }
+      if (typeof notifications.progressReports === "boolean") {
+        merged.notifications.progressReports = notifications.progressReports;
+      }
+      if (typeof notifications.achievements === "boolean") {
+        merged.notifications.achievements = notifications.achievements;
+      }
+      if (typeof notifications.study_reminders === "boolean") {
+        merged.notifications.studyReminders = notifications.study_reminders;
+      }
+    }
+
+    if (typeof prefs.study_reminders === "boolean") {
+      merged.notifications.studyReminders = prefs.study_reminders;
+    }
+
+    const quizSource = prefs.quiz;
+    if (quizSource && typeof quizSource === "object") {
+      const quizPrefs = quizSource as Record<string, unknown>;
+      if (
+        typeof quizPrefs.defaultMode === "string" &&
+        ["study", "exam"].includes(quizPrefs.defaultMode)
+      ) {
+        merged.quiz.defaultMode = quizPrefs.defaultMode as "study" | "exam";
+      }
+      if (typeof quizPrefs.showExplanations === "boolean") {
+        merged.quiz.showExplanations = quizPrefs.showExplanations;
+      }
+      if (typeof quizPrefs.timePerQuestion === "number") {
+        merged.quiz.timePerQuestion = quizPrefs.timePerQuestion;
+      }
+      if (typeof quizPrefs.autoSubmit === "boolean") {
+        merged.quiz.autoSubmit = quizPrefs.autoSubmit;
+      }
+    }
+
+    const studySource = prefs.study;
+    if (studySource && typeof studySource === "object") {
+      const studyPrefs = studySource as Record<string, unknown>;
+      if (typeof studyPrefs.defaultFocusTime === "number") {
+        merged.study.defaultFocusTime = studyPrefs.defaultFocusTime;
+      }
+      if (typeof studyPrefs.breakTime === "number") {
+        merged.study.breakTime = studyPrefs.breakTime;
+      }
+      if (typeof studyPrefs.soundEffects === "boolean") {
+        merged.study.soundEffects = studyPrefs.soundEffects;
+      }
+    }
+
+    return merged;
+  };
+
+  const buildUserFromSources = (
+    sessionUser: {
+      id: string;
+      email: string;
+      name?: string | null;
+      image?: string | null;
+    },
+    backendUser?: Record<string, unknown> | null
+  ): User => {
+    const backend = backendUser ?? null;
+
+    const nameFromBackend =
+      backend && typeof backend.name === "string"
+        ? (backend.name as string)
+        : undefined;
+    const nameFromSession =
+      typeof sessionUser.name === "string" && sessionUser.name.trim().length
+        ? sessionUser.name
+        : undefined;
+    const fallbackName = sessionUser.email.split("@")[0];
+
+    const allowedSubscriptions: User["subscription"][] = [
+      "free",
+      "premium",
+      "enterprise",
+    ];
+    const rawSubscription =
+      backend && typeof backend.subscription === "string"
+        ? (backend.subscription as string)
+        : undefined;
+    const subscription = allowedSubscriptions.includes(
+      rawSubscription as User["subscription"]
+    )
+      ? (rawSubscription as User["subscription"])
+      : "free";
+
+    const rawLevel = backend ? backend.level : undefined;
+    const level =
+      typeof rawLevel === "number" ? rawLevel : Number(rawLevel ?? 1) || 1;
+
+    const rawXp = backend ? backend.xp : undefined;
+    const xp = typeof rawXp === "number" ? rawXp : Number(rawXp ?? 0) || 0;
+
+    const rawCreatedAt = backend
+      ? backend["created_at"] ?? backend["createdAt"]
+      : undefined;
+    const joinedDate =
+      typeof rawCreatedAt === "string"
+        ? rawCreatedAt
+        : rawCreatedAt instanceof Date
+        ? rawCreatedAt.toISOString()
+        : new Date().toISOString();
+
+    const preferences = mergeUserPreferences(
+      backend ? backend["preferences"] : undefined
     );
+
+    const rawAvatar = backend ? backend.avatar : undefined;
+
+    return {
+      id: sessionUser.id,
+      name: nameFromBackend || nameFromSession || fallbackName,
+      email: sessionUser.email,
+      avatar:
+        (typeof rawAvatar === "string" ? rawAvatar : undefined) ||
+        sessionUser.image ||
+        undefined,
+      subscription,
+      level,
+      xp,
+      joinedDate,
+      preferences,
+    };
+  };
+
+  try {
+    useUserStore.setState({ isLoading: true });
+
+    const session = await authClient.getSession();
+    const sessionUser = session?.data?.user;
+
+    if (!sessionUser) {
+      logout();
+      return;
+    }
+
+    let backendUser: Record<string, unknown> | null = null;
+    try {
+      backendUser = (await databaseService.getUserById(
+        sessionUser.id
+      )) as Record<string, unknown> | null;
+    } catch (error) {
+      console.warn(
+        "Unable to fetch user from backend, using session data only",
+        error
+      );
+    }
+
+    const user = buildUserFromSources(sessionUser, backendUser);
+    setUser(user);
   } catch (error) {
     console.error("Failed to initialize user:", error);
     logout();
+  } finally {
+    useUserStore.setState({ isLoading: false });
   }
+};
+
+export const getCurrentUserId = (): string | null => {
+  return useUserStore.getState().user?.id ?? null;
 };
 
 export const getUserLevel = (xp: number): number => {

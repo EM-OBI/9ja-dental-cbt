@@ -1,10 +1,10 @@
 // Environment configuration for API endpoints
 export const config = {
   development: {
-    apiUrl: "http://localhost:8787", // Wrangler dev server
+    apiUrl: "http://localhost:8787",
   },
   production: {
-    apiUrl: "https://dental-cbt-backend.your-subdomain.workers.dev", // Replace with your worker URL
+    apiUrl: "https://dental-cbt.aokhitoya.workers.dev",
   },
 };
 

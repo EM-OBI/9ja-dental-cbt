@@ -1,15 +1,5 @@
 import { QuizMode, Specialty, TimerOption } from "@/types/definitions";
-import {
-  BookOpen,
-  Trophy,
-  Target,
-  Brain,
-  AlertCircle,
-  Award,
-  Zap,
-  Users,
-  Clock,
-} from "lucide-react";
+import { BookOpen, Trophy, Target } from "lucide-react";
 
 export const quizModes: QuizMode[] = [
   {
@@ -53,71 +43,12 @@ export const quizModes: QuizMode[] = [
   },
 ];
 
-export const specialties: Specialty[] = [
-  {
-    name: "Oral Surgery",
-    icon: <Target className="w-5 h-5" />,
-  },
-  {
-    name: "Endodontics",
-    icon: <Brain className="w-5 h-5" />,
-  },
-  {
-    name: "Periodontics",
-    icon: <AlertCircle className="w-5 h-5" />,
-  },
-  {
-    name: "Prosthodontics",
-    icon: <Award className="w-5 h-5" />,
-  },
-  {
-    name: "Orthodontics",
-    icon: <Zap className="w-5 h-5" />,
-  },
-  {
-    name: "Pediatric Dentistry",
-    icon: <BookOpen className="w-5 h-5" />,
-  },
-  {
-    name: "Oral Pathology & Oral Medicine",
-    icon: <Target className="w-5 h-5" />,
-  },
-  {
-    name: "Community Dentistry",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    name: "Radiology",
-    icon: <Brain className="w-5 h-5" />,
-  },
-  {
-    name: "General Dentistry",
-    icon: <BookOpen className="w-5 h-5" />,
-  },
-];
+// Specialties are now fetched from the API via /api/specialties
+// This is kept for backward compatibility but should be replaced with API data
+export const specialties: Specialty[] = [];
 
-// Default question counts for specialties
-// These will be updated dynamically when fetching quizzes from the API
-const defaultQuestionCounts: Record<string, number> = {
-  "Oral Surgery": 50,
-  Endodontics: 45,
-  Periodontics: 40,
-  Prosthodontics: 35,
-  Orthodontics: 30,
-  "Pediatric Dentistry": 25,
-  "Oral Pathology & Oral Medicine": 20,
-  "Community Dentistry": 15,
-  Radiology: 25,
-  "General Dentistry": 100,
-};
-
-// Add question counts to specialties
-export const specialtiesWithCounts: Specialty[] = specialties.map(
-  (specialty) => ({
-    ...specialty,
-    count: defaultQuestionCounts[specialty.name] || 0,
-  })
-);
+// Specialties with counts will be populated from API
+export const specialtiesWithCounts: Specialty[] = [];
 
 export const timerOptions: TimerOption[] = [
   { name: "Quick Fire", duration: "10 mins", minutes: 10 },

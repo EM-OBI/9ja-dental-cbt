@@ -1,91 +1,101 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { StudySession, StudyMaterial, StudyNote, StudyActions } from "./types";
-import { addXp } from "./userStore";
+import {
+  StudySession,
+  StudyMaterial,
+  StudyNote,
+  StudyActions,
+  AIStudyPackage,
+  JobStatus,
+  StudyPageUIState,
+} from "./types";
+import { addXp, getCurrentUserId } from "./userStore";
+import { nanoid } from "nanoid";
 
 interface StudyState {
   currentSession: StudySession | null;
   studyMaterials: StudyMaterial[];
+  aiGeneratedPackages: AIStudyPackage[];
+  activeJobs: Map<string, JobStatus>;
   recentMaterials: StudyMaterial[];
   bookmarkedMaterials: StudyMaterial[];
   studyHistory: StudySession[];
   isLoading: boolean;
   uploadProgress: number;
+  // UI State
+  studyPageUI: StudyPageUIState;
 }
 
 type StudyStore = StudyState & StudyActions;
 
-// Mock study materials
-const mockStudyMaterials: StudyMaterial[] = [
-  {
-    id: "material-1",
-    title: "Fundamentals of Oral Pathology",
-    type: "pdf",
-    url: "/materials/oral-pathology-fundamentals.pdf",
-    specialty: "Oral Pathology",
-    difficulty: "intermediate",
-    uploadDate: "2024-09-01",
-    size: 2500000, // 2.5MB
-    pages: 45,
-    isBookmarked: true,
-    progress: 65,
-    lastAccessed: "2025-09-07",
-    notes: [],
-    tags: ["pathology", "diagnosis", "lesions"],
-  },
-  {
-    id: "material-2",
-    title: "Endodontic Treatment Procedures",
-    type: "video",
-    url: "/materials/endodontic-procedures.mp4",
-    specialty: "Endodontics",
-    difficulty: "advanced",
-    uploadDate: "2024-08-15",
-    size: 15000000, // 15MB
-    duration: 1800, // 30 minutes
-    isBookmarked: false,
-    progress: 30,
-    lastAccessed: "2025-09-05",
-    notes: [],
-    tags: ["endodontics", "procedures", "root-canal"],
-  },
-  {
-    id: "material-3",
-    title: "Periodontal Disease Classification",
-    type: "article",
-    url: "/materials/periodontal-classification.html",
-    specialty: "Periodontics",
-    difficulty: "beginner",
-    uploadDate: "2024-09-03",
-    size: 500000, // 500KB
-    isBookmarked: true,
-    progress: 100,
-    lastAccessed: "2025-09-08",
-    notes: [],
-    tags: ["periodontics", "classification", "diagnosis"],
-  },
-];
+// Study materials will be fetched from the API
 
 export const useStudyStore = create<StudyStore>()(
   persist(
     (set, get) => ({
       // Initial state
       currentSession: null,
-      studyMaterials: mockStudyMaterials,
+      studyMaterials: [], // Will be loaded from API
+      aiGeneratedPackages: [],
+      activeJobs: new Map(),
       recentMaterials: [],
       bookmarkedMaterials: [],
       studyHistory: [],
       isLoading: false,
       uploadProgress: 0,
+      studyPageUI: {
+        activeTab: "topic",
+        topicInput: "",
+        notesInput: "",
+        materialTypes: ["summary"],
+      },
 
       // Actions
+      // Fetch study materials from API
+      fetchStudyMaterials: async () => {
+        set({ isLoading: true });
+        try {
+          const response = await fetch("/api/study/materials");
+          const result = (await response.json()) as {
+            success: boolean;
+            data?: StudyMaterial[];
+            error?: string;
+          };
+
+          if (result.success && result.data) {
+            set({
+              studyMaterials: result.data,
+              recentMaterials: result.data.slice(0, 5), // Last 5 accessed
+              bookmarkedMaterials: result.data.filter(
+                (m: StudyMaterial) => m.isBookmarked
+              ),
+              isLoading: false,
+            });
+          } else {
+            console.error("Failed to fetch study materials:", result.error);
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error("Error fetching study materials:", error);
+          set({ isLoading: false });
+        }
+      },
+
       startStudySession: (materialId: string) => {
         const material = get().studyMaterials.find((m) => m.id === materialId);
         if (!material) return;
 
+        const userId = getCurrentUserId();
+        if (!userId) {
+          console.warn(
+            "Attempted to start a study session without an authenticated user"
+          );
+          return;
+        }
+
         const newSession: StudySession = {
           id: `study-${Date.now()}`,
-          userId: "user-123", // Get from user store
+          userId,
           materialId,
           startTime: new Date().toISOString(),
           duration: 0,
@@ -319,15 +329,165 @@ export const useStudyStore = create<StudyStore>()(
           throw error;
         }
       },
+
+      // AI-generated materials actions
+      addAIPackage: (packageData) => {
+        const packageId = nanoid();
+        const newPackage: AIStudyPackage = {
+          ...packageData,
+          id: packageId,
+          generatedAt: new Date().toISOString(),
+        };
+
+        set({
+          aiGeneratedPackages: [newPackage, ...get().aiGeneratedPackages],
+        });
+
+        return packageId;
+      },
+
+      updateAIPackage: (packageId, updates) => {
+        const updatedPackages = get().aiGeneratedPackages.map((pkg) =>
+          pkg.id === packageId ? { ...pkg, ...updates } : pkg
+        );
+
+        set({ aiGeneratedPackages: updatedPackages });
+      },
+
+      deleteAIPackage: (packageId) => {
+        const filteredPackages = get().aiGeneratedPackages.filter(
+          (pkg) => pkg.id !== packageId
+        );
+
+        set({ aiGeneratedPackages: filteredPackages });
+      },
+
+      getAIPackage: (packageId) => {
+        return get().aiGeneratedPackages.find((pkg) => pkg.id === packageId);
+      },
+
+      updateJobStatus: (jobId, status) => {
+        const jobs = new Map(get().activeJobs);
+        jobs.set(jobId, status);
+
+        set({ activeJobs: jobs });
+
+        // If job is completed, update the corresponding package
+        if (status.status === "COMPLETED" && status.packageId) {
+          get().updateAIPackage(status.packageId, {
+            status: "completed",
+            progress: 100,
+          });
+        } else if (status.status === "FAILED" && status.packageId) {
+          get().updateAIPackage(status.packageId, {
+            status: "error",
+            error: status.error || "Generation failed",
+          });
+        }
+      },
+
+      // UI state actions
+      updateStudyPageUI: (updates) => {
+        set({
+          studyPageUI: {
+            ...get().studyPageUI,
+            ...updates,
+          },
+        });
+      },
+
+      resetStudyPageUI: () => {
+        set({
+          studyPageUI: {
+            activeTab: "topic",
+            topicInput: "",
+            notesInput: "",
+            materialTypes: ["summary"],
+          },
+        });
+      },
+
+      // Database integration actions
+      loadStudySessionsFromDatabase: async (userId: string) => {
+        set({ isLoading: true });
+        try {
+          const response = await fetch(`/api/users/${userId}/study-sessions`);
+          const data = (await response.json()) as {
+            success: boolean;
+            data?: Array<{
+              id: string;
+              userId: string;
+              materialId: string;
+              startTime: string;
+              endTime?: string;
+              duration: number;
+              focusTime: number;
+              breaks: number;
+              isActive: boolean;
+            }>;
+          };
+
+          if (data.success && data.data) {
+            // Transform API sessions to store format
+            const sessions: StudySession[] = data.data.map((s) => ({
+              ...s,
+              notes: [], // Notes would need to be fetched separately if needed
+            }));
+
+            set({
+              studyHistory: sessions,
+              isLoading: false,
+            });
+          } else {
+            console.error("Failed to load study sessions from database");
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error("Error loading study sessions:", error);
+          set({ isLoading: false });
+        }
+      },
+
+      saveStudySessionToDatabase: async (session: StudySession) => {
+        try {
+          const response = await fetch(
+            `/api/users/${session.userId}/study-sessions`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                materialId: session.materialId,
+                startTime: session.startTime,
+                endTime: session.endTime,
+                duration: session.duration,
+                focusTime: session.focusTime,
+                breaks: session.breaks,
+              }),
+            }
+          );
+
+          const data = (await response.json()) as {
+            success: boolean;
+            error?: string;
+          };
+          if (!data.success) {
+            console.error("Failed to save study session:", data.error);
+          }
+        } catch (error) {
+          console.error("Error saving study session:", error);
+        }
+      },
     }),
     {
       name: "study-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         studyMaterials: state.studyMaterials,
+        aiGeneratedPackages: state.aiGeneratedPackages,
         bookmarkedMaterials: state.bookmarkedMaterials,
         studyHistory: state.studyHistory,
-        // Don't persist current session to avoid stale state
+        studyPageUI: state.studyPageUI, // Persist UI state
+        // Don't persist current session, active jobs, or upload progress to avoid stale state
       }),
     }
   )
@@ -404,4 +564,25 @@ export const searchMaterials = (
 
     return matchesQuery && matchesSpecialty && matchesDifficulty && matchesType;
   });
+};
+
+// AI-generated materials helpers
+export const getAIPackages = () => {
+  const { aiGeneratedPackages } = useStudyStore.getState();
+  return aiGeneratedPackages;
+};
+
+export const getCompletedAIPackages = () => {
+  const { aiGeneratedPackages } = useStudyStore.getState();
+  return aiGeneratedPackages.filter((pkg) => pkg.status === "completed");
+};
+
+export const getAIPackagesBySource = (source: "topic" | "notes" | "pdf") => {
+  const { aiGeneratedPackages } = useStudyStore.getState();
+  return aiGeneratedPackages.filter((pkg) => pkg.source === source);
+};
+
+export const getActiveJobs = () => {
+  const { activeJobs } = useStudyStore.getState();
+  return Array.from(activeJobs.values());
 };

@@ -220,8 +220,8 @@ export class ErrorHandler {
   private handleSpecificError(error: AppError): void {
     switch (error.type) {
       case ErrorType.AUTHENTICATION:
-        // Clear local storage and redirect to login
-        localStorage.removeItem("auth-token");
+        // Better Auth handles sessions via cookies in D1 database
+        // Clear any local user data and redirect to login
         localStorage.removeItem("user-data");
         if (typeof window !== "undefined") {
           setTimeout(() => {

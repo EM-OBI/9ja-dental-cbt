@@ -364,7 +364,11 @@ export const useUnifiedProgressData = (
   const [error, setError] = useState<string | null>(null);
 
   const fetchProgressData = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setProgressData(null);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -396,6 +400,9 @@ export const useUnifiedProgressData = (
   }, [userId, useUnifiedAPI]);
 
   const refresh = useCallback(async () => {
+    if (!userId) {
+      return;
+    }
     if (useUnifiedAPI) {
       try {
         // Call refresh API endpoint

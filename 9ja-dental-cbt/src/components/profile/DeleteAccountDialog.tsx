@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface DeleteAccountDialogProps {
   isOpen: boolean;
@@ -151,7 +152,7 @@ export function DeleteAccountDialog({
           >
             {isDeleting ? (
               <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                <LoadingSpinner size="sm" label={null} />
                 <span>Deleting...</span>
               </>
             ) : (

@@ -7,7 +7,10 @@ import {
   Nunito_Sans,
 } from "next/font/google";
 import "../globals.css";
-import { AppStateProvider } from "@/store/AppStateProvider";
+import ClientLayout from "@/components/ClientLayout";
+
+// Force dynamic rendering to avoid SSR issues
+export const dynamic = "force-dynamic";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,7 +54,7 @@ export default function RootLayout({
       className={`${inter.variable} ${googleSans.variable} ${playfair.variable} ${allura.variable} ${dancing.variable}`}
     >
       <body className="bg-background text-foreground min-h-screen antialiased">
-        <AppStateProvider>{children}</AppStateProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

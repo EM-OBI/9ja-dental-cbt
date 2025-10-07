@@ -59,13 +59,6 @@ export default function DesktopHeader({
         >
           <HelpCircle className="h-5 w-5 text-slate-700 dark:text-white" />
         </button>
-        <div
-          className="h-8 w-8 rounded-full bg-cover bg-center border-2 border-slate-300 dark:border-slate-600"
-          style={{
-            backgroundImage:
-              "url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80)",
-          }}
-        ></div>
       </div>
     </header>
   );

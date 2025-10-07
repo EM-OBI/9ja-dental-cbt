@@ -16,132 +16,89 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-interface ApiError {
-  message: string;
+interface ApiError extends Error {
   status: number;
   code?: string;
 }
 
 class ApiClient {
   private baseUrl: string;
-  private authToken: string | null = null;
 
   constructor() {
-    this.baseUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      "https://dental-cbt-backend-staging.aokhitoya.workers.dev";
-  }
-
-  setAuthToken(token: string) {
-    this.authToken = token;
-    if (typeof window !== "undefined") {
-      localStorage.setItem("auth-token", token);
-    }
-  }
-
-  getAuthToken(): string | null {
-    if (this.authToken) return this.authToken;
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("auth-token");
-    }
-    return null;
-  }
-
-  clearAuthToken() {
-    this.authToken = null;
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth-token");
-    }
+    // If NEXT_PUBLIC_API_URL is empty/undefined, use empty string for same-origin requests
+    // This allows Next.js API routes to work in development
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    this.baseUrl = apiUrl && apiUrl.trim() !== "" ? apiUrl : "";
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const token = this.getAuthToken();
+    // For same-origin requests, endpoint should start with /
+    const url = this.baseUrl
+      ? `${this.baseUrl}${endpoint}`
+      : endpoint.startsWith("/")
+      ? endpoint
+      : `/${endpoint}`;
 
     const config: RequestInit = {
+      ...options,
+      credentials: "include", // Include cookies for session authentication
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
-      ...options,
     };
 
-    try {
-      const response = await fetch(url, config);
+    const response = await fetch(url, config);
 
-      if (!response.ok) {
-        const error: ApiError = {
-          message: `HTTP ${response.status}: ${response.statusText}`,
-          status: response.status,
+    // Handle network errors
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      let errorCode: string | undefined;
+
+      try {
+        const errorData = (await response.json()) as {
+          error?: string;
+          message?: string;
+          code?: string;
         };
-
-        try {
-          const errorData = await response.json();
-          error.message = errorData.error || errorData.message || error.message;
-          error.code = errorData.code;
-        } catch {
-          // Use default error message if JSON parsing fails
-        }
-
-        throw error;
+        errorMessage = errorData.error || errorData.message || errorMessage;
+        errorCode = errorData.code;
+      } catch {
+        // fallback to default message
       }
 
-      const data: ApiResponse<T> = await response.json();
+      const error: ApiError = Object.assign(new Error(errorMessage), {
+        status: response.status,
+        code: errorCode,
+      });
 
-      if (!data.success) {
-        throw new Error(data.error || "API request failed");
-      }
-
-      return data.data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error("Network error occurred");
+      throw error;
     }
+
+    const data = (await response.json()) as ApiResponse<T>;
+    if (!data.success) {
+      throw new Error(data.error || "API request failed");
+    }
+
+    return data.data;
   }
 
-  // Authentication endpoints
-  async login(
-    email: string,
-    password: string
-  ): Promise<{ user: User; token: string }> {
-    return this.request("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
-  }
-
-  async register(userData: {
-    name: string;
-    email: string;
-    password: string;
-    subscription?: string;
-  }): Promise<{ user: User; token: string }> {
-    return this.request("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(userData),
-    });
-  }
-
-  async logout(): Promise<void> {
-    await this.request("/api/auth/logout", { method: "POST" });
-    this.clearAuthToken();
-  }
+  // ===============================
+  // 🔐 Auth Endpoints
+  // ===============================
+  // Note: Authentication is handled by Better Auth via cookies
+  // These endpoints are maintained for compatibility but may not be used
 
   async getCurrentUser(): Promise<User> {
     return this.request("/api/auth/me");
   }
 
-  async refreshToken(): Promise<{ token: string }> {
-    return this.request("/api/auth/refresh", { method: "POST" });
-  }
-
-  // User endpoints
+  // ===============================
+  // 👤 User Endpoints
+  // ===============================
   async getUserById(id: string): Promise<User> {
     return this.request(`/api/users/${id}`);
   }
@@ -163,7 +120,9 @@ class ApiClient {
     });
   }
 
-  // Quiz endpoints
+  // ===============================
+  // 🧠 Quiz Endpoints
+  // ===============================
   async getQuizzes(filters?: {
     specialty?: string;
     difficulty?: string;
@@ -172,13 +131,10 @@ class ApiClient {
   }): Promise<{ quizzes: Quiz[]; total: number; page: number; limit: number }> {
     const queryParams = new URLSearchParams();
     if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, value.toString());
-        }
-      });
+      for (const [key, value] of Object.entries(filters)) {
+        if (value !== undefined) queryParams.append(key, String(value));
+      }
     }
-
     const endpoint = `/api/quizzes${
       queryParams.toString() ? `?${queryParams}` : ""
     }`;
@@ -207,10 +163,7 @@ class ApiClient {
     sessionId: string,
     questionId: string,
     answer: string | number
-  ): Promise<{
-    correct: boolean;
-    explanation?: string;
-  }> {
+  ): Promise<{ correct: boolean; explanation?: string }> {
     return this.request(`/api/quiz-sessions/${sessionId}/answers`, {
       method: "POST",
       body: JSON.stringify({ questionId, answer }),
@@ -229,7 +182,9 @@ class ApiClient {
     });
   }
 
-  // Dashboard endpoints
+  // ===============================
+  // 📊 Dashboard
+  // ===============================
   async getDashboardStats(): Promise<DashboardStats> {
     return this.request("/api/dashboard/stats");
   }
@@ -248,7 +203,9 @@ class ApiClient {
     return this.request(`/api/users/${userId}/streaks`);
   }
 
-  // Study sessions
+  // ===============================
+  // 🎯 Study Sessions
+  // ===============================
   async createStudySession(data: {
     specialty: string;
     duration: number;
@@ -264,7 +221,9 @@ class ApiClient {
     return this.request(`/api/users/${userId}/study-sessions`);
   }
 
-  // Bookmarks
+  // ===============================
+  // 🔖 Bookmarks
+  // ===============================
   async addBookmark(
     itemType: string,
     itemId: string,
@@ -278,7 +237,7 @@ class ApiClient {
 
   async getBookmarks(
     userId: string
-  ): Promise<{ id: string; questionId: string; createdAt: Date }[]> {
+  ): Promise<{ id: string; questionId: string; createdAt: string }[]> {
     return this.request(`/api/users/${userId}/bookmarks`);
   }
 
@@ -288,12 +247,14 @@ class ApiClient {
     });
   }
 
-  // Health check
+  // ===============================
+  // 🩺 Health Check
+  // ===============================
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.request("/api/health");
   }
 }
 
-// Create a singleton instance
+// ✅ Singleton instance
 export const apiClient = new ApiClient();
 export default apiClient;

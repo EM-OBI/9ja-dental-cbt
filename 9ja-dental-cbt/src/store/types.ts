@@ -1,10 +1,13 @@
 // Global state types for the dental CBT application
 
+export type UserRole = "user" | "admin" | "superadmin";
+
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar?: string;
+  role?: UserRole; // User role for authorization
   subscription: "free" | "premium" | "enterprise";
   level: number;
   xp: number;
@@ -200,6 +203,11 @@ export interface UserActions {
 }
 
 export interface QuizActions {
+  // Data fetching
+  fetchSpecialties: () => Promise<void>;
+  loadQuestionsFromDatabase: (specialty?: string) => Promise<void>;
+  loadQuizQuestionsById: (quizId: string) => Promise<void>;
+  // Quiz management
   startQuiz: (
     specialty: string,
     mode: "study" | "exam",
@@ -220,7 +228,76 @@ export interface QuizActions {
   loadQuizHistory: () => void;
 }
 
+// AI-generated study materials
+export interface AIStudyPackage {
+  id: string;
+  topic: string;
+  source: "topic" | "notes" | "pdf";
+  sourceContent?: string; // Original notes or topic
+  fileName?: string; // For PDF uploads
+  generatedAt: string;
+  status: "generating" | "completed" | "error";
+  progress: number;
+  summary?: AIGeneratedContent;
+  flashcards?: AIGeneratedContent;
+  quiz?: AIGeneratedContent;
+  jobId?: string;
+  error?: string;
+}
+
+export interface AIGeneratedContent {
+  id: string;
+  type: "summary" | "flashcards" | "quiz";
+  content: string | FlashcardData | QuizData;
+  generatedAt: string;
+  model: string; // e.g., "llama-3-8b-instruct"
+}
+
+export interface FlashcardData {
+  cards: Array<{
+    question: string;
+    answer: string;
+  }>;
+}
+
+export interface QuizData {
+  questions: Array<{
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation?: string;
+  }>;
+}
+
+export interface JobStatus {
+  jobId: string;
+  status:
+    | "PENDING"
+    | "UPLOADED"
+    | "PARSING"
+    | "SUMMARIZING"
+    | "GENERATING_FLASHCARDS"
+    | "GENERATING_QUIZ"
+    | "COMPLETED"
+    | "FAILED";
+  progress: number;
+  message: string;
+  packageId?: string;
+  error?: string;
+}
+
+// UI State for Study Page
+export interface StudyPageUIState {
+  activeTab: "topic" | "notes" | "pdf";
+  topicInput: string;
+  notesInput: string;
+  materialTypes: string[];
+}
+
 export interface StudyActions {
+  // Data fetching
+  fetchStudyMaterials: () => Promise<void>;
+  // Session management
   startStudySession: (materialId: string) => void;
   pauseStudySession: () => void;
   resumeStudySession: () => void;
@@ -231,6 +308,23 @@ export interface StudyActions {
   bookmarkMaterial: (materialId: string) => void;
   updateProgress: (materialId: string, progress: number) => void;
   uploadMaterial: (material: Omit<StudyMaterial, "id" | "uploadDate">) => void;
+  // AI-generated materials actions
+  addAIPackage: (
+    packageData: Omit<AIStudyPackage, "id" | "generatedAt">
+  ) => string;
+  updateAIPackage: (
+    packageId: string,
+    updates: Partial<AIStudyPackage>
+  ) => void;
+  deleteAIPackage: (packageId: string) => void;
+  getAIPackage: (packageId: string) => AIStudyPackage | undefined;
+  updateJobStatus: (jobId: string, status: JobStatus) => void;
+  // UI state actions
+  updateStudyPageUI: (updates: Partial<StudyPageUIState>) => void;
+  resetStudyPageUI: () => void;
+  // Database integration
+  loadStudySessionsFromDatabase: (userId: string) => Promise<void>;
+  saveStudySessionToDatabase: (session: StudySession) => Promise<void>;
 }
 
 export interface ProgressActions {
@@ -243,6 +337,8 @@ export interface ProgressActions {
     description: string;
     points?: number;
   }) => void;
+  // Database integration
+  loadProgressFromDatabase: (userId: string) => Promise<void>;
 }
 
 export interface NotificationActions {

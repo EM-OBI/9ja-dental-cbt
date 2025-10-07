@@ -1,28 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ActivityFeedProps } from "@/types/dashboard";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Trophy,
-  Brain,
-  BookOpen,
-  Flame,
-  Filter,
-  ChevronDown,
-} from "lucide-react";
-
-const activityIcons = {
-  quiz_completed: Brain,
-  study_session: BookOpen,
-  achievement_unlocked: Trophy,
-  streak_milestone: Flame,
-};
-
-const activityColors = {
-  quiz_completed: "text-blue-500 bg-blue-100 dark:bg-blue-900/20",
-  study_session: "text-green-500 bg-green-100 dark:bg-green-900/20",
-  achievement_unlocked: "text-yellow-500 bg-yellow-100 dark:bg-yellow-900/20",
-  streak_milestone: "text-orange-500 bg-orange-100 dark:bg-orange-900/20",
-};
+import { ChevronDown } from "lucide-react";
 
 export default function ActivityFeed({
   activities,
@@ -67,9 +46,9 @@ export default function ActivityFeed({
   const displayedActivities = filteredActivities.slice(0, maxItems);
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+    <div className="p-5">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-foreground">
           Recent Activity
         </h3>
 
@@ -77,17 +56,16 @@ export default function ActivityFeed({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            className="flex items-center space-x-2 px-3 py-2 text-sm bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg border border-slate-200 dark:border-slate-600 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-50 dark:bg-muted hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-border transition-colors"
           >
-            <Filter className="w-4 h-4" />
-            <span>
+            <span className="text-slate-600 dark:text-slate-400">
               {filterOptions.find((opt) => opt.value === selectedFilter)?.label}
             </span>
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {showFilterDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg z-10">
+            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg shadow-lg z-10">
               {filterOptions.map((option) => (
                 <button
                   key={option.value}
@@ -95,10 +73,10 @@ export default function ActivityFeed({
                     setSelectedFilter(option.value);
                     setShowFilterDropdown(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg transition-colors ${
+                  className={`w-full text-left px-3 py-2 text-xs first:rounded-t-lg last:rounded-b-lg transition-colors ${
                     selectedFilter === option.value
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "text-slate-700 dark:text-slate-300"
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-foreground font-medium"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
                 >
                   {option.label}
@@ -111,27 +89,20 @@ export default function ActivityFeed({
 
       <div className="space-y-4">
         {displayedActivities.length === 0 ? (
-          <p className="text-slate-500 dark:text-slate-400 text-center py-4">
-            No recent activity
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">
+            No activity yet
           </p>
         ) : (
           displayedActivities.map((activity) => {
-            const Icon = activityIcons[activity.type];
-            const colorClass = activityColors[activity.type];
-
             return (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${colorClass}`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
+              <div key={activity.id} className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mt-2" />
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-sm font-medium text-slate-900 dark:text-foreground">
                     {activity.title}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                     {activity.description}
                   </p>
                   {showTimestamp && (
@@ -149,9 +120,9 @@ export default function ActivityFeed({
       </div>
 
       {filteredActivities.length > maxItems && (
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-          <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
-            View More ({filteredActivities.length - maxItems} more)
+        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-border/50">
+          <button className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-foreground font-medium transition-colors">
+            View all activity ({filteredActivities.length})
           </button>
         </div>
       )}

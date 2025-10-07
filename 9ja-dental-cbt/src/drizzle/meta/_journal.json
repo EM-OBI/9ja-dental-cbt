@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1759315284238,
+      "tag": "0000_powerful_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1759338604545,
+      "tag": "0001_closed_hawkeye",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1759651945450,
+      "tag": "0002_brave_phil_sheldon",
+      "breakpoints": true
+    }
+  ]
+}

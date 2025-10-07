@@ -1,7 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { Edit, Save, X, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Edit,
+  Save,
+  X,
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +36,7 @@ export default function ProfilePage() {
   const { mode, setMode } = useThemeStore();
 
   // Get progress data for specialty mastery
-  const userId = user?.id || "user-123";
+  const userId = user?.id ?? "";
   const { progressData } = useUnifiedProgressData(userId, false);
 
   // Custom tab state management
@@ -42,6 +49,81 @@ export default function ProfilePage() {
     email: user?.email || "",
     bio: "",
   });
+
+  // Preferences API state
+  const [preferenceSaveStatus, setPreferenceSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load preferences from API on mount
+  useEffect(() => {
+    const loadPreferencesFromAPI = async () => {
+      if (!user?.id) return;
+
+      try {
+        const response = await fetch(`/api/users/${user.id}/preferences`);
+        if (response.ok) {
+          const result = (await response.json()) as {
+            success: boolean;
+            data: unknown;
+            source: string;
+          };
+          if (result.success && result.data) {
+            // Merge API preferences with local state
+            updatePreferences(result.data);
+            console.log("✅ Preferences loaded from", result.source);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load preferences:", error);
+      }
+    };
+
+    if (user?.id) {
+      loadPreferencesFromAPI();
+    }
+  }, [user?.id, updatePreferences]);
+
+  // Debounced save to API
+  const savePreferencesToAPI = useCallback(
+    async (preferences: Record<string, unknown>) => {
+      if (!user?.id) return;
+
+      // Clear any pending save
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      // Set saving status
+      setPreferenceSaveStatus("saving");
+
+      // Debounce the API call
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/users/${user.id}/preferences`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(preferences),
+          });
+
+          if (response.ok) {
+            setPreferenceSaveStatus("saved");
+            // Reset status after 2 seconds
+            setTimeout(() => setPreferenceSaveStatus("idle"), 2000);
+          } else {
+            setPreferenceSaveStatus("error");
+            setTimeout(() => setPreferenceSaveStatus("idle"), 3000);
+          }
+        } catch (error) {
+          console.error("Failed to save preferences:", error);
+          setPreferenceSaveStatus("error");
+          setTimeout(() => setPreferenceSaveStatus("idle"), 3000);
+        }
+      }, 800); // 800ms debounce
+    },
+    [user]
+  );
 
   if (!user) {
     return (
@@ -124,7 +206,11 @@ export default function ProfilePage() {
       updatedPreferences.quiz.timePerQuestion = value as number;
     }
 
+    // Update local state immediately for responsive UI
     updatePreferences(updatedPreferences);
+
+    // Auto-save to API (debounced)
+    savePreferencesToAPI(updatedPreferences);
   };
 
   return (
@@ -360,7 +446,27 @@ export default function ProfilePage() {
           {activeTab === "settings" && (
             <div className="space-y-6">
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-6">Preferences</h3>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold">Preferences</h3>
+                  {preferenceSaveStatus === "saving" && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Saving...</span>
+                    </div>
+                  )}
+                  {preferenceSaveStatus === "saved" && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Saved</span>
+                    </div>
+                  )}
+                  {preferenceSaveStatus === "error" && (
+                    <div className="flex items-center gap-2 text-sm text-destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span>Failed to save</span>
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-6">
                   {/* Theme Settings */}
                   <div className="space-y-4">

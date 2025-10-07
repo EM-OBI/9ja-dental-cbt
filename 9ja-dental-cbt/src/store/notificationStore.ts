@@ -4,6 +4,7 @@ import type {
   Notification as AppNotification,
   NotificationActions,
 } from "./types";
+import { getCurrentUserId } from "./userStore";
 
 interface NotificationState {
   notifications: AppNotification[];
@@ -130,9 +131,17 @@ export const showAchievementNotification = (
   description: string
 ) => {
   const { addNotification } = useNotificationStore.getState();
+  const userId = getCurrentUserId();
+
+  if (!userId) {
+    console.warn(
+      "Skipping achievement notification because no authenticated user is available"
+    );
+    return;
+  }
 
   addNotification({
-    userId: "user-123", // Get from user store
+    userId,
     type: "achievement",
     title: `🎉 Achievement Unlocked!`,
     message: `${title}: ${description}`,
@@ -143,9 +152,17 @@ export const showAchievementNotification = (
 
 export const showStreakNotification = (streakCount: number) => {
   const { addNotification } = useNotificationStore.getState();
+  const userId = getCurrentUserId();
+
+  if (!userId) {
+    console.warn(
+      "Skipping streak notification because no authenticated user is available"
+    );
+    return;
+  }
 
   addNotification({
-    userId: "user-123", // Get from user store
+    userId,
     type: "streak",
     title: `🔥 ${streakCount} Day Streak!`,
     message: `You're on fire! Keep up the great work.`,
@@ -159,9 +176,17 @@ export const showReminderNotification = (
   message: string
 ) => {
   const { addNotification } = useNotificationStore.getState();
+  const userId = getCurrentUserId();
+
+  if (!userId) {
+    console.warn(
+      "Skipping reminder notification because no authenticated user is available"
+    );
+    return;
+  }
 
   addNotification({
-    userId: "user-123", // Get from user store
+    userId,
     type: "reminder",
     title: "⏰ Study Reminder",
     message,

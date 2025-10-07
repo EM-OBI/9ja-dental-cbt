@@ -5,16 +5,60 @@ import { QuizSetup } from "@/components/quiz/QuizSetup";
 import { QuizEngine } from "@/components/quiz/QuizEngine";
 import { QuizResults } from "@/components/quiz/QuizResults";
 import { useQuizEngineStore } from "@/store/quizEngineStore";
-import { databaseService } from "@/services/database";
 import { generateQuizSeed } from "@/utils/shuffle";
-import { QuizConfig } from "@/types/definitions";
+import { QuizConfig, Question } from "@/types/definitions";
+import { ErrorAlert } from "@/components/ui/ErrorAlert";
 
 export default function QuizPage() {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [quizConfig, setQuizConfig] = useState<QuizConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [quizError, setQuizError] = useState<{
+    message: string;
+    severity?: "error" | "warning";
+  } | null>(null);
 
-  const { session, isActive, initializeQuiz, resetQuiz, loadProgress } =
+  const { session, initializeQuiz, resetQuiz, loadProgress } =
     useQuizEngineStore();
+
+  // Specialties data for quiz setup
+  const [specialtiesData, setSpecialtiesData] = useState<
+    Array<{
+      name: string;
+      questionCount: number;
+      icon?: React.ReactNode;
+    }>
+  >([]);
+
+  // Fetch specialties on mount
+  useEffect(() => {
+    const loadSpecialties = async () => {
+      try {
+        const response = await fetch(
+          "/api/specialties?includeQuestionCount=true"
+        );
+        const result = (await response.json()) as {
+          success: boolean;
+          data?: Array<{ name: string; questionCount: number }>;
+          error?: string;
+        };
+
+        if (result.success && result.data) {
+          // Map API data to component format
+          const mapped = result.data.map((specialty) => ({
+            name: specialty.name,
+            questionCount: specialty.questionCount || 0,
+            icon: undefined, // Icons will be handled in the component
+          }));
+          setSpecialtiesData(mapped);
+        }
+      } catch (error) {
+        console.error("Failed to fetch specialties:", error);
+      }
+    };
+
+    loadSpecialties();
+  }, []);
 
   // Check for saved progress on mount
   useEffect(() => {
@@ -27,57 +71,89 @@ export default function QuizPage() {
   }, [loadProgress]);
 
   const handleStartQuiz = async (config: QuizConfig) => {
+    setIsLoading(true);
+    setQuizError(null); // Clear previous errors
     try {
-      // Get available quizzes for the selected specialty
-      const quizzesResponse = await databaseService.getQuizzes({
-        category:
-          config.specialty === "All Specialties" ? undefined : config.specialty,
-        limit: 50, // Get more questions than needed
-      });
+      // Fetch questions directly from the questions API
+      const queryParams = new URLSearchParams();
 
-      if (quizzesResponse.data.length === 0) {
-        console.error("No quizzes available for selected specialty");
-        alert(
-          "No quizzes available for the selected specialty. Please try a different specialty."
-        );
-        return;
+      if (config.specialty && config.specialty !== "All Specialties") {
+        // Convert specialty name to slug (lowercase, replace spaces with hyphens)
+        const specialtySlug = config.specialty
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+        queryParams.append("specialtySlug", specialtySlug);
       }
 
-      // For now, we'll need to create mock questions from the quiz data
-      // since the backend doesn't return actual question content yet
-      const selectedQuiz = quizzesResponse.data[0];
-
-      // Create placeholder questions based on the quiz metadata
-      // This is temporary until the backend provides actual questions
-      const questions = Array.from(
-        {
-          length: Math.min(config.totalQuestions, selectedQuiz.totalQuestions),
-        },
-        (_, index) => ({
-          id: `q-${selectedQuiz.id}-${index + 1}`,
-          text: `Sample question ${index + 1} for ${selectedQuiz.title}`,
-          options: ["Option A", "Option B", "Option C", "Option D"],
-          correctAnswer: 0,
-          explanation: `This is a sample explanation for question ${index + 1}`,
-          specialty: selectedQuiz.category,
-          difficulty: selectedQuiz.difficulty,
-          type: "mcq" as const,
-          timeEstimate: 60,
-        })
+      // Request more questions than needed to allow for shuffling
+      queryParams.append(
+        "limit",
+        String(Math.max(config.totalQuestions * 3, 50))
       );
+      queryParams.append("isActive", "true");
 
-      if (questions.length === 0) {
-        console.error("Could not generate questions for quiz");
-        alert("Unable to generate questions for this quiz. Please try again.");
+      const response = await fetch(`/api/questions?${queryParams.toString()}`);
+      const questionsData = (await response.json()) as {
+        success: boolean;
+        data?: Question[];
+        error?: string;
+      };
+
+      if (
+        !questionsData.success ||
+        !questionsData.data ||
+        questionsData.data.length === 0
+      ) {
+        console.error("No questions available for selected specialty");
+        setQuizError({
+          message:
+            "No questions available for the selected specialty. Please try a different specialty.",
+          severity: "warning",
+        });
         return;
       }
 
-      // Generate seed for randomization
-      const seed = generateQuizSeed();
-      const configWithSeed = { ...config, seed };
+      const availableQuestions = questionsData.data;
 
-      // Initialize the quiz
-      initializeQuiz(questions, configWithSeed);
+      if (availableQuestions.length < config.totalQuestions) {
+        console.warn(
+          `Requested ${config.totalQuestions} questions but only ${availableQuestions.length} available.`
+        );
+      }
+
+      // Shuffle questions using Fisher-Yates algorithm
+      const shuffledQuestions = [...availableQuestions];
+      for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledQuestions[i], shuffledQuestions[j]] = [
+          shuffledQuestions[j],
+          shuffledQuestions[i],
+        ];
+      }
+
+      // Take only the number of questions requested
+      const questionCount = Math.min(
+        config.totalQuestions,
+        shuffledQuestions.length
+      );
+      const questionsToUse = shuffledQuestions.slice(0, questionCount);
+
+      // Generate a session ID
+      const sessionId = `session-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
+
+      const seed = generateQuizSeed();
+      const configWithSeed: QuizConfig = {
+        ...config,
+        seed,
+        timeLimit: config.timeLimit,
+        totalQuestions: questionCount,
+        quizId: `quiz-${config.specialty}-${Date.now()}`,
+        sessionId,
+      };
+
+      initializeQuiz(questionsToUse, configWithSeed);
       setQuizConfig(configWithSeed);
       setIsSetupComplete(true);
 
@@ -87,7 +163,12 @@ export default function QuizPage() {
       }, 0);
     } catch (error) {
       console.error("Failed to start quiz:", error);
-      alert("Failed to load quiz questions. Please try again.");
+      setQuizError({
+        message: "Failed to load quiz questions. Please try again.",
+        severity: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,12 +176,13 @@ export default function QuizPage() {
     resetQuiz();
     setIsSetupComplete(false);
     setQuizConfig(null);
+    setIsLoading(false);
   };
 
   // Show results if quiz is completed
   if (session?.endTime) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-background">
         <QuizResults onRestart={handleRestartQuiz} />
       </div>
     );
@@ -109,7 +191,7 @@ export default function QuizPage() {
   // Show quiz engine if setup is complete and quiz config exists
   if (isSetupComplete && quizConfig) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-background">
         <QuizEngine config={quizConfig} onExit={handleRestartQuiz} />
       </div>
     );
@@ -117,10 +199,21 @@ export default function QuizPage() {
 
   // Show quiz setup by default
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-background">
+      {quizError && (
+        <div className="max-w-4xl mx-auto pt-6 px-4">
+          <ErrorAlert
+            message={quizError.message}
+            severity={quizError.severity}
+            onDismiss={() => setQuizError(null)}
+          />
+        </div>
+      )}
       <QuizSetup
         onStartQuiz={handleStartQuiz}
         onRestartQuiz={handleRestartQuiz}
+        isLoading={isLoading}
+        specialties={specialtiesData}
       />
     </div>
   );

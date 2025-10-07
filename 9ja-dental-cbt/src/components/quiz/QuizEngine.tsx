@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuizEngineStore } from "@/store/quizEngineStore";
+import { useQuizAutoSave } from "@/hooks/useQuizAutoSave";
+import { useQuizResultsSaver } from "@/hooks/useQuizResultsSaver";
+import { useUserStore } from "@/store/userStore";
 import { QuizConfig } from "@/types/definitions";
 import {
   Clock,
@@ -9,15 +12,11 @@ import {
   BookmarkCheck,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
-  XCircle,
   Play,
   Pause,
   RotateCcw,
-  Target,
-  Trophy,
-  BookOpen,
 } from "lucide-react";
+import Image from "next/image";
 
 interface QuizEngineProps {
   config: QuizConfig;
@@ -28,6 +27,9 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
 
+  const { user } = useUserStore();
+  const { saveResults } = useQuizResultsSaver();
+
   const {
     shuffledQuestions,
     currentQuestionIndex,
@@ -37,7 +39,6 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
     isActive,
     isSubmitting,
     bookmarkedQuestions,
-    session,
     startQuiz,
     submitAnswer,
     nextQuestion,
@@ -48,6 +49,14 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
     unbookmarkQuestion,
     finishQuiz,
   } = useQuizEngineStore();
+
+  // Auto-save quiz progress
+  useQuizAutoSave({
+    userId: user?.id || "",
+    sessionId: config.sessionId || "",
+    enabled: true,
+    debounceMs: 2000,
+  });
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
   const existingAnswer = answers.find(
@@ -124,36 +133,30 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
     }
   };
 
+  const handleFinishQuiz = async () => {
+    // Save results to API before finishing
+    if (user?.id && config.sessionId) {
+      const totalTimeSpent =
+        Date.now() - (useQuizEngineStore.getState().startTime || Date.now());
+      await saveResults({
+        sessionId: config.sessionId,
+        userId: user.id,
+        answers,
+        score,
+        totalQuestions: shuffledQuestions.length,
+        timeSpent: Math.floor(totalTimeSpent / 1000),
+        specialtyId: config.specialty,
+      });
+    }
+
+    // Then finish the quiz in the store
+    finishQuiz();
+  };
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
-
-  const getModeIcon = () => {
-    switch (config.mode) {
-      case "practice":
-        return <BookOpen className="w-5 h-5" />;
-      case "challenge":
-        return <Trophy className="w-5 h-5" />;
-      case "exam":
-        return <Target className="w-5 h-5" />;
-      default:
-        return <BookOpen className="w-5 h-5" />;
-    }
-  };
-
-  const getModeColor = () => {
-    switch (config.mode) {
-      case "practice":
-        return "text-green-600 dark:text-green-400";
-      case "challenge":
-        return "text-blue-600 dark:text-blue-400";
-      case "exam":
-        return "text-red-600 dark:text-red-400";
-      default:
-        return "text-gray-600 dark:text-gray-400";
-    }
   };
 
   const getOptionIcon = (optionIndex: number) => {
@@ -163,11 +166,11 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
     const isSelected = optionIndex === existingAnswer.selectedOption;
 
     if (isCorrect) {
-      return <CheckCircle className="w-5 h-5 text-green-500" />;
+      return <span className="text-xs font-medium">✓</span>;
     }
 
     if (isSelected && !isCorrect) {
-      return <XCircle className="w-5 h-5 text-red-500" />;
+      return <span className="text-xs font-medium">✗</span>;
     }
 
     return null;
@@ -175,8 +178,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
   const getOptionClassName = (optionIndex: number) => {
     const baseClasses = `
-      w-full p-4 text-left border-2 rounded-lg transition-all duration-200
-      hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500
+      w-full p-4 text-left border-2 rounded-lg transition-all
+      hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-100
     `;
 
     if (existingAnswer) {
@@ -184,29 +187,29 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
       const isSelected = optionIndex === existingAnswer.selectedOption;
 
       if (isCorrect) {
-        return `${baseClasses} border-green-500 bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-100`;
+        return `${baseClasses} border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-foreground`;
       }
 
       if (isSelected && !isCorrect) {
-        return `${baseClasses} border-red-500 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100`;
+        return `${baseClasses} border-slate-400 dark:border-slate-500 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400`;
       }
 
-      return `${baseClasses} border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400`;
+      return `${baseClasses} border-slate-200 dark:border-border text-slate-500 dark:text-slate-400`;
     }
 
     if (selectedAnswer === optionIndex) {
-      return `${baseClasses} border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100`;
+      return `${baseClasses} border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-foreground`;
     }
 
-    return `${baseClasses} border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`;
+    return `${baseClasses} border-slate-200 dark:border-border text-slate-900 dark:text-foreground bg-white dark:bg-card`;
   };
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-4">
+      <div className="min-h-screen bg-transparent p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="text-lg text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
               Loading questions...
             </div>
           </div>
@@ -218,48 +221,40 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   // Start quiz if not active
   if (!isActive && currentQuestionIndex === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-4">
+      <div className="min-h-screen bg-transparent p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+          <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-8">
             <div className="text-center space-y-6">
-              <div className="flex items-center justify-center space-x-3">
-                <div
-                  className={`p-3 rounded-full bg-gray-100 dark:bg-gray-700 ${getModeColor()}`}
-                >
-                  {getModeIcon()}
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {config.mode.charAt(0).toUpperCase() + config.mode.slice(1)}{" "}
-                  Mode
-                </h1>
-              </div>
+              <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
+                {config.mode.charAt(0).toUpperCase() + config.mode.slice(1)}{" "}
+                Mode
+              </h1>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-border">
+                  <div className="text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
                     Questions
                   </div>
-                  <div className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <div className="text-xl font-semibold text-slate-900 dark:text-foreground">
                     {shuffledQuestions.length}
                   </div>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-border">
+                  <div className="text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
                     Specialty
                   </div>
-                  <div className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <div className="text-xl font-semibold text-slate-900 dark:text-foreground">
                     {config.specialty}
                   </div>
                 </div>
 
                 {config.timeLimit && (
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-border">
+                    <div className="text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
                       Time Limit
                     </div>
-                    <div className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
+                    <div className="text-xl font-semibold text-slate-900 dark:text-foreground">
                       {Math.floor(config.timeLimit / 60)}m
                     </div>
                   </div>
@@ -268,9 +263,9 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
               <button
                 onClick={startQuiz}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center space-x-2 mx-auto"
+                className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
               >
-                <Play className="w-5 h-5" />
+                <Play className="w-4 h-4" />
                 <span>Start Quiz</span>
               </button>
             </div>
@@ -281,42 +276,35 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-4">
+    <div className="min-h-screen bg-transparent p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-3">
-              <div
-                className={`p-2 rounded-lg bg-gray-100 dark:bg-gray-700 ${getModeColor()}`}
-              >
-                {getModeIcon()}
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {config.mode.charAt(0).toUpperCase() + config.mode.slice(1)}{" "}
-                  Mode
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {config.specialty}
-                </p>
-              </div>
+        <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900 dark:text-foreground">
+                {config.mode.charAt(0).toUpperCase() + config.mode.slice(1)}{" "}
+                Mode
+              </h1>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {config.specialty}
+              </p>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               {timeRemaining !== null && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span className="font-mono text-orange-500">
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <span className="font-mono text-slate-900 dark:text-foreground">
                     {formatTime(timeRemaining)}
                   </span>
                 </div>
               )}
 
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <button
                   onClick={isActive ? pauseQuiz : resumeQuiz}
-                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   {isActive ? (
                     <Pause className="w-4 h-4" />
@@ -330,7 +318,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                   title="Exit Quiz"
                   aria-labelledby="exit-quiz-button"
                   onClick={onExit}
-                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -340,16 +328,16 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
           {/* Progress Bar */}
           <div className="mt-4">
-            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-2">
               <span>
-                Progress: {currentQuestionIndex + 1} of{" "}
+                Question {currentQuestionIndex + 1} of{" "}
                 {shuffledQuestions.length}
               </span>
               <span>Score: {score}</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
               <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full transition-all"
                 style={{
                   width: `${
                     ((currentQuestionIndex + 1) / shuffledQuestions.length) *
@@ -362,44 +350,36 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
         </div>
 
         {/* Question Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-6">
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-3">
-                <span className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full">
                   Question {currentQuestionIndex + 1} of{" "}
                   {shuffledQuestions.length}
                 </span>
-                <span
-                  className={`text-sm px-3 py-1 rounded-full ${
-                    currentQuestion.difficulty === "easy"
-                      ? "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400"
-                      : currentQuestion.difficulty === "medium"
-                      ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400"
-                      : "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                  }`}
-                >
+                <span className="text-xs px-2.5 py-1 rounded-full border border-slate-200 dark:border-border text-slate-600 dark:text-slate-400">
                   {currentQuestion.difficulty}
                 </span>
               </div>
 
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-relaxed">
+              <h2 className="text-lg font-medium text-slate-900 dark:text-foreground leading-relaxed">
                 {currentQuestion.text}
               </h2>
             </div>
 
             <button
               onClick={handleBookmark}
-              className={`ml-4 p-2 rounded-lg transition-colors duration-200 ${
+              className={`ml-4 p-2 rounded-lg border transition-colors ${
                 isBookmarked
-                  ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400"
-                  : "bg-gray-100 text-gray-400 dark:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
+                  ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
+                  : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600"
               }`}
             >
               {isBookmarked ? (
-                <BookmarkCheck className="w-5 h-5" />
+                <BookmarkCheck className="w-4 h-4" />
               ) : (
-                <Bookmark className="w-5 h-5" />
+                <Bookmark className="w-4 h-4" />
               )}
             </button>
           </div>
@@ -407,7 +387,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
           {/* Question Image */}
           {currentQuestion.imageUrl && (
             <div className="mb-6">
-              <img
+              <Image
                 src={currentQuestion.imageUrl}
                 alt="Question illustration"
                 className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
@@ -443,7 +423,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               <button
                 onClick={handleSubmitAnswer}
                 disabled={isSubmitting}
-                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
+                className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
               >
                 {isSubmitting ? "Submitting..." : "Submit Answer"}
               </button>
@@ -452,38 +432,21 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
           {/* Explanation */}
           {showExplanation && existingAnswer && currentQuestion.explanation && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-start space-x-3">
-                <div
-                  className={`p-2 rounded-full ${
-                    existingAnswer.isCorrect
-                      ? "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400"
-                      : "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                  }`}
-                >
-                  {existingAnswer.isCorrect ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <XCircle className="w-5 h-5" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                    {existingAnswer.isCorrect ? "Correct!" : "Incorrect"}
-                  </h4>
-                  {!existingAnswer.isCorrect && (
-                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
-                      The correct answer is:{" "}
-                      <strong>
-                        {currentQuestion.options[currentQuestion.correctAnswer]}
-                      </strong>
-                    </p>
-                  )}
-                  <p className="text-blue-800 dark:text-blue-200 leading-relaxed">
-                    {currentQuestion.explanation}
-                  </p>
-                </div>
-              </div>
+            <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-border">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-foreground mb-2">
+                {existingAnswer.isCorrect ? "Correct" : "Incorrect"}
+              </h4>
+              {!existingAnswer.isCorrect && (
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+                  Correct answer:{" "}
+                  <strong>
+                    {currentQuestion.options[currentQuestion.correctAnswer]}
+                  </strong>
+                </p>
+              )}
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                {currentQuestion.explanation}
+              </p>
             </div>
           )}
 
@@ -492,7 +455,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
             <div className="flex justify-center mb-6">
               <button
                 onClick={handleNextQuestion}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
+                className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
               >
                 {currentQuestionIndex === shuffledQuestions.length - 1
                   ? "Finish Quiz"
@@ -502,11 +465,11 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
+          <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-border">
             <button
               onClick={handlePreviousQuestion}
               disabled={currentQuestionIndex === 0}
-              className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
+              className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Previous</span>
@@ -516,11 +479,11 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               <button
                 onClick={
                   currentQuestionIndex === shuffledQuestions.length - 1
-                    ? finishQuiz
+                    ? handleFinishQuiz
                     : handleNextQuestion
                 }
                 disabled={!existingAnswer}
-                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <span>
                   {currentQuestionIndex === shuffledQuestions.length - 1

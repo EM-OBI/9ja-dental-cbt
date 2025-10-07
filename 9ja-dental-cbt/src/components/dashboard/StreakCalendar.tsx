@@ -7,7 +7,6 @@ import {
   isToday,
   subDays,
 } from "date-fns";
-import { Calendar, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/store/progressStore";
 
@@ -54,32 +53,21 @@ export default function StreakCalendar({
   const allActivityDates = [...activityDates, ...streakDates];
 
   return (
-    <div
-      className={cn(
-        "bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm overflow-auto hidden sm:block",
-        className
-      )}
-    >
+    <div className={cn("p-5 overflow-auto hidden sm:block", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h3>
-        </div>
-        <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
-          <Flame className="w-4 h-4" />
-          <span className="text-sm font-medium">
-            {streakData.currentStreak} days
-          </span>
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-foreground">
+          {title}
+        </h3>
+        <div className="text-sm font-semibold tabular-nums text-slate-900 dark:text-foreground">
+          {streakData.currentStreak} days
         </div>
       </div>
 
       {/* Mini Calendar */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {/* Week day headers */}
-        <div className="grid grid-cols-7 gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="grid grid-cols-7 gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
             <div key={day} className="text-center py-1">
               {day}
@@ -99,15 +87,15 @@ export default function StreakCalendar({
               <div
                 key={index}
                 className={cn(
-                  "aspect-square flex items-center justify-center text-xs rounded transition-colors",
+                  "aspect-square flex items-center justify-center text-xs rounded transition-colors font-medium",
                   {
-                    "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium":
+                    "bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900":
                       hasActivity,
-                    "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400":
+                    "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400":
                       !hasActivity && !isCurrentDay,
-                    "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium":
+                    "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 ring-1 ring-slate-300 dark:ring-slate-600":
                       isCurrentDay && !hasActivity,
-                    "bg-green-200 dark:bg-green-800/50 text-green-800 dark:text-green-200 font-bold border-2 border-green-400":
+                    "bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 ring-2 ring-slate-400 dark:ring-slate-500":
                       isCurrentDay && hasActivity,
                   }
                 )}
@@ -119,10 +107,10 @@ export default function StreakCalendar({
         </div>
 
         {/* Streak Info */}
-        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-            <span>Current: {streakData.currentStreak} days</span>
-            <span>Best: {streakData.longestStreak} days</span>
+        <div className="pt-3 border-t border-slate-100 dark:border-border/50">
+          <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+            <span>Current: {streakData.currentStreak}</span>
+            <span>Best: {streakData.longestStreak}</span>
           </div>
         </div>
       </div>

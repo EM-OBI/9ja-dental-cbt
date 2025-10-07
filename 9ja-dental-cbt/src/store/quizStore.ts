@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { QuizSession, QuizQuestion, QuizActions } from "./types";
-import { addXp } from "./userStore";
+import { addXp, getCurrentUserId } from "./userStore";
 import { databaseService } from "@/services/database";
 
 interface QuizState {
@@ -15,20 +15,7 @@ interface QuizState {
 type QuizStore = QuizState & QuizActions;
 
 // Questions will be loaded from the API instead of mock data
-
-// Available specialties for quiz selection
-const availableSpecialties = [
-  "General Dentistry",
-  "Oral Pathology",
-  "Endodontics",
-  "Periodontics",
-  "Oral Surgery",
-  "Orthodontics",
-  "Prosthodontics",
-  "Pediatric Dentistry",
-  "Oral Medicine",
-  "Dental Public Health",
-];
+// Specialties will be loaded from the API
 
 export const useQuizStore = create<QuizStore>()(
   persist(
@@ -38,9 +25,38 @@ export const useQuizStore = create<QuizStore>()(
       questions: [], // Will be loaded from API
       quizHistory: [],
       isLoading: false,
-      availableSpecialties,
+      availableSpecialties: [], // Will be loaded from API
 
       // Actions
+      // Fetch specialties from API
+      fetchSpecialties: async () => {
+        set({ isLoading: true });
+        try {
+          const response = await fetch(
+            "/api/specialties?includeQuestionCount=true"
+          );
+          const result = (await response.json()) as {
+            success: boolean;
+            data?: Array<{ name: string; questionCount?: number }>;
+            error?: string;
+          };
+
+          if (result.success && result.data) {
+            const specialtyNames = result.data.map((s) => s.name);
+            set({
+              availableSpecialties: specialtyNames,
+              isLoading: false,
+            });
+          } else {
+            console.error("Failed to fetch specialties:", result.error);
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error("Error fetching specialties:", error);
+          set({ isLoading: false });
+        }
+      },
+
       startQuiz: async (
         specialty: string,
         mode: "study" | "exam",
@@ -61,9 +77,18 @@ export const useQuizStore = create<QuizStore>()(
             .sort(() => Math.random() - 0.5)
             .slice(0, questionCount);
 
+          const userId = getCurrentUserId();
+          if (!userId) {
+            console.warn(
+              "Attempted to start a quiz session without an authenticated user"
+            );
+            set({ isLoading: false });
+            return;
+          }
+
           const newSession: QuizSession = {
             id: `quiz-${Date.now()}`,
-            userId: "user-123", // Get from user store
+            userId,
             mode,
             specialty,
             questions: selectedQuestions,
@@ -270,6 +295,58 @@ export const useQuizStore = create<QuizStore>()(
             quizHistory: [],
             isLoading: false,
           });
+        }
+      },
+
+      // Database integration - load available quizzes metadata
+      loadQuestionsFromDatabase: async (specialty?: string) => {
+        set({ isLoading: true });
+        try {
+          // For now, we'll keep questions empty and load them when a quiz is actually started
+          // This is because the Quiz type doesn't include questions array
+          // Questions would be fetched when starting a specific quiz via getQuizById
+
+          // We can still fetch quiz metadata to show available quizzes
+          const response = await databaseService.getQuizzes({
+            category: specialty,
+            limit: 100,
+          });
+
+          if (response.data && response.data.length > 0) {
+            // Store quiz metadata for later use
+            // Questions will be loaded when quiz is started
+            console.log(`Loaded ${response.data.length} quizzes from database`);
+            set({ isLoading: false });
+          } else {
+            console.warn("No quizzes found in database");
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error("Error loading quizzes from database:", error);
+          set({ isLoading: false });
+        }
+      },
+
+      // Load questions for a specific quiz when starting it
+      loadQuizQuestionsById: async (quizId: string) => {
+        set({ isLoading: true });
+        try {
+          const quiz = await databaseService.getQuizById(quizId);
+
+          if (quiz) {
+            // Transform quiz to questions format
+            // Note: Quiz type needs to be extended to include questions
+            // For now, we'll work with the assumption that questions are loaded separately
+            console.log(`Loaded quiz: ${quiz.title}`);
+            set({ isLoading: false });
+            // Return type is void, just update state
+          } else {
+            console.error("Quiz not found");
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error("Error loading quiz questions:", error);
+          set({ isLoading: false });
         }
       },
     }),

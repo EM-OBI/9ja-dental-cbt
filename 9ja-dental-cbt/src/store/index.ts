@@ -1,5 +1,10 @@
 // Main store exports and initialization
-import { useUserStore, initializeUser, addXp } from "./userStore";
+import {
+  useUserStore,
+  initializeUser,
+  addXp,
+  getCurrentUserId,
+} from "./userStore";
 import { useQuizStore, getQuizStats, getSpecialtyStats } from "./quizStore";
 import {
   useStudyStore,
@@ -36,7 +41,12 @@ import {
 } from "./notificationStore";
 
 // Re-export everything
-export { useUserStore, initializeUser, addXp } from "./userStore";
+export {
+  useUserStore,
+  initializeUser,
+  addXp,
+  getCurrentUserId,
+} from "./userStore";
 export { useQuizStore, getQuizStats, getSpecialtyStats } from "./quizStore";
 export {
   useStudyStore,

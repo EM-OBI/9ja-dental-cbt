@@ -28,6 +28,15 @@ export function useDashboardData(userId: string): UseDashboardDataResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setStats(null);
+      setStreak(null);
+      setLeaderboard([]);
+      setQuizAttempts([]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -52,9 +61,11 @@ export function useDashboardData(userId: string): UseDashboardDataResult {
   }, [userId]);
 
   useEffect(() => {
-    if (userId) {
-      fetchData();
+    if (!userId) {
+      setIsLoading(false);
+      return;
     }
+    fetchData();
   }, [userId, fetchData]);
 
   return {

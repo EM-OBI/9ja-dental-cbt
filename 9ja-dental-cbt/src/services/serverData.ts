@@ -1,0 +1,932 @@
+import { getDb } from "@/db";
+import {
+  user,
+  userProgress,
+  userPreferences,
+  userStreaks,
+  userAchievements,
+  quizzes,
+  questions,
+  quizSessions,
+  quizResults,
+  quizQuestions,
+  studySessions,
+  dailyActivity,
+  bookmarks,
+  achievements,
+  specialties,
+} from "@/db/schema";
+import { eq, desc, sql, and, or, gte, lte, like, inArray } from "drizzle-orm";
+import { nanoid } from "nanoid";
+
+// Helper function for error handling
+function handleDatabaseError(error: Error | unknown, context: string): never {
+  console.error(`Database Error (${context}):`, error);
+  const message = error instanceof Error ? error.message : "Unknown error";
+  throw new Error(`Failed to ${context}: ${message}`);
+}
+
+// ============================================
+// USER OPERATIONS
+// ============================================
+
+export async function getUserById(id: string) {
+  try {
+    const db = await getDb();
+    const userData = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+
+    if (!userData.length) {
+      throw new Error("User not found");
+    }
+
+    return userData[0];
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user");
+  }
+}
+
+export async function updateUser(
+  id: string,
+  updates: Partial<typeof user.$inferInsert>
+) {
+  try {
+    const db = await getDb();
+    const updatedUser = await db
+      .update(user)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, id))
+      .returning();
+
+    if (!updatedUser.length) {
+      throw new Error("User not found");
+    }
+
+    return updatedUser[0];
+  } catch (error) {
+    return handleDatabaseError(error, "update user");
+  }
+}
+
+export async function findUserByEmail(email: string) {
+  try {
+    const db = await getDb();
+    const userData = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, email))
+      .limit(1);
+
+    return userData.length > 0 ? userData[0] : null;
+  } catch (error) {
+    console.error(`Failed to find user by email: ${email}`, error);
+    return null;
+  }
+}
+
+// ============================================
+// USER PROGRESS OPERATIONS
+// ============================================
+
+export async function getUserProgress(userId: string) {
+  try {
+    const db = await getDb();
+
+    // Get user progress data
+    const progressData = await db
+      .select()
+      .from(userProgress)
+      .where(eq(userProgress.userId, userId))
+      .limit(1);
+
+    // Get quiz results statistics
+    const quizStats = await db
+      .select({
+        totalQuizzes: sql<number>`count(*)`,
+        averageScore: sql<number>`avg(${quizResults.score})`,
+        totalCorrect: sql<number>`sum(${quizResults.correctAnswers})`,
+        totalQuestions: sql<number>`sum(${quizResults.totalQuestions})`,
+      })
+      .from(quizResults)
+      .where(eq(quizResults.userId, userId));
+
+    // Get current streak
+    const currentStreak = await db
+      .select()
+      .from(userStreaks)
+      .where(eq(userStreaks.userId, userId))
+      .limit(1);
+
+    // Get recent activity (last 7 days)
+    const recentActivity = await db
+      .select()
+      .from(dailyActivity)
+      .where(eq(dailyActivity.userId, userId))
+      .orderBy(desc(dailyActivity.activityDate))
+      .limit(7);
+
+    return {
+      progressData: progressData[0] || null,
+      quizStats: quizStats[0] || null,
+      currentStreak: currentStreak[0] || null,
+      recentActivity,
+    };
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user progress");
+  }
+}
+
+export async function updateUserProgress(
+  userId: string,
+  specialtyId: string,
+  updates: Partial<typeof userProgress.$inferInsert>
+) {
+  try {
+    const db = await getDb();
+
+    // Check if progress record exists
+    const existing = await db
+      .select()
+      .from(userProgress)
+      .where(
+        and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.specialtyId, specialtyId)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing record
+      return await db
+        .update(userProgress)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.specialtyId, specialtyId)
+          )
+        )
+        .returning();
+    } else {
+      // Create new record
+      return await db
+        .insert(userProgress)
+        .values({
+          id: nanoid(),
+          userId,
+          specialtyId,
+          ...updates,
+        })
+        .returning();
+    }
+  } catch (error) {
+    return handleDatabaseError(error, "update user progress");
+  }
+}
+
+// ============================================
+// USER PREFERENCES OPERATIONS
+// ============================================
+
+export async function getUserPreferences(userId: string) {
+  try {
+    const db = await getDb();
+    const preferences = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .limit(1);
+
+    return preferences[0] || null;
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user preferences");
+  }
+}
+
+export async function updateUserPreferences(
+  userId: string,
+  updates: Partial<typeof userPreferences.$inferInsert>
+) {
+  try {
+    const db = await getDb();
+
+    // Check if preferences exist
+    const existing = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing preferences
+      return await db
+        .update(userPreferences)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(userPreferences.userId, userId))
+        .returning();
+    } else {
+      // Create new preferences
+      return await db
+        .insert(userPreferences)
+        .values({
+          id: nanoid(),
+          userId,
+          ...updates,
+        })
+        .returning();
+    }
+  } catch (error) {
+    return handleDatabaseError(error, "update user preferences");
+  }
+}
+
+// ============================================
+// USER STREAKS OPERATIONS
+// ============================================
+
+export async function getUserStreaks(userId: string) {
+  try {
+    const db = await getDb();
+    return await db
+      .select()
+      .from(userStreaks)
+      .where(eq(userStreaks.userId, userId));
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user streaks");
+  }
+}
+
+export async function updateUserStreak(
+  userId: string,
+  streakType: "daily_quiz" | "study_session" | "login" | "weekly_goal",
+  updates: Partial<typeof userStreaks.$inferInsert>
+) {
+  try {
+    const db = await getDb();
+
+    const existing = await db
+      .select()
+      .from(userStreaks)
+      .where(
+        and(
+          eq(userStreaks.userId, userId),
+          eq(userStreaks.streakType, streakType)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      return await db
+        .update(userStreaks)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userStreaks.userId, userId),
+            eq(userStreaks.streakType, streakType)
+          )
+        )
+        .returning();
+    } else {
+      return await db
+        .insert(userStreaks)
+        .values({
+          id: nanoid(),
+          userId,
+          streakType,
+          ...updates,
+        })
+        .returning();
+    }
+  } catch (error) {
+    return handleDatabaseError(error, "update user streak");
+  }
+}
+
+// ============================================
+// QUIZ OPERATIONS
+// ============================================
+
+export async function getQuizzes(
+  options: {
+    specialty?: string;
+    difficulty?: "easy" | "medium" | "hard";
+    page?: number;
+    limit?: number;
+  } = {}
+) {
+  try {
+    const db = await getDb();
+    const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
+
+    // Build conditions array
+    const conditions = [eq(quizzes.isActive, true)];
+
+    if (options.specialty) {
+      conditions.push(like(specialties.slug, `%${options.specialty}%`));
+    }
+
+    if (options.difficulty) {
+      conditions.push(eq(quizzes.difficulty, options.difficulty));
+    }
+
+    const results = await db
+      .select({
+        quiz: quizzes,
+        specialty: specialties,
+      })
+      .from(quizzes)
+      .leftJoin(specialties, eq(quizzes.specialtyId, specialties.id))
+      .where(and(...conditions))
+      .orderBy(desc(quizzes.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const totalCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(quizzes)
+      .where(eq(quizzes.isActive, true));
+
+    return {
+      quizzes: results.map((r) => ({
+        ...r.quiz,
+        specialty: r.specialty,
+      })),
+      total: Number(totalCount[0]?.count || 0),
+    };
+  } catch (error) {
+    return handleDatabaseError(error, "fetch quizzes");
+  }
+}
+
+export async function getQuizById(id: string) {
+  try {
+    const db = await getDb();
+
+    const quiz = await db
+      .select({
+        quiz: quizzes,
+        specialty: specialties,
+      })
+      .from(quizzes)
+      .leftJoin(specialties, eq(quizzes.specialtyId, specialties.id))
+      .where(eq(quizzes.id, id))
+      .limit(1);
+
+    if (!quiz.length) {
+      throw new Error("Quiz not found");
+    }
+
+    // Get quiz questions
+    const quizQuestionsData = await db
+      .select({
+        question: questions,
+        sortOrder: quizQuestions.sortOrder,
+      })
+      .from(quizQuestions)
+      .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
+      .where(eq(quizQuestions.quizId, id))
+      .orderBy(quizQuestions.sortOrder);
+
+    return {
+      ...quiz[0].quiz,
+      specialty: quiz[0].specialty,
+      questions: quizQuestionsData.map((q) => ({
+        ...q.question,
+        options: JSON.parse(q.question.options),
+        tags: q.question.tags ? JSON.parse(q.question.tags) : [],
+        sortOrder: q.sortOrder,
+      })),
+    };
+  } catch (error) {
+    return handleDatabaseError(error, "fetch quiz");
+  }
+}
+
+// ============================================
+// QUIZ SESSION OPERATIONS
+// ============================================
+
+export async function createQuizSession(
+  sessionData: typeof quizSessions.$inferInsert
+) {
+  try {
+    const db = await getDb();
+    return await db
+      .insert(quizSessions)
+      .values({
+        ...sessionData,
+        id: sessionData.id || nanoid(),
+      })
+      .returning();
+  } catch (error) {
+    return handleDatabaseError(error, "create quiz session");
+  }
+}
+
+export async function getQuizSession(id: string) {
+  try {
+    const db = await getDb();
+    const session = await db
+      .select()
+      .from(quizSessions)
+      .where(eq(quizSessions.id, id))
+      .limit(1);
+
+    return session[0] || null;
+  } catch (error) {
+    return handleDatabaseError(error, "fetch quiz session");
+  }
+}
+
+export async function updateQuizSession(
+  id: string,
+  updates: Partial<typeof quizSessions.$inferInsert>
+) {
+  try {
+    const db = await getDb();
+    return await db
+      .update(quizSessions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(quizSessions.id, id))
+      .returning();
+  } catch (error) {
+    return handleDatabaseError(error, "update quiz session");
+  }
+}
+
+export async function getUserQuizSessions(
+  userId: string,
+  options: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  } = {}
+) {
+  try {
+    const db = await getDb();
+    const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
+
+    // Build conditions array
+    const conditions = [eq(quizSessions.userId, userId)];
+
+    if (options.status === "completed") {
+      conditions.push(eq(quizSessions.isCompleted, true));
+    } else if (options.status === "active") {
+      conditions.push(eq(quizSessions.isCompleted, false));
+    }
+
+    const results = await db
+      .select({
+        session: quizSessions,
+        quiz: quizzes,
+      })
+      .from(quizSessions)
+      .leftJoin(quizzes, eq(quizSessions.quizId, quizzes.id))
+      .where(and(...conditions))
+      .orderBy(desc(quizSessions.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return results.map((r) => ({
+      ...r.session,
+      quiz: r.quiz,
+    }));
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user quiz sessions");
+  }
+}
+
+// ============================================
+// QUIZ RESULTS OPERATIONS
+// ============================================
+
+export async function createQuizResult(
+  resultData: typeof quizResults.$inferInsert
+) {
+  try {
+    const db = await getDb();
+    return await db
+      .insert(quizResults)
+      .values({
+        ...resultData,
+        id: resultData.id || nanoid(),
+      })
+      .returning();
+  } catch (error) {
+    return handleDatabaseError(error, "create quiz result");
+  }
+}
+
+export async function getUserQuizResults(
+  userId: string,
+  options: {
+    quizId?: string;
+    page?: number;
+    limit?: number;
+  } = {}
+) {
+  try {
+    const db = await getDb();
+    const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
+
+    // Build conditions array
+    const conditions = [eq(quizResults.userId, userId)];
+
+    if (options.quizId) {
+      conditions.push(eq(quizResults.quizId, options.quizId));
+    }
+
+    const results = await db
+      .select({
+        result: quizResults,
+        quiz: quizzes,
+      })
+      .from(quizResults)
+      .leftJoin(quizzes, eq(quizResults.quizId, quizzes.id))
+      .where(and(...conditions))
+      .orderBy(desc(quizResults.completedAt))
+      .limit(limit)
+      .offset(offset);
+
+    return results.map((r) => ({
+      ...r.result,
+      quiz: r.quiz,
+    }));
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user quiz results");
+  }
+}
+
+// ============================================
+// STUDY SESSIONS OPERATIONS
+// ============================================
+
+export async function createStudySession(
+  sessionData: typeof studySessions.$inferInsert
+) {
+  try {
+    const db = await getDb();
+    return await db
+      .insert(studySessions)
+      .values({
+        ...sessionData,
+        id: sessionData.id || nanoid(),
+      })
+      .returning();
+  } catch (error) {
+    return handleDatabaseError(error, "create study session");
+  }
+}
+
+export async function getUserStudySessions(
+  userId: string,
+  options: {
+    status?: string;
+    topic?: string;
+    page?: number;
+    limit?: number;
+  } = {}
+) {
+  try {
+    const db = await getDb();
+    const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
+
+    // Build conditions array
+    const conditions = [eq(studySessions.userId, userId)];
+
+    if (options.topic) {
+      conditions.push(like(specialties.name, `%${options.topic}%`));
+    }
+
+    const results = await db
+      .select({
+        session: studySessions,
+        specialty: specialties,
+      })
+      .from(studySessions)
+      .leftJoin(specialties, eq(studySessions.specialtyId, specialties.id))
+      .where(and(...conditions))
+      .orderBy(desc(studySessions.startedAt))
+      .limit(limit)
+      .offset(offset);
+
+    return results.map((r) => ({
+      ...r.session,
+      specialty: r.specialty,
+    }));
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user study sessions");
+  }
+}
+
+// ============================================
+// BOOKMARKS OPERATIONS
+// ============================================
+
+export async function createBookmark(
+  bookmarkData: typeof bookmarks.$inferInsert
+) {
+  try {
+    const db = await getDb();
+
+    // Check if bookmark already exists
+    const existing = await db
+      .select()
+      .from(bookmarks)
+      .where(
+        and(
+          eq(bookmarks.userId, bookmarkData.userId),
+          eq(bookmarks.itemType, bookmarkData.itemType),
+          eq(bookmarks.itemId, bookmarkData.itemId)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      throw new Error("Item already bookmarked");
+    }
+
+    return await db
+      .insert(bookmarks)
+      .values({
+        ...bookmarkData,
+        id: bookmarkData.id || nanoid(),
+      })
+      .returning();
+  } catch (error) {
+    return handleDatabaseError(error, "create bookmark");
+  }
+}
+
+export async function getUserBookmarks(
+  userId: string,
+  options: {
+    itemType?: "quiz" | "question" | "topic";
+    page?: number;
+    limit?: number;
+  } = {}
+) {
+  try {
+    const db = await getDb();
+    const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
+
+    // Build conditions array
+    const conditions = [eq(bookmarks.userId, userId)];
+
+    if (options.itemType) {
+      conditions.push(eq(bookmarks.itemType, options.itemType));
+    }
+
+    const results = await db
+      .select({
+        bookmark: bookmarks,
+        question: questions,
+      })
+      .from(bookmarks)
+      .leftJoin(
+        questions,
+        and(
+          eq(bookmarks.itemType, "question"),
+          eq(bookmarks.itemId, questions.id)
+        )
+      )
+      .where(and(...conditions))
+      .orderBy(desc(bookmarks.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return results.map((r) => ({
+      ...r.bookmark,
+      question: r.question
+        ? {
+            ...r.question,
+            options: JSON.parse(r.question.options),
+            tags: r.question.tags ? JSON.parse(r.question.tags) : [],
+          }
+        : null,
+    }));
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user bookmarks");
+  }
+}
+
+export async function deleteBookmark(id: string, userId: string) {
+  try {
+    const db = await getDb();
+    return await db
+      .delete(bookmarks)
+      .where(and(eq(bookmarks.id, id), eq(bookmarks.userId, userId)))
+      .returning();
+  } catch (error) {
+    return handleDatabaseError(error, "delete bookmark");
+  }
+}
+
+// ============================================
+// SPECIALTIES OPERATIONS
+// ============================================
+
+export async function getSpecialties() {
+  try {
+    const db = await getDb();
+    return await db
+      .select()
+      .from(specialties)
+      .where(eq(specialties.isActive, true))
+      .orderBy(specialties.sortOrder);
+  } catch (error) {
+    return handleDatabaseError(error, "fetch specialties");
+  }
+}
+
+export async function getSpecialtyById(id: string) {
+  try {
+    const db = await getDb();
+    const specialty = await db
+      .select()
+      .from(specialties)
+      .where(eq(specialties.id, id))
+      .limit(1);
+
+    return specialty[0] || null;
+  } catch (error) {
+    return handleDatabaseError(error, "fetch specialty");
+  }
+}
+
+// ============================================
+// QUESTIONS OPERATIONS
+// ============================================
+
+export async function getQuestions(
+  options: {
+    specialtyId?: string;
+    difficulty?: "easy" | "medium" | "hard";
+    search?: string;
+    page?: number;
+    limit?: number;
+  } = {}
+) {
+  try {
+    const db = await getDb();
+    const { page = 1, limit = 20 } = options;
+    const offset = (page - 1) * limit;
+
+    // Build conditions array
+    const conditions = [eq(questions.isActive, true)];
+
+    if (options.specialtyId) {
+      conditions.push(eq(questions.specialtyId, options.specialtyId));
+    }
+
+    if (options.difficulty) {
+      conditions.push(eq(questions.difficulty, options.difficulty));
+    }
+
+    if (options.search) {
+      conditions.push(like(questions.text, `%${options.search}%`));
+    }
+
+    const results = await db
+      .select({
+        question: questions,
+        specialty: specialties,
+      })
+      .from(questions)
+      .leftJoin(specialties, eq(questions.specialtyId, specialties.id))
+      .where(and(...conditions))
+      .orderBy(desc(questions.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return results.map((r) => ({
+      ...r.question,
+      options: JSON.parse(r.question.options),
+      tags: r.question.tags ? JSON.parse(r.question.tags) : [],
+      specialty: r.specialty,
+    }));
+  } catch (error) {
+    return handleDatabaseError(error, "fetch questions");
+  }
+}
+
+export async function getQuestionById(id: string) {
+  try {
+    const db = await getDb();
+    const question = await db
+      .select({
+        question: questions,
+        specialty: specialties,
+      })
+      .from(questions)
+      .leftJoin(specialties, eq(questions.specialtyId, specialties.id))
+      .where(eq(questions.id, id))
+      .limit(1);
+
+    if (!question.length) {
+      throw new Error("Question not found");
+    }
+
+    return {
+      ...question[0].question,
+      options: JSON.parse(question[0].question.options),
+      tags: question[0].question.tags
+        ? JSON.parse(question[0].question.tags)
+        : [],
+      specialty: question[0].specialty,
+    };
+  } catch (error) {
+    return handleDatabaseError(error, "fetch question");
+  }
+}
+
+// ============================================
+// DAILY ACTIVITY OPERATIONS
+// ============================================
+
+export async function updateDailyActivity(
+  userId: string,
+  date: string,
+  updates: Partial<typeof dailyActivity.$inferInsert>
+) {
+  try {
+    const db = await getDb();
+
+    const existing = await db
+      .select()
+      .from(dailyActivity)
+      .where(
+        and(
+          eq(dailyActivity.userId, userId),
+          eq(dailyActivity.activityDate, date)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      return await db
+        .update(dailyActivity)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(dailyActivity.userId, userId),
+            eq(dailyActivity.activityDate, date)
+          )
+        )
+        .returning();
+    } else {
+      return await db
+        .insert(dailyActivity)
+        .values({
+          id: nanoid(),
+          userId,
+          activityDate: date,
+          ...updates,
+        })
+        .returning();
+    }
+  } catch (error) {
+    return handleDatabaseError(error, "update daily activity");
+  }
+}
+
+export async function getUserDailyActivity(userId: string, days: number = 30) {
+  try {
+    const db = await getDb();
+    return await db
+      .select()
+      .from(dailyActivity)
+      .where(eq(dailyActivity.userId, userId))
+      .orderBy(desc(dailyActivity.activityDate))
+      .limit(days);
+  } catch (error) {
+    return handleDatabaseError(error, "fetch user daily activity");
+  }
+}

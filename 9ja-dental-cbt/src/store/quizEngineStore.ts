@@ -75,7 +75,8 @@ export const useQuizEngineStore = create<QuizStore>()(
           const shuffledQuestions = seededShuffle(questions, seed);
 
           const session: QuizSession = {
-            id: `quiz-${Date.now()}`,
+            id: config.sessionId || `quiz-${Date.now()}`,
+            quizId: config.quizId,
             mode: config.mode,
             timeLimit: config.timeLimit,
             specialty: config.specialty,

@@ -2,7 +2,7 @@
 export interface StatItem {
   title: string;
   value: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode; // Made optional for minimal design
   position: "top-right" | "bottom-left" | "top-left" | "bottom-right";
   delay: string;
 }
@@ -48,6 +48,7 @@ export interface QuizSession {
   totalQuestions: number;
   startTime: number;
   endTime?: number;
+  quizId?: string;
 }
 
 export interface QuizState {
@@ -84,6 +85,8 @@ export interface QuizConfig {
   specialty: string;
   totalQuestions: number;
   seed?: string;
+  quizId?: string;
+  sessionId?: string;
 }
 
 export interface QuizMode {

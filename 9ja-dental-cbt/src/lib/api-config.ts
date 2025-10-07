@@ -4,7 +4,7 @@ export const config = {
     apiUrl: "http://localhost:8787",
   },
   production: {
-    apiUrl: "https://dental-cbt.aokhitoya.workers.dev/",
+    apiUrl: "https://dental-cbt.aokhitoya.workers.dev",
   },
 };
 

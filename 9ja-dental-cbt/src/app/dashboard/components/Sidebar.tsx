@@ -44,7 +44,7 @@ export default function Sidebar({
       {/* Main Sidebar */}
       <aside
         className={`
-          fixed lg:relative inset-y-0 left-0 z-40
+          fixed lg:relative inset-y-0 left-0 z-50
           flex flex-col h-full
           border-r border-slate-200 dark:border-slate-800
           bg-white dark:bg-slate-900
@@ -64,7 +64,7 @@ export default function Sidebar({
           {showFullSidebar ? (
             /* Expanded Header */
             <>
-              <Link href="/" className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="h-9 w-9 bg-slate-900 dark:bg-white rounded-lg grid place-content-center flex-shrink-0">
                   <TowerControl className="h-5 w-5 text-white dark:text-slate-900" />
                 </div>
@@ -74,7 +74,7 @@ export default function Sidebar({
                 <span className="text-base font-semibold text-slate-900 dark:text-white lg:hidden">
                   9ja Dental
                 </span>
-              </Link>
+              </div>
               <button
                 title="Toggle sidebar"
                 aria-label="Toggle desktop sidebar"
@@ -138,7 +138,7 @@ export default function Sidebar({
       {isMobileMenuOpen && (
         <div
           onClick={closeMobileMenu}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-45 lg:hidden"
           aria-hidden="true"
         />
       )}

@@ -10,6 +10,7 @@ import { StreakCalendarDrawer } from "@/components/StreakCalendarDrawer";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { authClient } from "@/modules/auth/utils/auth-client";
 import { useLoadUserData } from "@/hooks/useLoadUserData";
+import { cn } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
@@ -83,21 +84,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 z-10">
-          {/* For Desktop Screen Only */}
-          <div className="hidden lg:block">
-            <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />
-          </div>
-          {/* For Mobile Screen Only */}
-          <div className="block lg:hidden">
-            <MobileHeader
-              onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
-            />
-          </div>
+        <header className="hidden lg:block bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 z-10">
+          <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />
         </header>
 
+        <MobileHeader
+          onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
+        />
+
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 scrollbar-hide pb-24 lg:pb-6">
+        <main
+          className={cn(
+            "flex-1 overflow-y-auto px-4 lg:px-6 space-y-6 scrollbar-hide pb-24 lg:pb-6",
+            "pt-[5.5rem] supports-[padding:env(safe-area-inset-top)]:pt-[calc(env(safe-area-inset-top)+5rem)]",
+            "lg:pt-6"
+          )}
+        >
           {/* Show loading indicator for data (optional, non-blocking) */}
           {isLoadingData && (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">

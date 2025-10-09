@@ -1,11 +1,10 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { Flame } from "lucide-react";
+import { Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useProgressStore } from "@/store/progressStore";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 import { NotificationPopover } from "@/components/ui/NotificationPopover";
 // import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
@@ -20,22 +19,16 @@ const pageTitles: Record<string, string> = {
 
 interface MobileHeaderProps {
   onStreakCalendarOpen?: () => void;
+  className?: string;
 }
 
 export default function MobileHeader({
   onStreakCalendarOpen,
+  className,
 }: MobileHeaderProps = {}) {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Dashboard";
-  const { streakData, recentActivity, initializeStreakData } =
-    useProgressStore();
-  const [mounted, setMounted] = useState(false);
-
-  // Initialize streak data after hydration
-  useEffect(() => {
-    setMounted(true);
-    initializeStreakData();
-  }, [initializeStreakData]);
+  const { recentActivity } = useProgressStore();
 
   // Check if user has activity today
   const hasActivityToday = recentActivity.some((activity) => {
@@ -44,11 +37,16 @@ export default function MobileHeader({
     return activityDate.toDateString() === today.toDateString();
   });
 
-  // Prevent hydration mismatch by showing 0 until mounted
-  const displayStreak = mounted ? streakData.currentStreak : 0;
-
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 backdrop-blur-lg">
+    <header
+      className={cn(
+        "lg:hidden fixed top-0 left-0 right-0 z-40 w-full",
+        "flex items-center justify-between gap-4 px-4 py-3",
+        "border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm",
+        "supports-[padding:env(safe-area-inset-top)]:pt-[calc(env(safe-area-inset-top)+0.75rem)]",
+        className
+      )}
+    >
       <div className="flex items-center gap-4">
         <div className="lg:hidden w-8"></div>
         <div>
@@ -58,7 +56,7 @@ export default function MobileHeader({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        {/* Streak Flame Icon and Badge */}
+        {/* Activity Icon and Badge */}
         <motion.button
           onClick={onStreakCalendarOpen}
           className={cn(
@@ -69,14 +67,14 @@ export default function MobileHeader({
           )}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          aria-label={`Open streak calendar. Current streak: ${displayStreak} days`}
+          aria-label={`Open recent activity. Activity count: ${recentActivity.length}`}
         >
-          <Flame className="h-5 w-5 text-orange-500" />
+          <Activity className="h-5 w-5 text-orange-500" />
           <Badge
             variant="secondary"
             className="bg-primary/10 text-primary border-primary/20 font-bold text-xs px-1.5 py-0.5"
           >
-            {displayStreak}
+            {recentActivity.length}
           </Badge>
           {hasActivityToday && (
             <motion.div

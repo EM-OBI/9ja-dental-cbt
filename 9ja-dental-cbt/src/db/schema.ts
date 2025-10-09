@@ -680,10 +680,6 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
     fields: [userProgress.userId],
     references: [user.id],
   }),
-  specialty: one(specialties, {
-    fields: [userProgress.specialtyId],
-    references: [specialties.id],
-  }),
 }));
 
 export const studySessionsRelations = relations(studySessions, ({ one }) => ({
@@ -718,15 +714,12 @@ export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
   }),
 }));
 
-export const userPreferencesRelations = relations(
-  userPreferences,
-  ({ one }) => ({
-    user: one(user, {
-      fields: [userPreferences.userId],
-      references: [user.id],
-    }),
-  })
-);
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+  user: one(user, {
+    fields: [userProfiles.userId],
+    references: [user.id],
+  }),
+}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {

@@ -6,4 +6,10 @@ export async function getDb() {
   const { env } = await getCloudflareContext();
   return drizzle(env.dental_data, { schema });
 }
+
+export async function getKV() {
+  const { env } = await getCloudflareContext();
+  return env.KV_DENTAL;
+}
+
 export * from "./schema";

@@ -566,6 +566,7 @@ export const useProgressStore = create<ProgressStore>()(
           },
           study: {
             totalHours: studyStats.totalHours,
+            totalMinutes: studyTotalMinutes,
             materialsCompleted: studyStats.materialsCompleted,
             notesCreated: studyStats.totalNotes,
             focusSessions: 0, // Would be calculated from study sessions
@@ -585,7 +586,7 @@ export const useProgressStore = create<ProgressStore>()(
         set({ progressStats: updatedStats, streakData: resolvedStreakData });
       },
 
-      updateStreak: (activityType: "quiz" | "study" | "review") => {
+      updateStreak: (activityType: "quiz" | "study" | "review" | "login") => {
         const currentStreakData = get().streakData;
         const today = new Date().toISOString().split("T")[0];
         const resolvedUserId = getCurrentUserId() ?? currentStreakData.userId;

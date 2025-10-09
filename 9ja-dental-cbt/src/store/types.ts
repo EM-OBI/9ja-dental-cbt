@@ -172,6 +172,7 @@ export interface ProgressStats {
   };
   study: {
     totalHours: number;
+    totalMinutes: number;
     materialsCompleted: number;
     notesCreated: number;
     focusSessions: number;

@@ -119,7 +119,7 @@ export interface StreakData {
   streakHistory: Array<{
     date: string;
     active: boolean;
-    activityTypes: ("quiz" | "study" | "review")[];
+    activityTypes: ("quiz" | "study" | "review" | "login")[];
     activityCount: number;
   }>;
   weeklyGoal: number;
@@ -330,13 +330,14 @@ export interface StudyActions {
 export interface ProgressActions {
   initializeStreakData: () => void;
   updateStats: () => void;
-  updateStreak: (activityType: "quiz" | "study" | "review") => void;
+  updateStreak: (activityType: "quiz" | "study" | "review" | "login") => void;
   unlockAchievement: (achievementId: string) => void;
   addActivity: (activity: {
     type: "quiz" | "study" | "achievement" | "streak";
     description: string;
     points?: number;
   }) => void;
+  resetProgress: () => void;
   // Database integration
   loadProgressFromDatabase: (userId: string) => Promise<void>;
 }

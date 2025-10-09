@@ -154,7 +154,7 @@ export class DatabaseService implements DatabaseAdapter {
       const quizAttempts: QuizAttempt[] = userProgress.recentActivity
         .filter((activity) => activity.type === "quiz_completed")
         .slice(0, limit)
-        .map((activity, index) => ({
+        .map((activity) => ({
           id: activity.id,
           userId,
           quizId: `quiz-${activity.id}`,
@@ -196,6 +196,7 @@ export class DatabaseService implements DatabaseAdapter {
 
   async getDashboardStats(userId: string): Promise<DashboardStats> {
     try {
+      void userId;
       return await apiClient.getDashboardStats();
     } catch (error) {
       console.error("Failed to fetch dashboard stats:", error);
@@ -275,6 +276,7 @@ export class DatabaseService implements DatabaseAdapter {
 
   async getStudySessions(userId: string, limit = 10): Promise<StudySession[]> {
     try {
+      void limit;
       return await apiClient.getStudySessions(userId);
     } catch (error) {
       console.error("Failed to fetch study sessions:", error);
@@ -407,7 +409,9 @@ export class DatabaseService implements DatabaseAdapter {
     studyTimeDistribution: Array<{ hour: number; minutes: number }>;
   }> {
     try {
-      const [dashboardStats, userStreak] = await Promise.all([
+      void timeRange;
+
+      const [, userStreak] = await Promise.all([
         this.getDashboardStats(userId),
         this.getUserStreak(userId),
       ]);

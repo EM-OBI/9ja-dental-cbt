@@ -212,12 +212,24 @@ export async function getUserProgress(userId: string) {
   try {
     const db = await getDb();
 
-    // Get user progress data
-    const progressData = await db
-      .select()
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId))
-      .limit(1);
+    // Aggregate progress metrics from daily activity snapshots
+    const [activitySummary] = await db
+      .select({
+        totalQuizzes: sql<number>`coalesce(sum(${dailyActivity.quizzesCompleted}), 0)`,
+        totalQuestionsAnswered: sql<number>`coalesce(sum(${dailyActivity.questionsAnswered}), 0)`,
+        correctAnswers: sql<number>`coalesce(sum(${dailyActivity.correctAnswers}), 0)`,
+        totalStudyMinutes: sql<number>`coalesce(sum(${dailyActivity.studyMinutes}), 0)`,
+        loginCount: sql<number>`coalesce(sum(${dailyActivity.loginCount}), 0)`,
+        pointsEarned: sql<number>`coalesce(sum(${dailyActivity.pointsEarned}), 0)`,
+        xpEarned: sql<number>`coalesce(sum(${dailyActivity.xpEarned}), 0)`,
+        streakDaysMaintained: sql<number>`coalesce(sum(${dailyActivity.streakMaintained}), 0)`,
+        lastActivityDate: sql<
+          string | null
+        >`max(${dailyActivity.activityDate})`,
+        activeDays: sql<number>`count(distinct ${dailyActivity.activityDate})`,
+      })
+      .from(dailyActivity)
+      .where(eq(dailyActivity.userId, userId));
 
     // Get quiz results statistics
     const quizStats = await db
@@ -245,8 +257,59 @@ export async function getUserProgress(userId: string) {
       .orderBy(desc(dailyActivity.activityDate))
       .limit(7);
 
+    const aggregatedMetrics = {
+      totalQuizzes: Number(activitySummary?.totalQuizzes ?? 0),
+      totalQuestionsAnswered: Number(
+        activitySummary?.totalQuestionsAnswered ?? 0
+      ),
+      correctAnswers: Number(activitySummary?.correctAnswers ?? 0),
+      totalStudyMinutes: Number(activitySummary?.totalStudyMinutes ?? 0),
+      loginCount: Number(activitySummary?.loginCount ?? 0),
+      pointsEarned: Number(activitySummary?.pointsEarned ?? 0),
+      xpEarned: Number(activitySummary?.xpEarned ?? 0),
+      streakDaysMaintained: Number(activitySummary?.streakDaysMaintained ?? 0),
+      activeDays: Number(activitySummary?.activeDays ?? 0),
+      lastActivityDate: activitySummary?.lastActivityDate ?? null,
+    };
+
+    const totalQuestions = aggregatedMetrics.totalQuestionsAnswered;
+    const correctAnswers = aggregatedMetrics.correctAnswers;
+    const averageScore =
+      totalQuestions > 0
+        ? Math.round((correctAnswers / totalQuestions) * 100)
+        : 0;
+
+    const focusSessions = aggregatedMetrics.activeDays;
+    const totalStudyMinutes = aggregatedMetrics.totalStudyMinutes;
+
+    const progressSummary = {
+      id: `daily-aggregate-${userId}`,
+      userId,
+      totalQuizzes: aggregatedMetrics.totalQuizzes,
+      completedQuizzes: aggregatedMetrics.totalQuizzes,
+      averageScore,
+      bestScore: averageScore,
+      totalQuestionsAnswered: aggregatedMetrics.totalQuestionsAnswered,
+      correctAnswers: aggregatedMetrics.correctAnswers,
+      totalTimeSpent: totalStudyMinutes,
+      totalStudyMinutes,
+      materialsCompleted: 0,
+      notesCreated: 0,
+      focusSessions,
+      averageFocusTime:
+        focusSessions > 0 ? Math.round(totalStudyMinutes / focusSessions) : 0,
+      specialtyStats: "{}",
+      recentActivity: JSON.stringify(recentActivity),
+      lastActivityDate: aggregatedMetrics.lastActivityDate,
+      pointsEarned: aggregatedMetrics.pointsEarned,
+      xpEarned: aggregatedMetrics.xpEarned,
+      loginCount: aggregatedMetrics.loginCount,
+      streakDaysMaintained: aggregatedMetrics.streakDaysMaintained,
+      activeDays: aggregatedMetrics.activeDays,
+    };
+
     return {
-      progressData: progressData[0] || null,
+      progressData: progressSummary,
       quizStats: quizStats[0] || null,
       currentStreak: currentStreak[0] || null,
       recentActivity,
@@ -258,51 +321,38 @@ export async function getUserProgress(userId: string) {
 
 export async function updateUserProgress(
   userId: string,
-  specialtyId: string,
   updates: Partial<typeof userProgress.$inferInsert>
 ) {
   try {
     const db = await getDb();
 
-    // Check if progress record exists
     const existing = await db
       .select()
       .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.specialtyId, specialtyId)
-        )
-      )
+      .where(eq(userProgress.userId, userId))
       .limit(1);
 
     if (existing.length > 0) {
-      // Update existing record
       return await db
         .update(userProgress)
         .set({
           ...updates,
           updatedAt: new Date(),
         })
-        .where(
-          and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.specialtyId, specialtyId)
-          )
-        )
-        .returning();
-    } else {
-      // Create new record
-      return await db
-        .insert(userProgress)
-        .values({
-          id: nanoid(),
-          userId,
-          specialtyId,
-          ...updates,
-        })
+        .where(eq(userProgress.userId, userId))
         .returning();
     }
+
+    return await db
+      .insert(userProgress)
+      .values({
+        id: nanoid(),
+        userId,
+        ...updates,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
   } catch (error) {
     return handleDatabaseError(error, "update user progress");
   }
@@ -548,25 +598,6 @@ export async function getQuizSession(id: string) {
   }
 }
 
-export async function updateQuizSession(
-  id: string,
-  updates: Partial<typeof quizSessions.$inferInsert>
-) {
-  try {
-    const db = await getDb();
-    return await db
-      .update(quizSessions)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
-      .where(eq(quizSessions.id, id))
-      .returning();
-  } catch (error) {
-    return handleDatabaseError(error, "update quiz session");
-  }
-}
-
 export async function getUserQuizSessions(
   userId: string,
   options: {
@@ -577,15 +608,14 @@ export async function getUserQuizSessions(
 ) {
   try {
     const db = await getDb();
-    const { page = 1, limit = 10 } = options;
+    const { page = 1, limit = 10, status } = options;
     const offset = (page - 1) * limit;
 
-    // Build conditions array
     const conditions = [eq(quizSessions.userId, userId)];
 
-    if (options.status === "completed") {
+    if (status === "completed") {
       conditions.push(eq(quizSessions.isCompleted, true));
-    } else if (options.status === "active") {
+    } else if (status === "active") {
       conditions.push(eq(quizSessions.isCompleted, false));
     }
 

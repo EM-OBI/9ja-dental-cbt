@@ -2,9 +2,8 @@ import { getDb } from "@/db";
 import {
   user,
   userProgress,
-  userPreferences,
+  userProfiles,
   userStreaks,
-  userAchievements,
   quizzes,
   questions,
   quizSessions,
@@ -13,17 +12,126 @@ import {
   studySessions,
   dailyActivity,
   bookmarks,
-  achievements,
   specialties,
 } from "@/db/schema";
-import { eq, desc, sql, and, or, gte, lte, like, inArray } from "drizzle-orm";
+import { eq, desc, sql, and, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import type { UserPreferences as PreferenceShape } from "@/store/types";
 
 // Helper function for error handling
 function handleDatabaseError(error: Error | unknown, context: string): never {
   console.error(`Database Error (${context}):`, error);
   const message = error instanceof Error ? error.message : "Unknown error";
   throw new Error(`Failed to ${context}: ${message}`);
+}
+
+const DEFAULT_USER_PREFERENCES: PreferenceShape = {
+  theme: "system",
+  notifications: {
+    studyReminders: true,
+    streakAlerts: true,
+    progressReports: true,
+    achievements: true,
+  },
+  quiz: {
+    defaultMode: "study",
+    showExplanations: true,
+    timePerQuestion: 60,
+    autoSubmit: false,
+  },
+  study: {
+    defaultFocusTime: 25,
+    breakTime: 5,
+    soundEffects: true,
+  },
+};
+
+type PreferenceUpdate = Partial<PreferenceShape> & {
+  notifications?: Partial<PreferenceShape["notifications"]>;
+  quiz?: Partial<PreferenceShape["quiz"]>;
+  study?: Partial<PreferenceShape["study"]>;
+};
+
+const serializePreferences = (prefs: PreferenceShape): string =>
+  JSON.stringify(prefs);
+
+const parsePreferences = (raw: string | null | undefined): PreferenceShape => {
+  if (!raw) {
+    return { ...DEFAULT_USER_PREFERENCES };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as PreferenceShape;
+    return {
+      ...DEFAULT_USER_PREFERENCES,
+      ...parsed,
+      notifications: {
+        ...DEFAULT_USER_PREFERENCES.notifications,
+        ...(parsed?.notifications ?? {}),
+      },
+      quiz: {
+        ...DEFAULT_USER_PREFERENCES.quiz,
+        ...(parsed?.quiz ?? {}),
+      },
+      study: {
+        ...DEFAULT_USER_PREFERENCES.study,
+        ...(parsed?.study ?? {}),
+      },
+    };
+  } catch (error) {
+    console.warn(
+      "Failed to parse user preferences, falling back to defaults",
+      error
+    );
+    return { ...DEFAULT_USER_PREFERENCES };
+  }
+};
+
+const mergePreferences = (
+  current: PreferenceShape,
+  updates: PreferenceUpdate
+): PreferenceShape => ({
+  ...current,
+  ...updates,
+  notifications: {
+    ...current.notifications,
+    ...(updates.notifications ?? {}),
+  },
+  quiz: {
+    ...current.quiz,
+    ...(updates.quiz ?? {}),
+  },
+  study: {
+    ...current.study,
+    ...(updates.study ?? {}),
+  },
+});
+
+async function ensureUserProfile(
+  db: Awaited<ReturnType<typeof getDb>>,
+  userId: string
+) {
+  const existing = await db
+    .select()
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  const [created] = await db
+    .insert(userProfiles)
+    .values({
+      userId,
+      preferences: serializePreferences(DEFAULT_USER_PREFERENCES),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  return created;
 }
 
 // ============================================
@@ -43,7 +151,13 @@ export async function getUserById(id: string) {
       throw new Error("User not found");
     }
 
-    return userData[0];
+    const profile = await ensureUserProfile(db, id);
+
+    return {
+      ...userData[0],
+      profile,
+      preferences: parsePreferences(profile.preferences),
+    };
   } catch (error) {
     return handleDatabaseError(error, "fetch user");
   }
@@ -201,13 +315,8 @@ export async function updateUserProgress(
 export async function getUserPreferences(userId: string) {
   try {
     const db = await getDb();
-    const preferences = await db
-      .select()
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, userId))
-      .limit(1);
-
-    return preferences[0] || null;
+    const profile = await ensureUserProfile(db, userId);
+    return parsePreferences(profile.preferences);
   } catch (error) {
     return handleDatabaseError(error, "fetch user preferences");
   }
@@ -215,39 +324,23 @@ export async function getUserPreferences(userId: string) {
 
 export async function updateUserPreferences(
   userId: string,
-  updates: Partial<typeof userPreferences.$inferInsert>
+  updates: PreferenceUpdate
 ) {
   try {
     const db = await getDb();
+    const profile = await ensureUserProfile(db, userId);
+    const currentPreferences = parsePreferences(profile.preferences);
+    const mergedPreferences = mergePreferences(currentPreferences, updates);
 
-    // Check if preferences exist
-    const existing = await db
-      .select()
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, userId))
-      .limit(1);
+    await db
+      .update(userProfiles)
+      .set({
+        preferences: serializePreferences(mergedPreferences),
+        updatedAt: new Date(),
+      })
+      .where(eq(userProfiles.userId, userId));
 
-    if (existing.length > 0) {
-      // Update existing preferences
-      return await db
-        .update(userPreferences)
-        .set({
-          ...updates,
-          updatedAt: new Date(),
-        })
-        .where(eq(userPreferences.userId, userId))
-        .returning();
-    } else {
-      // Create new preferences
-      return await db
-        .insert(userPreferences)
-        .values({
-          id: nanoid(),
-          userId,
-          ...updates,
-        })
-        .returning();
-    }
+    return mergedPreferences;
   } catch (error) {
     return handleDatabaseError(error, "update user preferences");
   }

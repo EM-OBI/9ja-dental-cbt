@@ -10,7 +10,8 @@ import {
   StudySession,
   PaginatedResponse,
 } from "@/types/dashboard";
-import { Question, UserPreferences } from "@/types/backendTypes";
+import { Question } from "@/types/backendTypes";
+import type { UserPreferences } from "@/store/types";
 import { apiClient } from "./api";
 
 // Extended Database Service with full authentication and quiz session support
@@ -27,7 +28,7 @@ export class DatabaseService implements DatabaseAdapter {
   async updateUserPreferences(
     id: string,
     preferences: UserPreferences
-  ): Promise<User> {
+  ): Promise<UserPreferences> {
     try {
       return await apiClient.updateUserPreferences(id, preferences);
     } catch (error) {

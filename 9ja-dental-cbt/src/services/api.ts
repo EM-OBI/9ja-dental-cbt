@@ -8,7 +8,8 @@ import {
   UserStreak,
   RecentActivity,
 } from "@/types/dashboard";
-import { UserPreferences, Question } from "@/types/backendTypes";
+import type { Question } from "@/types/backendTypes";
+import type { UserPreferences } from "@/store/types";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -113,7 +114,7 @@ class ApiClient {
   async updateUserPreferences(
     id: string,
     preferences: UserPreferences
-  ): Promise<User> {
+  ): Promise<UserPreferences> {
     return this.request(`/api/users/${id}/preferences`, {
       method: "PUT",
       body: JSON.stringify(preferences),

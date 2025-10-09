@@ -17,6 +17,12 @@ type QuizStore = QuizState & QuizActions;
 // Questions will be loaded from the API instead of mock data
 // Specialties will be loaded from the API
 
+// Create a user-specific storage key
+const getStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `quiz-storage-${userId}` : "quiz-storage-guest";
+};
+
 export const useQuizStore = create<QuizStore>()(
   persist(
     (set, get) => ({
@@ -351,7 +357,7 @@ export const useQuizStore = create<QuizStore>()(
       },
     }),
     {
-      name: "quiz-storage",
+      name: getStorageKey(),
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         quizHistory: state.quizHistory,

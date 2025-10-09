@@ -23,6 +23,7 @@ import {
 import { authClient } from "@/modules/auth/utils/auth-client";
 import dashboardRoutes from "@/modules/dashboard/dashboard.route";
 import { signIn } from "../actions/auth.action";
+import { hydrateClientAfterAuth } from "../utils/post-auth";
 import authRoutes from "../auth.route";
 
 export function LoginForm({
@@ -86,6 +87,12 @@ export function LoginForm({
     const { success, message } = await signIn(result.data);
 
     if (success) {
+      try {
+        await hydrateClientAfterAuth();
+      } catch (error) {
+        console.error("Failed to refresh user after sign-in", error);
+      }
+
       toast.success(message.toString());
       router.push(dashboardRoutes.dashboard);
     } else {

@@ -9,6 +9,8 @@ import {
   QuizConfig,
 } from "@/types/definitions";
 import { seededShuffle } from "@/utils/shuffle";
+import { getCurrentUserId } from "./userStore";
+import { useProgressStore } from "./progressStore";
 
 export interface QuizActions {
   // Core actions
@@ -62,6 +64,12 @@ const initialState: QuizState = {
   startTime: null,
   lastQuestionStartTime: null,
   seed: "",
+};
+
+// Create a user-specific storage key
+const getQuizEngineStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `quiz-engine-${userId}` : "quiz-engine-guest";
 };
 
 export const useQuizEngineStore = create<QuizStore>()(
@@ -209,6 +217,21 @@ export const useQuizEngineStore = create<QuizStore>()(
 
         finishQuiz: () => {
           const state = get();
+
+          if (!state.session) {
+            console.warn(
+              "Attempted to finish a quiz without an active session."
+            );
+            return;
+          }
+
+          if (state.session.endTime) {
+            console.debug(
+              "Quiz session already completed; skipping duplicate finish call."
+            );
+            return;
+          }
+
           const endTime = Date.now();
 
           console.log(
@@ -216,17 +239,84 @@ export const useQuizEngineStore = create<QuizStore>()(
             state.timeRemaining === 0 ? "Time expired" : "Manual finish"
           );
 
-          if (state.session) {
-            const updatedSession = {
-              ...state.session,
-              endTime,
-            };
+          const updatedSession = {
+            ...state.session,
+            endTime,
+          };
 
-            set({
-              session: updatedSession,
-              isActive: false,
-            });
+          set({
+            session: updatedSession,
+            isActive: false,
+          });
+
+          const userId = getCurrentUserId();
+          if (!userId) {
+            console.warn(
+              "No authenticated user found; skipping activity tracking."
+            );
+            return;
           }
+
+          const totalQuestions = state.shuffledQuestions.length;
+          const answeredQuestions = state.answers.length;
+          const correctAnswers = state.answers.filter(
+            (answer) => answer.isCorrect
+          ).length;
+          const pointsEarned = state.score;
+          const durationSeconds = state.startTime
+            ? Math.max(0, Math.round((endTime - state.startTime) / 1000))
+            : null;
+
+          if (totalQuestions === 0) {
+            console.warn(
+              "Quiz finished without loaded questions; skipping activity tracking."
+            );
+            return;
+          }
+
+          const payload = {
+            activityType: "quiz" as const,
+            questionsAnswered: answeredQuestions,
+            correctAnswers,
+            pointsEarned,
+            xpEarned: pointsEarned,
+            quizzesCompleted: 1,
+            durationSeconds: durationSeconds ?? undefined,
+            quizId: state.session.quizId,
+            metadata: {
+              totalQuestions,
+            },
+          };
+
+          void (async () => {
+            try {
+              const response = await fetch(
+                `/api/users/${userId}/daily-activity`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                }
+              );
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Failed to record daily activity:", errorText);
+                return;
+              }
+
+              const progressStore = useProgressStore.getState();
+              progressStore.updateStreak("quiz");
+              progressStore.addActivity({
+                type: "quiz",
+                description: `Completed a quiz with ${correctAnswers}/${totalQuestions} correct answers`,
+                points: pointsEarned,
+              });
+              progressStore.updateStats();
+            } catch (error) {
+              console.error("Error recording daily activity:", error);
+            }
+          })();
         },
 
         updateTimer: () => {
@@ -342,7 +432,7 @@ export const useQuizEngineStore = create<QuizStore>()(
         },
       }),
       {
-        name: "quiz-engine-store",
+        name: getQuizEngineStorageKey(),
         partialize: (state) => ({
           session: state.session,
           answers: state.answers,

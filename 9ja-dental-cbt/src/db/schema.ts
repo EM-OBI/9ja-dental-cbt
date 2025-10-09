@@ -29,6 +29,28 @@ export const user = sqliteTable("user", {
     .notNull(),
 });
 
+export const userProfiles = sqliteTable("user_profiles", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  subscription: text("subscription", {
+    enum: ["free", "premium", "enterprise"],
+  })
+    .default("free")
+    .notNull(),
+  level: integer("level").default(1).notNull(),
+  xp: integer("xp").default(0).notNull(),
+  preferences: text("preferences").default("{}").notNull(),
+  lastLoginAt: integer("last_login_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .$onUpdateFn(() => new Date())
+    .notNull(),
+});
+
 export const session = sqliteTable("session", {
   id: text("id").primaryKey(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
@@ -103,37 +125,6 @@ export const specialties = sqliteTable("specialties", {
   isActive: integer("is_active", { mode: "boolean" }).default(true),
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())
-    .notNull(),
-});
-
-export const userPreferences = sqliteTable("user_preferences", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" })
-    .unique(),
-  theme: text("theme", { enum: ["light", "dark", "system"] }).default("system"),
-  notifications: integer("notifications", { mode: "boolean" }).default(true),
-  difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default(
-    "medium"
-  ),
-  studyReminders: integer("study_reminders", { mode: "boolean" }).default(true),
-  language: text("language").default("en"),
-  timezone: text("timezone").default("UTC"),
-  emailNotifications: integer("email_notifications", {
-    mode: "boolean",
-  }).default(true),
-  pushNotifications: integer("push_notifications", { mode: "boolean" }).default(
-    true
-  ),
-  preferredStudyTime: text("preferred_study_time"),
-  dailyGoal: integer("daily_goal").default(10),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .$onUpdateFn(() => new Date())
     .notNull(),
 });
 
@@ -287,31 +278,38 @@ export const quizResults = sqliteTable("quiz_results", {
     .notNull(),
 });
 
-export const userProgress = sqliteTable("user_progress", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  specialtyId: text("specialty_id").references(() => specialties.id),
-  totalQuestionsAnswered: integer("total_questions_answered").default(0),
-  correctAnswers: integer("correct_answers").default(0),
-  accuracyRate: real("accuracy_rate").default(0.0),
-  averageTimePerQuestion: integer("average_time_per_question").default(0),
-  totalStudyTime: integer("total_study_time").default(0),
-  questionsPerDifficulty: text("questions_per_difficulty").default(
-    '{"easy": 0, "medium": 0, "hard": 0}'
-  ),
-  weeklyGoals: text("weekly_goals").default("{}"),
-  monthlyGoals: text("monthly_goals").default("{}"),
-  lastActivityDate: integer("last_activity_date", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .$onUpdateFn(() => new Date())
-    .notNull(),
-});
+export const userProgress = sqliteTable(
+  "user_progress",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    totalQuizzes: integer("total_quizzes").default(0),
+    completedQuizzes: integer("completed_quizzes").default(0),
+    averageScore: real("average_score").default(0),
+    bestScore: integer("best_score").default(0),
+    totalQuestionsAnswered: integer("total_questions_answered").default(0),
+    correctAnswers: integer("correct_answers").default(0),
+    totalTimeSpent: integer("total_time_spent").default(0),
+    totalStudyMinutes: integer("total_study_minutes").default(0),
+    materialsCompleted: integer("materials_completed").default(0),
+    notesCreated: integer("notes_created").default(0),
+    focusSessions: integer("focus_sessions").default(0),
+    averageFocusTime: integer("average_focus_time").default(0),
+    specialtyStats: text("specialty_stats").default("{}"),
+    recentActivity: text("recent_activity").default("[]"),
+    lastActivityDate: text("last_activity_date"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .$defaultFn(() => new Date())
+      .$onUpdateFn(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex("user_progress_user_idx").on(table.userId)]
+);
 
 export const studySessions = sqliteTable("study_sessions", {
   id: text("id").primaryKey(),
@@ -352,12 +350,9 @@ export const studySummaries = sqliteTable(
       .$defaultFn(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    userTopicIdx: uniqueIndex("summaries_user_topic_idx").on(
-      table.userId,
-      table.topicSlug
-    ),
-  })
+  (table) => [
+    uniqueIndex("summaries_user_topic_idx").on(table.userId, table.topicSlug),
+  ]
 );
 
 export const studyFlashcards = sqliteTable(
@@ -379,12 +374,9 @@ export const studyFlashcards = sqliteTable(
       .$defaultFn(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    userTopicIdx: uniqueIndex("flashcards_user_topic_idx").on(
-      table.userId,
-      table.topicSlug
-    ),
-  })
+  (table) => [
+    uniqueIndex("flashcards_user_topic_idx").on(table.userId, table.topicSlug),
+  ]
 );
 
 export const studyQuizzes = sqliteTable(
@@ -406,12 +398,12 @@ export const studyQuizzes = sqliteTable(
       .$defaultFn(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    userTopicIdx: uniqueIndex("study_quizzes_user_topic_idx").on(
+  (table) => [
+    uniqueIndex("study_quizzes_user_topic_idx").on(
       table.userId,
       table.topicSlug
     ),
-  })
+  ]
 );
 
 export const studyProgress = sqliteTable(
@@ -436,39 +428,48 @@ export const studyProgress = sqliteTable(
       .$onUpdateFn(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    userTopicIdx: uniqueIndex("study_progress_user_topic_idx").on(
+  (table) => [
+    uniqueIndex("study_progress_user_topic_idx").on(
       table.userId,
       table.topicSlug
     ),
-  })
+  ]
 );
 
-export const dailyActivity = sqliteTable("daily_activity", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  activityDate: text("activity_date").notNull(), // DATE format
-  questionsAnswered: integer("questions_answered").default(0),
-  correctAnswers: integer("correct_answers").default(0),
-  studyMinutes: integer("study_minutes").default(0),
-  quizzesCompleted: integer("quizzes_completed").default(0),
-  loginCount: integer("login_count").default(0),
-  streakMaintained: integer("streak_maintained", { mode: "boolean" }).default(
-    false
-  ),
-  pointsEarned: integer("points_earned").default(0),
-  xpEarned: integer("xp_earned").default(0),
-  activities: text("activities").default("[]"), // JSON array
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$defaultFn(() => new Date())
-    .$onUpdateFn(() => new Date())
-    .notNull(),
-});
+export const dailyActivity = sqliteTable(
+  "daily_activity",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    activityDate: text("activity_date").notNull(), // DATE format
+    questionsAnswered: integer("questions_answered").default(0),
+    correctAnswers: integer("correct_answers").default(0),
+    studyMinutes: integer("study_minutes").default(0),
+    quizzesCompleted: integer("quizzes_completed").default(0),
+    loginCount: integer("login_count").default(0),
+    streakMaintained: integer("streak_maintained", { mode: "boolean" }).default(
+      false
+    ),
+    pointsEarned: integer("points_earned").default(0),
+    xpEarned: integer("xp_earned").default(0),
+    activities: text("activities").default("[]"), // JSON array
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .$defaultFn(() => new Date())
+      .$onUpdateFn(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("daily_activity_user_day_idx").on(
+      table.userId,
+      table.activityDate
+    ),
+  ]
+);
 
 export const userStreaks = sqliteTable("user_streaks", {
   id: text("id").primaryKey(),
@@ -553,10 +554,13 @@ export const systemSettings = sqliteTable("system_settings", {
 // RELATIONS
 // ============================================
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
   sessions: many(session),
   accounts: many(account),
-  preferences: many(userPreferences),
+  profile: one(userProfiles, {
+    fields: [user.id],
+    references: [userProfiles.userId],
+  }),
   quizSessions: many(quizSessions),
   quizResults: many(quizResults),
   userProgress: many(userProgress),

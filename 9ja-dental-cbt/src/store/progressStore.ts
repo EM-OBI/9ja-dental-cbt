@@ -9,6 +9,7 @@ import {
 import { useUserStore, addXp, getCurrentUserId } from "./userStore";
 import { getQuizStats, getSpecialtyStats } from "./quizStore";
 import { getStudyStats } from "./studyStore";
+import { getUserStorageKey } from "./storeUtils";
 
 interface ProgressState {
   streakData: StreakData;
@@ -27,8 +28,42 @@ interface ProgressState {
 
 type ProgressStore = ProgressState & ProgressActions;
 
+const memoryStorage = (() => {
+  const store = new Map<string, string>();
+  return {
+    getItem: (name: string) => store.get(name) ?? null,
+    setItem: (name: string, value: string) => {
+      store.set(name, value);
+    },
+    removeItem: (name: string) => {
+      store.delete(name);
+    },
+  };
+})();
+
+const getScopedStorage = () => {
+  if (typeof window === "undefined") {
+    return memoryStorage;
+  }
+
+  return {
+    getItem: (name: string) => {
+      const key = getUserStorageKey(name);
+      return window.localStorage.getItem(key);
+    },
+    setItem: (name: string, value: string) => {
+      const key = getUserStorageKey(name);
+      window.localStorage.setItem(key, value);
+    },
+    removeItem: (name: string) => {
+      const key = getUserStorageKey(name);
+      window.localStorage.removeItem(key);
+    },
+  };
+};
+
 // Default achievements
-const defaultAchievements: Achievement[] = [
+const defaultAchievementsTemplate: Achievement[] = [
   {
     id: "first-quiz",
     title: "First Steps",
@@ -111,8 +146,11 @@ const defaultAchievements: Achievement[] = [
   },
 ];
 
-// Generate mock streak history for the last 30 days
-const generateStreakHistory = () => {
+const createDefaultAchievements = (): Achievement[] =>
+  defaultAchievementsTemplate.map((achievement) => ({ ...achievement }));
+
+// Generate empty streak history for the last 30 days
+const generateEmptyStreakHistory = () => {
   const history = [];
   const today = new Date();
 
@@ -120,20 +158,11 @@ const generateStreakHistory = () => {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
-    const isActive = Math.random() > 0.3; // 70% chance of activity
-    const activityTypes: ("quiz" | "study" | "review")[] = [];
-
-    if (isActive) {
-      if (Math.random() > 0.5) activityTypes.push("quiz");
-      if (Math.random() > 0.5) activityTypes.push("study");
-      if (Math.random() > 0.7) activityTypes.push("review");
-    }
-
     history.push({
       date: date.toISOString().split("T")[0],
-      active: isActive,
-      activityTypes,
-      activityCount: activityTypes.length,
+      active: false,
+      activityTypes: [],
+      activityCount: 0,
     });
   }
 
@@ -170,61 +199,90 @@ const calculateLongestStreak = (history: StreakData["streakHistory"]) => {
   return longest;
 };
 
-const initialStreakHistory = generateStreakHistory();
-const initialStreakData: StreakData = {
+const createInitialStreakData = (): StreakData => ({
   userId: getCurrentUserId() ?? "",
-  currentStreak: 0, // Start with 0 to avoid hydration mismatch
-  longestStreak: 0, // Start with 0 to avoid hydration mismatch
+  currentStreak: 0,
+  longestStreak: 0,
   lastActivityDate: new Date().toISOString().split("T")[0],
-  streakHistory: initialStreakHistory,
+  streakHistory: generateEmptyStreakHistory(),
   weeklyGoal: 5,
   monthlyGoal: 20,
+});
+
+const createInitialProgressStats = (streakData: StreakData): ProgressStats => ({
+  quizzes: {
+    total: 0,
+    completed: 0,
+    averageScore: 0,
+    bestScore: 0,
+    timeSpent: 0,
+    bySpecialty: {},
+  },
+  study: {
+    totalHours: 0,
+    totalMinutes: 0,
+    materialsCompleted: 0,
+    notesCreated: 0,
+    focusSessions: 0,
+    averageFocusTime: 0,
+  },
+  streaks: streakData,
+  level: {
+    current: 1,
+    xp: 0,
+    xpToNext: 100,
+    totalXp: 0,
+  },
+  achievements: createDefaultAchievements(),
+  recentActivity: [],
+});
+
+const createInitialProgressState = () => {
+  const streakData = createInitialStreakData();
+  return {
+    streakData,
+    achievements: createDefaultAchievements(),
+    progressStats: createInitialProgressStats(streakData),
+    recentActivity: [],
+    isLoading: false,
+    lastFetched: null,
+  } satisfies Pick<
+    ProgressStore,
+    | "streakData"
+    | "achievements"
+    | "progressStats"
+    | "recentActivity"
+    | "isLoading"
+    | "lastFetched"
+  >;
 };
 
 export const useProgressStore = create<ProgressStore>()(
   persist(
     (set, get) => ({
       // Initial state
-      streakData: initialStreakData,
-      achievements: defaultAchievements,
-      progressStats: {
-        quizzes: {
-          total: 0,
-          completed: 0,
-          averageScore: 0,
-          bestScore: 0,
-          timeSpent: 0,
-          bySpecialty: {},
-        },
-        study: {
-          totalHours: 0,
-          materialsCompleted: 0,
-          notesCreated: 0,
-          focusSessions: 0,
-          averageFocusTime: 0,
-        },
-        streaks: initialStreakData,
-        level: {
-          current: 1,
-          xp: 0,
-          xpToNext: 100,
-          totalXp: 0,
-        },
-        achievements: defaultAchievements,
-        recentActivity: [],
-      },
-      recentActivity: [],
-      isLoading: false,
-      lastFetched: null,
+      ...createInitialProgressState(),
 
+      resetProgress: () => {
+        const initialState = createInitialProgressState();
+        set({
+          ...initialState,
+        });
+      },
       // Database integration actions
       loadProgressFromDatabase: async (userId: string) => {
         set({ isLoading: true });
         try {
-          // Fetch progress, streaks data from API
+          // Fetch progress and streaks data from API
           const [progressRes, streaksRes] = await Promise.all([
-            fetch(`/api/users/${userId}/progress`),
-            fetch(`/api/users/${userId}/streaks`),
+            fetch(`/api/users/${userId}/progress`, {
+              method: "GET",
+              cache: "no-store",
+            }),
+            fetch(`/api/users/${userId}/streaks`, {
+              method: "GET",
+              cache: "no-store",
+            }),
           ]);
 
           const progressData = (await progressRes.json()) as {

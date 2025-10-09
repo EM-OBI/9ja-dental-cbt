@@ -28,6 +28,12 @@ interface StudyState {
 
 type StudyStore = StudyState & StudyActions;
 
+// Create a user-specific storage key
+const getStudyStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `study-${userId}` : "study-guest";
+};
+
 // Study materials will be fetched from the API
 
 export const useStudyStore = create<StudyStore>()(
@@ -479,7 +485,7 @@ export const useStudyStore = create<StudyStore>()(
       },
     }),
     {
-      name: "study-storage",
+      name: getStudyStorageKey(),
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         studyMaterials: state.studyMaterials,

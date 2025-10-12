@@ -7,10 +7,13 @@ type LeaderboardPeriod = "daily" | "weekly" | "monthly";
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("[leaderboard] Fetching leaderboard data...");
     const db = await getDb();
     const { searchParams } = new URL(request.url);
     const period = (searchParams.get("period") ||
       "weekly") as LeaderboardPeriod;
+
+    console.log("[leaderboard] Period:", period);
 
     // Calculate date range based on period
     const now = new Date();
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
         startDate.setDate(now.getDate() - 7);
     }
 
-    // Query leaderboard data with aggregated quiz results
+    // Query leaderboard data with aggregated quiz results (only practice quizzes)
     const leaderboardEntries = await db
       .select({
         userId: user.id,
@@ -51,7 +54,9 @@ export async function GET(request: NextRequest) {
         quizResults,
         sql`${user.id} = ${quizResults.userId} AND ${
           quizResults.completedAt
-        } >= ${startDate.toISOString()}`
+        } >= ${startDate.toISOString()} AND ${
+          quizResults.quizType
+        } = 'practice'`
       )
       .groupBy(user.id, user.name, user.email, user.image)
       .orderBy(
@@ -72,16 +77,26 @@ export async function GET(request: NextRequest) {
       level: entry.level || 1,
     }));
 
-    return NextResponse.json({
+    const responseData = {
       period,
       entries: rankedEntries,
       totalUsers: rankedEntries.length,
       updatedAt: new Date().toISOString(),
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: responseData,
     });
   } catch (error) {
-    console.error("Error fetching leaderboard:", error);
+    console.error("[leaderboard] Fatal error:", error);
+    console.error(
+      "[leaderboard] Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
     return NextResponse.json(
       {
+        success: false,
         error: "Failed to fetch leaderboard",
         details: error instanceof Error ? error.message : "Unknown error",
       },

@@ -8,6 +8,7 @@ import {
   Clock,
   Flame,
   Target,
+  Trash2,
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/drawer";
 import { useProgressStore } from "@/store/progressStore";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface StreakCalendarDrawerProps {
   className?: string;
@@ -39,7 +41,7 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isOpen = controlledIsOpen ?? uncontrolledOpen;
 
-  const { recentActivity } = useProgressStore();
+  const { recentActivity, clearRecentActivity } = useProgressStore();
 
   const activityTypeConfig = useMemo(
     () => ({
@@ -121,6 +123,16 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
     }
   };
 
+  const handleClearActivity = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to clear all recent activity? This action cannot be undone."
+      )
+    ) {
+      clearRecentActivity();
+    }
+  };
+
   const StreakDrawerContent = () => (
     <DrawerContent className="h-[90vh] max-h-screen">
       <DrawerHeader className="px-6 py-4">
@@ -164,6 +176,17 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
                 <Activity className="h-4 w-4 md:h-5 md:w-5 text-orange-500" />
                 Activity Log
               </h3>
+              {recentActivity.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearActivity}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear All
+                </Button>
+              )}
             </div>
 
             {recentActivity.length === 0 ? (

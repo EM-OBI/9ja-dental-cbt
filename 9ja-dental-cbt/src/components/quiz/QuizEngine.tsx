@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuizEngineStore } from "@/store/quizEngineStore";
 import { useQuizAutoSave } from "@/hooks/useQuizAutoSave";
-import { useQuizResultsSaver } from "@/hooks/useQuizResultsSaver";
+import { useQuizSession } from "@/hooks/useQuizSession";
 import { useUserStore } from "@/store/userStore";
 import { QuizConfig } from "@/types/definitions";
 import {
@@ -28,7 +28,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   const [showExplanation, setShowExplanation] = useState(false);
 
   const { user } = useUserStore();
-  const { saveResults } = useQuizResultsSaver();
+  const { submitQuiz, isSubmitting: isSubmittingAPI } = useQuizSession();
 
   const {
     shuffledQuestions,
@@ -59,6 +59,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   });
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
+  const displaySpecialty = config.specialtyName || config.specialtyId;
+  const progressBarRef = useRef<HTMLDivElement>(null);
   const existingAnswer = answers.find(
     (a) => a.questionId === currentQuestion?.id
   );
@@ -95,7 +97,16 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
         clearInterval(interval);
       }
     };
-  }, [isActive]); // Only depend on isActive to avoid recreating interval constantly
+  }, [isActive, timeRemaining]);
+
+  useEffect(() => {
+    if (!progressBarRef.current || shuffledQuestions.length === 0) return;
+
+    const progress =
+      ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
+
+    progressBarRef.current.style.width = `${progress}%`;
+  }, [currentQuestionIndex, shuffledQuestions.length]);
 
   const handleAnswerSelect = (optionIndex: number) => {
     if (existingAnswer || !isActive) return;
@@ -134,22 +145,35 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   };
 
   const handleFinishQuiz = async () => {
-    // Save results to API before finishing
+    if (isSubmittingAPI) return;
+
+    // Submit results to API before finishing
     if (user?.id && config.sessionId) {
       const totalTimeSpent =
         Date.now() - (useQuizEngineStore.getState().startTime || Date.now());
-      await saveResults({
+
+      const result = await submitQuiz({
         sessionId: config.sessionId,
         userId: user.id,
         answers,
         score,
         totalQuestions: shuffledQuestions.length,
         timeSpent: Math.floor(totalTimeSpent / 1000),
-        specialtyId: config.specialty,
+        specialtyId: config.specialtyId || "",
       });
+
+      if (result) {
+        console.log(
+          "[QuizEngine] Quiz submitted successfully:",
+          result.resultId
+        );
+        // Optionally store result ID for later retrieval
+      } else {
+        console.warn("[QuizEngine] Failed to submit quiz results");
+      }
     }
 
-    // Then finish the quiz in the store
+    // Finish the quiz in the store regardless of API success
     finishQuiz();
   };
 
@@ -245,7 +269,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                     Specialty
                   </div>
                   <div className="text-xl font-semibold text-slate-900 dark:text-foreground">
-                    {config.specialty}
+                    {displaySpecialty}
                   </div>
                 </div>
 
@@ -287,7 +311,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                 Mode
               </h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {config.specialty}
+                {displaySpecialty}
               </p>
             </div>
 
@@ -337,13 +361,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
             </div>
             <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
               <div
+                ref={progressBarRef}
                 className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full transition-all"
-                style={{
-                  width: `${
-                    ((currentQuestionIndex + 1) / shuffledQuestions.length) *
-                    100
-                  }%`,
-                }}
               />
             </div>
           </div>
@@ -482,12 +501,14 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                     ? handleFinishQuiz
                     : handleNextQuestion
                 }
-                disabled={!existingAnswer}
+                disabled={!existingAnswer || isSubmittingAPI}
                 className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <span>
                   {currentQuestionIndex === shuffledQuestions.length - 1
-                    ? "Finish"
+                    ? isSubmittingAPI
+                      ? "Finishing..."
+                      : "Finish"
                     : "Next"}
                 </span>
                 <ChevronRight className="w-4 h-4" />

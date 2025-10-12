@@ -5,25 +5,36 @@ import { QuizSetup } from "@/components/quiz/QuizSetup";
 import { QuizEngine } from "@/components/quiz/QuizEngine";
 import { QuizResults } from "@/components/quiz/QuizResults";
 import { useQuizEngineStore } from "@/store/quizEngineStore";
-import { generateQuizSeed } from "@/utils/shuffle";
+import { useUserStore } from "@/store/userStore";
+import { useQuizSession } from "@/hooks/useQuizSession";
 import { QuizConfig, Question } from "@/types/definitions";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
+import { useSearchParams } from "next/navigation";
 
 export default function QuizPage() {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [quizConfig, setQuizConfig] = useState<QuizConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [quizError, setQuizError] = useState<{
     message: string;
     severity?: "error" | "warning";
   } | null>(null);
 
+  const { user } = useUserStore();
   const { session, initializeQuiz, resetQuiz, loadProgress } =
     useQuizEngineStore();
+  const searchParams = useSearchParams();
+  const [loadedPackageId, setLoadedPackageId] = useState<string | null>(null);
+
+  const {
+    startQuiz: startQuizAPI,
+    isStarting,
+    error: apiError,
+  } = useQuizSession();
 
   // Specialties data for quiz setup
   const [specialtiesData, setSpecialtiesData] = useState<
     Array<{
+      id: string;
       name: string;
       questionCount: number;
       icon?: React.ReactNode;
@@ -39,13 +50,14 @@ export default function QuizPage() {
         );
         const result = (await response.json()) as {
           success: boolean;
-          data?: Array<{ name: string; questionCount: number }>;
+          data?: Array<{ id: string; name: string; questionCount: number }>;
           error?: string;
         };
 
         if (result.success && result.data) {
           // Map API data to component format
           const mapped = result.data.map((specialty) => ({
+            id: specialty.id,
             name: specialty.name,
             questionCount: specialty.questionCount || 0,
             icon: undefined, // Icons will be handled in the component
@@ -60,115 +72,185 @@ export default function QuizPage() {
     loadSpecialties();
   }, []);
 
+  // Check for API errors
+  useEffect(() => {
+    if (apiError) {
+      setQuizError({
+        message: apiError,
+        severity: "error",
+      });
+    }
+  }, [apiError]);
+
   // Check for saved progress on mount
   useEffect(() => {
+    if (searchParams.get("packageId")) return;
+
     const hasSavedProgress = loadProgress();
     if (hasSavedProgress) {
       console.log("Found saved progress");
       // Optionally show a dialog to resume
       setIsSetupComplete(true);
     }
-  }, [loadProgress]);
+  }, [loadProgress, searchParams]);
 
-  const handleStartQuiz = async (config: QuizConfig) => {
-    setIsLoading(true);
-    setQuizError(null); // Clear previous errors
-    try {
-      // Fetch questions directly from the questions API
-      const queryParams = new URLSearchParams();
+  useEffect(() => {
+    const packageId = searchParams.get("packageId");
+    if (!packageId || packageId === loadedPackageId) {
+      return;
+    }
 
-      if (config.specialty && config.specialty !== "All Specialties") {
-        // Convert specialty name to slug (lowercase, replace spaces with hyphens)
-        const specialtySlug = config.specialty
-          .toLowerCase()
-          .replace(/\s+/g, "-");
-        queryParams.append("specialtySlug", specialtySlug);
-      }
+    const loadGeneratedQuiz = async () => {
+      try {
+        const response = await fetch(`/api/study/materials/${packageId}`);
+        if (!response.ok) {
+          throw new Error("Failed to load AI-generated quiz");
+        }
 
-      // Request more questions than needed to allow for shuffling
-      queryParams.append(
-        "limit",
-        String(Math.max(config.totalQuestions * 3, 50))
-      );
-      queryParams.append("isActive", "true");
+        const result = (await response.json()) as {
+          success?: boolean;
+          package?: { topic?: string };
+          materials?: {
+            quiz?: {
+              content?:
+                | Array<{
+                    question: string;
+                    options?: string[];
+                    correctIndex?: number;
+                    correctAnswer?: number;
+                    explanation?: string;
+                  }>
+                | {
+                    questions?: Array<{
+                      question: string;
+                      options?: string[];
+                      correctIndex?: number;
+                      correctAnswer?: number;
+                      explanation?: string;
+                    }>;
+                  };
+            };
+          };
+        };
 
-      const response = await fetch(`/api/questions?${queryParams.toString()}`);
-      const questionsData = (await response.json()) as {
-        success: boolean;
-        data?: Question[];
-        error?: string;
-      };
+        if (result.success === false) {
+          throw new Error("Quiz materials are unavailable");
+        }
 
-      if (
-        !questionsData.success ||
-        !questionsData.data ||
-        questionsData.data.length === 0
-      ) {
-        console.error("No questions available for selected specialty");
+        const quizMaterial = result.materials?.quiz;
+        type GeneratedQuestion = {
+          question: string;
+          options?: string[];
+          correctIndex?: number;
+          correctAnswer?: number;
+          explanation?: string;
+        };
+
+        const content = quizMaterial?.content as
+          | GeneratedQuestion[]
+          | { questions?: GeneratedQuestion[] }
+          | undefined;
+
+        const rawQuestions: GeneratedQuestion[] = Array.isArray(content)
+          ? content
+          : content?.questions ?? [];
+
+        if (!rawQuestions || rawQuestions.length === 0) {
+          throw new Error("No quiz questions found for this study package");
+        }
+
+        resetQuiz();
+
+        const mappedQuestions: Question[] = rawQuestions.map((q, index) => ({
+          id: `${packageId}-${index}`,
+          text: q.question,
+          options: q.options ?? [],
+          correctAnswer: q.correctIndex ?? q.correctAnswer ?? 0,
+          explanation: q.explanation ?? "",
+          specialty: result.package?.topic ?? "AI Study",
+          difficulty: "medium",
+          type: "mcq",
+          timeEstimate: 60,
+        }));
+
+        const config: QuizConfig = {
+          mode: "practice",
+          timeLimit: null,
+          specialtyId: packageId,
+          specialtyName: result.package?.topic ?? "AI Study",
+          totalQuestions: mappedQuestions.length,
+          quizId: packageId,
+          sessionId: `study-${packageId}-${Date.now()}`,
+        };
+
+        initializeQuiz(mappedQuestions, config);
+        setQuizConfig(config);
+        setIsSetupComplete(true);
+        setLoadedPackageId(packageId);
+
+        setTimeout(() => {
+          useQuizEngineStore.getState().startQuiz();
+        }, 0);
+      } catch (error) {
+        console.error("Failed to load AI-generated quiz:", error);
         setQuizError({
           message:
-            "No questions available for the selected specialty. Please try a different specialty.",
-          severity: "warning",
+            error instanceof Error
+              ? error.message
+              : "Unable to load AI-generated quiz",
+          severity: "error",
         });
+      }
+    };
+
+    loadGeneratedQuiz();
+  }, [
+    searchParams,
+    loadedPackageId,
+    initializeQuiz,
+    resetQuiz,
+    setIsSetupComplete,
+    setQuizConfig,
+  ]);
+
+  const handleStartQuiz = async (config: QuizConfig) => {
+    if (!user?.id) {
+      setQuizError({
+        message: "Please log in to start a quiz",
+        severity: "error",
+      });
+      return;
+    }
+
+    setQuizError(null); // Clear previous errors
+
+    try {
+      // Call the quiz start API
+      const result = await startQuizAPI({
+        ...config,
+        userId: user.id,
+      } as QuizConfig & { userId: string });
+
+      if (!result) {
+        // Error handled by useQuizSession
         return;
       }
 
-      const availableQuestions = questionsData.data;
-
-      if (availableQuestions.length < config.totalQuestions) {
-        console.warn(
-          `Requested ${config.totalQuestions} questions but only ${availableQuestions.length} available.`
-        );
-      }
-
-      // Shuffle questions using Fisher-Yates algorithm
-      const shuffledQuestions = [...availableQuestions];
-      for (let i = shuffledQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledQuestions[i], shuffledQuestions[j]] = [
-          shuffledQuestions[j],
-          shuffledQuestions[i],
-        ];
-      }
-
-      // Take only the number of questions requested
-      const questionCount = Math.min(
-        config.totalQuestions,
-        shuffledQuestions.length
-      );
-      const questionsToUse = shuffledQuestions.slice(0, questionCount);
-
-      // Generate a session ID
-      const sessionId = `session-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`;
-
-      const seed = generateQuizSeed();
-      const configWithSeed: QuizConfig = {
-        ...config,
-        seed,
-        timeLimit: config.timeLimit,
-        totalQuestions: questionCount,
-        quizId: `quiz-${config.specialty}-${Date.now()}`,
-        sessionId,
-      };
-
-      initializeQuiz(questionsToUse, configWithSeed);
-      setQuizConfig(configWithSeed);
+      // Initialize the quiz engine store with questions from API
+      initializeQuiz(result.questions, result.config);
+      setQuizConfig(result.config);
       setIsSetupComplete(true);
 
-      // Start the quiz immediately to avoid double start buttons
+      // Start the quiz immediately
       setTimeout(() => {
         useQuizEngineStore.getState().startQuiz();
       }, 0);
     } catch (error) {
       console.error("Failed to start quiz:", error);
       setQuizError({
-        message: "Failed to load quiz questions. Please try again.",
+        message: "Failed to start quiz. Please try again.",
         severity: "error",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -176,7 +258,6 @@ export default function QuizPage() {
     resetQuiz();
     setIsSetupComplete(false);
     setQuizConfig(null);
-    setIsLoading(false);
   };
 
   // Show results if quiz is completed
@@ -212,7 +293,7 @@ export default function QuizPage() {
       <QuizSetup
         onStartQuiz={handleStartQuiz}
         onRestartQuiz={handleRestartQuiz}
-        isLoading={isLoading}
+        isLoading={isStarting}
         specialties={specialtiesData}
       />
     </div>

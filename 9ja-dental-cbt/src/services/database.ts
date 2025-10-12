@@ -146,51 +146,11 @@ export class DatabaseService implements DatabaseAdapter {
 
   async getQuizAttempts(userId: string, limit = 10): Promise<QuizAttempt[]> {
     try {
-      // TODO: Implement when quiz attempts endpoint is available in backend
-      // For now, we can derive this from dashboard stats or user progress
-      const userProgress = await this.getUserProgress(userId);
-
-      // Convert recent activity to quiz attempts as a temporary solution
-      const quizAttempts: QuizAttempt[] = userProgress.recentActivity
-        .filter((activity) => activity.type === "quiz_completed")
-        .slice(0, limit)
-        .map((activity) => ({
-          id: activity.id,
-          userId,
-          quizId: `quiz-${activity.id}`,
-          score: Math.floor(Math.random() * 100), // TODO: Get real score from metadata
-          totalQuestions: 20, // TODO: Get real value
-          timeSpent: Math.floor(Math.random() * 1800) + 300, // 5-35 minutes
-          completedAt: activity.timestamp,
-          answers: [], // TODO: Implement when answer details are available
-        }));
-
+      const quizAttempts = await apiClient.getQuizAttempts(userId, limit);
       return quizAttempts;
     } catch (error) {
       console.error("Failed to fetch quiz attempts:", error);
       return [];
-    }
-  }
-
-  async createQuizAttempt(
-    attempt: Omit<QuizAttempt, "id" | "completedAt">
-  ): Promise<QuizAttempt> {
-    try {
-      // TODO: Implement actual API call when backend supports quiz attempt creation
-      // For now, create a local attempt record
-      const newAttempt: QuizAttempt = {
-        id: `attempt-${Date.now()}`,
-        completedAt: new Date(),
-        ...attempt,
-      };
-
-      // In a real implementation, this would also update user progress
-      // and potentially trigger leaderboard updates
-
-      return newAttempt;
-    } catch (error) {
-      console.error("Failed to create quiz attempt:", error);
-      throw error;
     }
   }
 
@@ -238,25 +198,47 @@ export class DatabaseService implements DatabaseAdapter {
     period: "daily" | "weekly" | "monthly" = "weekly"
   ): Promise<LeaderboardEntry[]> {
     try {
-      const leaderboardData = await apiClient.getLeaderboard(period);
+      const leaderboardResponse = await apiClient.getLeaderboard(period);
 
-      // Transform API response (RecentActivity[]) to LeaderboardEntry format
-      // This is a temporary solution until the backend provides proper leaderboard data
-      const mockLeaderboardEntries: LeaderboardEntry[] = leaderboardData
+      // The API now returns { period, entries, totalUsers, updatedAt }
+      // Extract the entries array
+      type LeaderboardApiEntry = {
+        userId: string;
+        userName: string;
+        userAvatar?: string;
+        totalScore: number;
+        quizzesCompleted: number;
+        averageScore: number;
+        rank: number;
+        level: number;
+      };
+
+      interface LeaderboardApiResponse {
+        entries: LeaderboardApiEntry[];
+      }
+
+      const apiEntries = Array.isArray(leaderboardResponse)
+        ? leaderboardResponse
+        : (leaderboardResponse as LeaderboardApiResponse).entries || [];
+
+      // Transform API response to LeaderboardEntry format
+      const leaderboardEntries: LeaderboardEntry[] = (
+        apiEntries as LeaderboardApiEntry[]
+      )
         .slice(0, limit)
-        .map((activity, index) => ({
-          id: activity.id,
-          userId: `user-${activity.id}`,
-          userName: activity.title || `User ${index + 1}`,
-          userAvatar: undefined,
-          totalScore: Math.floor(Math.random() * 5000) + 1000, // Mock score
-          quizzesCompleted: Math.floor(Math.random() * 50) + 10, // Mock count
-          averageScore: Math.floor(Math.random() * 40) + 60, // 60-100% average
-          rank: index + 1,
-          level: Math.floor(Math.random() * 10) + 1, // Mock level
+        .map((entry, index) => ({
+          id: entry.userId || `user-${index}`,
+          userId: entry.userId || `user-${index}`,
+          userName: entry.userName || `User ${index + 1}`,
+          userAvatar: entry.userAvatar || undefined,
+          totalScore: entry.totalScore || 0,
+          quizzesCompleted: entry.quizzesCompleted || 0,
+          averageScore: entry.averageScore || 0,
+          rank: entry.rank || index + 1,
+          level: entry.level || 1,
         }));
 
-      return mockLeaderboardEntries;
+      return leaderboardEntries;
     } catch (error) {
       console.error("Failed to fetch leaderboard:", error);
       // Return mock leaderboard data as fallback
@@ -313,83 +295,6 @@ export class DatabaseService implements DatabaseAdapter {
         completedAt: new Date(),
         notes: session.notes,
       };
-    }
-  }
-
-  // ========== SEARCH AND UTILITY METHODS ==========
-
-  async searchQuestions(
-    query: string,
-    filters?: {
-      specialty?: string;
-      difficulty?: string;
-      limit?: number;
-    }
-  ): Promise<Question[]> {
-    try {
-      // TODO: Implement when question search endpoint is available in backend
-      // For now, use quiz search as a fallback and extract questions
-      const quizFilters = {
-        search: query,
-        category: filters?.specialty,
-        difficulty: filters?.difficulty as "easy" | "medium" | "hard",
-        limit: filters?.limit || 20,
-      };
-
-      const quizResults = await this.getQuizzes(quizFilters);
-
-      // Mock question data based on quiz results
-      // In a real implementation, this would call a dedicated question search endpoint
-      const mockQuestions: Question[] = quizResults.data
-        .flatMap((quiz) =>
-          Array.from(
-            { length: Math.min(quiz.totalQuestions, 5) },
-            (_, index) => ({
-              id: `q-${quiz.id}-${index}`,
-              text: `Question ${index + 1} from ${quiz.title}`,
-              options: ["Option A", "Option B", "Option C", "Option D"],
-              correct_answer: 0, // First option is correct
-              explanation: `This is the explanation for question ${index + 1}`,
-              specialty: quiz.category,
-              difficulty: quiz.difficulty,
-              type: "mcq" as const,
-              time_estimate: 60,
-              tags: [quiz.category.toLowerCase()],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-          )
-        )
-        .slice(0, filters?.limit || 20);
-
-      return mockQuestions;
-    } catch (error) {
-      console.error("Failed to search questions:", error);
-      return [];
-    }
-  }
-
-  async getQuestionById(id: string): Promise<Question | null> {
-    try {
-      // TODO: Implement when individual question endpoint is available
-      // For now, search through cached questions or return mock data
-      return {
-        id,
-        text: `Mock question with ID: ${id}`,
-        options: ["Option A", "Option B", "Option C", "Option D"],
-        correct_answer: 0, // First option is correct
-        explanation: "This is a mock explanation.",
-        specialty: "General",
-        difficulty: "medium",
-        type: "mcq",
-        time_estimate: 60,
-        tags: ["mock"],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error("Failed to fetch question:", error);
-      return null;
     }
   }
 
@@ -532,8 +437,6 @@ export class DatabaseService implements DatabaseAdapter {
 
   // ========== HEALTH CHECK AND CONNECTIVITY ==========
 
-  // ========== HEALTH CHECK AND CONNECTIVITY ==========
-
   async healthCheck(): Promise<boolean> {
     try {
       await apiClient.healthCheck();
@@ -544,7 +447,6 @@ export class DatabaseService implements DatabaseAdapter {
     }
   }
 
-  // ========== UTILITY METHODS ==========
 
   /**
    * Test the connection to the backend API

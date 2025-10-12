@@ -89,11 +89,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         <MobileHeader
-          onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
+        // onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
         />
 
         {/* Page Content */}
         <main
+          id="dashboard-main"
           className={cn(
             "flex-1 overflow-y-auto px-4 lg:px-6 space-y-6 scrollbar-hide pb-24 lg:pb-6",
             "pt-[5.5rem] supports-[padding:env(safe-area-inset-top)]:pt-[calc(env(safe-area-inset-top)+5rem)]",

@@ -1,8 +1,10 @@
-// App State Provider Component
 "use client";
 
 import React, { createContext, useContext, useEffect, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { initializeStores, useAppState } from "./index";
+import { useQuizStore } from "./quizStore";
+import { useStudyStore } from "./studyStore";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 interface AppStateContextType {
@@ -32,6 +34,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
 }) => {
   const [isInitialized, setIsInitialized] = React.useState(false);
   const appState = useAppState();
+  const router = useRouter();
 
   useEffect(() => {
     // Initialize all stores
@@ -42,26 +45,30 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
   // Add global keyboard shortcuts
   useEffect(() => {
     const handleKeyboardShortcuts = (event: KeyboardEvent) => {
+      // Get fresh state inside handler instead of depending on it
+      const currentQuiz = useQuizStore.getState().currentSession;
+      const currentStudy = useStudyStore.getState().currentSession;
+      const isInActiveSession = !!(
+        currentQuiz?.isActive || currentStudy?.isActive
+      );
+
       // Prevent shortcuts during active quiz/study sessions
-      if (appState.isInActiveSession) return;
+      if (isInActiveSession) return;
 
       if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
         switch (event.key) {
           case "q":
-            event.preventDefault();
-            window.location.href = "/dashboard/quiz";
+            router.push("/dashboard/quiz");
             break;
           case "s":
-            event.preventDefault();
-            window.location.href = "/dashboard/study";
+            router.push("/dashboard/study");
             break;
           case "p":
-            event.preventDefault();
-            window.location.href = "/dashboard/progress";
+            router.push("/dashboard/progress");
             break;
           case "h":
-            event.preventDefault();
-            window.location.href = "/dashboard";
+            router.push("/dashboard");
             break;
         }
       }
@@ -70,34 +77,38 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
     document.addEventListener("keydown", handleKeyboardShortcuts);
     return () =>
       document.removeEventListener("keydown", handleKeyboardShortcuts);
-  }, [appState.isInActiveSession]);
+  }, [router]); // Only depend on router, get fresh state inside handler
 
   // Auto-save session data periodically
   useEffect(() => {
     if (!isInitialized) return;
 
     const interval = setInterval(() => {
+      // Get fresh state from stores inside interval instead of depending on it
+      const currentQuiz = useQuizStore.getState().currentSession;
+      const currentStudy = useStudyStore.getState().currentSession;
+
       // Auto-save current quiz session
-      if (appState.currentQuiz?.isActive) {
+      if (currentQuiz?.isActive) {
         // Save quiz progress to localStorage
         localStorage.setItem(
-          `quiz-autosave-${appState.currentQuiz.id}`,
-          JSON.stringify(appState.currentQuiz)
+          `quiz-autosave-${currentQuiz.id}`,
+          JSON.stringify(currentQuiz)
         );
       }
 
       // Auto-save current study session
-      if (appState.currentStudy?.isActive) {
+      if (currentStudy?.isActive) {
         // Save study progress to localStorage
         localStorage.setItem(
-          `study-autosave-${appState.currentStudy.id}`,
-          JSON.stringify(appState.currentStudy)
+          `study-autosave-${currentStudy.id}`,
+          JSON.stringify(currentStudy)
         );
       }
     }, 30000); // Every 30 seconds
 
     return () => clearInterval(interval);
-  }, [isInitialized, appState.currentQuiz, appState.currentStudy]);
+  }, [isInitialized]); // Only depend on isInitialized to avoid recreating interval
 
   // Show streak notifications
   useEffect(() => {

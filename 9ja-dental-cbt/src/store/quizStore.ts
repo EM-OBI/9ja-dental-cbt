@@ -1,15 +1,14 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { QuizSession, QuizQuestion, QuizActions } from "./types";
+import { QuizSession, QuizActions } from "./types";
 import { addXp, getCurrentUserId } from "./userStore";
-import { databaseService } from "@/services/database";
 
 interface QuizState {
   currentSession: QuizSession | null;
-  questions: QuizQuestion[];
-  quizHistory: QuizSession[];
+  // questions removed - fetched when quiz starts
+  // quizHistory removed - now fetched from API
+  // availableSpecialties removed - fetch from API
   isLoading: boolean;
-  availableSpecialties: string[];
 }
 
 type QuizStore = QuizState & QuizActions;
@@ -28,60 +27,37 @@ export const useQuizStore = create<QuizStore>()(
     (set, get) => ({
       // Initial state
       currentSession: null,
-      questions: [], // Will be loaded from API
-      quizHistory: [],
+      // questions removed - fetched when quiz starts
+      // quizHistory removed - now fetched from API
+      // availableSpecialties removed - fetch from API
       isLoading: false,
-      availableSpecialties: [], // Will be loaded from API
 
       // Actions
-      // Fetch specialties from API
+      // fetchSpecialties removed - fetch from /api/specialties instead
       fetchSpecialties: async () => {
-        set({ isLoading: true });
-        try {
-          const response = await fetch(
-            "/api/specialties?includeQuestionCount=true"
-          );
-          const result = (await response.json()) as {
-            success: boolean;
-            data?: Array<{ name: string; questionCount?: number }>;
-            error?: string;
-          };
-
-          if (result.success && result.data) {
-            const specialtyNames = result.data.map((s) => s.name);
-            set({
-              availableSpecialties: specialtyNames,
-              isLoading: false,
-            });
-          } else {
-            console.error("Failed to fetch specialties:", result.error);
-            set({ isLoading: false });
-          }
-        } catch (error) {
-          console.error("Error fetching specialties:", error);
-          set({ isLoading: false });
-        }
+        // Deprecated - use API hook instead
+        console.warn("fetchSpecialties is deprecated - use /api/specialties");
       },
 
       startQuiz: async (
         specialty: string,
         mode: "study" | "exam",
-        questionCount: number = 10
+        questionCount: number = 10 // Will be used in API call
       ) => {
         set({ isLoading: true });
 
         try {
-          // Filter questions by specialty
-          const allQuestions = get().questions;
-          const specialtyQuestions =
-            specialty === "All Specialties"
-              ? allQuestions
-              : allQuestions.filter((q) => q.specialty === specialty);
-
-          // Randomly select questions
-          const selectedQuestions = specialtyQuestions
-            .sort(() => Math.random() - 0.5)
-            .slice(0, questionCount);
+          // TODO: Fetch questions from API instead of from store
+          // Call /api/quiz/start with specialty, mode, questionCount
+          // For now, create empty session
+          console.warn(
+            "startQuiz needs to call API - questions no longer in store",
+            {
+              specialty,
+              mode,
+              questionCount,
+            }
+          );
 
           const userId = getCurrentUserId();
           if (!userId) {
@@ -92,12 +68,13 @@ export const useQuizStore = create<QuizStore>()(
             return;
           }
 
+          // Placeholder - replace with API call
           const newSession: QuizSession = {
             id: `quiz-${Date.now()}`,
             userId,
             mode,
             specialty,
-            questions: selectedQuestions,
+            questions: [], // Will be fetched from API
             currentQuestionIndex: 0,
             answers: {},
             startTime: new Date().toISOString(),
@@ -233,7 +210,7 @@ export const useQuizStore = create<QuizStore>()(
         // Update state
         set({
           currentSession: null,
-          quizHistory: [completedSession, ...get().quizHistory],
+          // quizHistory removed - no longer stored in Zustand
         });
 
         return completedSession;
@@ -256,191 +233,23 @@ export const useQuizStore = create<QuizStore>()(
         );
       },
 
-      loadQuizHistory: async () => {
-        set({ isLoading: true });
+      // loadQuizHistory removed - use API hook instead
+      // History is now fetched from /api/quiz/history with pagination
 
-        try {
-          // Load quiz attempts from the database service
-          const userId = "current"; // Replace with actual user ID from auth
-          const quizAttempts = await databaseService.getQuizAttempts(userId);
-
-          // Convert quiz attempts to quiz sessions format for history
-          const quizHistory: QuizSession[] = quizAttempts.map((attempt) => ({
-            id: attempt.id,
-            userId: attempt.userId,
-            specialty: "General", // Default, could be enhanced with quiz metadata
-            mode: "study" as const,
-            questions: [], // Empty for completed sessions
-            currentQuestionIndex: attempt.totalQuestions,
-            answers: {}, // Convert if needed
-            startTime: new Date(
-              attempt.completedAt.getTime() - attempt.timeSpent * 1000
-            ).toISOString(),
-            endTime: attempt.completedAt.toISOString(),
-            timePerQuestion: {},
-            isActive: false,
-            isPaused: false,
-            score: {
-              correct: Math.round(
-                (attempt.score / 100) * attempt.totalQuestions
-              ),
-              incorrect:
-                attempt.totalQuestions -
-                Math.round((attempt.score / 100) * attempt.totalQuestions),
-              percentage: attempt.score,
-            },
-          }));
-
-          set({
-            quizHistory,
-            isLoading: false,
-          });
-        } catch (error) {
-          console.error("Error loading quiz history:", error);
-          set({
-            quizHistory: [],
-            isLoading: false,
-          });
-        }
-      },
-
-      // Database integration - load available quizzes metadata
-      loadQuestionsFromDatabase: async (specialty?: string) => {
-        set({ isLoading: true });
-        try {
-          // For now, we'll keep questions empty and load them when a quiz is actually started
-          // This is because the Quiz type doesn't include questions array
-          // Questions would be fetched when starting a specific quiz via getQuizById
-
-          // We can still fetch quiz metadata to show available quizzes
-          const response = await databaseService.getQuizzes({
-            category: specialty,
-            limit: 100,
-          });
-
-          if (response.data && response.data.length > 0) {
-            // Store quiz metadata for later use
-            // Questions will be loaded when quiz is started
-            console.log(`Loaded ${response.data.length} quizzes from database`);
-            set({ isLoading: false });
-          } else {
-            console.warn("No quizzes found in database");
-            set({ isLoading: false });
-          }
-        } catch (error) {
-          console.error("Error loading quizzes from database:", error);
-          set({ isLoading: false });
-        }
-      },
-
-      // Load questions for a specific quiz when starting it
-      loadQuizQuestionsById: async (quizId: string) => {
-        set({ isLoading: true });
-        try {
-          const quiz = await databaseService.getQuizById(quizId);
-
-          if (quiz) {
-            // Transform quiz to questions format
-            // Note: Quiz type needs to be extended to include questions
-            // For now, we'll work with the assumption that questions are loaded separately
-            console.log(`Loaded quiz: ${quiz.title}`);
-            set({ isLoading: false });
-            // Return type is void, just update state
-          } else {
-            console.error("Quiz not found");
-            set({ isLoading: false });
-          }
-        } catch (error) {
-          console.error("Error loading quiz questions:", error);
-          set({ isLoading: false });
-        }
-      },
+      // loadQuestionsFromDatabase removed - questions fetched when quiz starts
+      // loadQuizQuestionsById removed - use API instead
     }),
     {
       name: getStorageKey(),
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        quizHistory: state.quizHistory,
+      partialize: () => ({
+        // Don't persist quiz history - fetched from API
         // Don't persist current session to avoid stale state
       }),
     }
   )
 );
 
-// Helper functions
-export const getQuizStats = () => {
-  const { quizHistory } = useQuizStore.getState();
-
-  if (quizHistory.length === 0) {
-    return {
-      totalQuizzes: 0,
-      averageScore: 0,
-      bestScore: 0,
-      totalTimeSpent: 0,
-      accuracyTrend: [],
-    };
-  }
-
-  const totalQuizzes = quizHistory.length;
-  const scores = quizHistory.map((quiz) => quiz.score?.percentage || 0);
-  const averageScore =
-    scores.reduce((sum, score) => sum + score, 0) / scores.length;
-  const bestScore = Math.max(...scores);
-
-  const totalTimeSpent = quizHistory.reduce((total, quiz) => {
-    const timeValues = Object.values(quiz.timePerQuestion);
-    return total + timeValues.reduce((sum, time) => sum + time, 0);
-  }, 0);
-
-  const accuracyTrend = quizHistory
-    .slice(-10) // Last 10 quizzes
-    .map((quiz) => quiz.score?.percentage || 0);
-
-  return {
-    totalQuizzes,
-    averageScore: Math.round(averageScore),
-    bestScore,
-    totalTimeSpent: Math.round(totalTimeSpent / 60), // Convert to minutes
-    accuracyTrend,
-  };
-};
-
-export const getSpecialtyStats = () => {
-  const { quizHistory } = useQuizStore.getState();
-
-  const specialtyStats: Record<
-    string,
-    {
-      attempted: number;
-      accuracy: number;
-      averageTime: number;
-    }
-  > = {};
-
-  quizHistory.forEach((quiz) => {
-    if (!specialtyStats[quiz.specialty]) {
-      specialtyStats[quiz.specialty] = {
-        attempted: 0,
-        accuracy: 0,
-        averageTime: 0,
-      };
-    }
-
-    const stats = specialtyStats[quiz.specialty];
-    stats.attempted++;
-
-    if (quiz.score) {
-      stats.accuracy =
-        (stats.accuracy * (stats.attempted - 1) + quiz.score.percentage) /
-        stats.attempted;
-    }
-
-    const timeValues = Object.values(quiz.timePerQuestion);
-    const avgTime =
-      timeValues.reduce((sum, time) => sum + time, 0) / timeValues.length;
-    stats.averageTime =
-      (stats.averageTime * (stats.attempted - 1) + avgTime) / stats.attempted;
-  });
-
-  return specialtyStats;
-};
+// Helper functions removed - use API hooks instead
+// Use /api/quiz/history for quiz stats
+// Use /api/users/stats for user statistics

@@ -1,9 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { Activity } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { useProgressStore } from "@/store/progressStore";
-import { motion } from "framer-motion";
+// import { Activity } from "lucide-react";
+// import { useProgressStore } from "@/store/progressStore";
 import { cn } from "@/lib/utils";
 import { NotificationPopover } from "@/components/ui/NotificationPopover";
 // import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -18,24 +16,17 @@ const pageTitles: Record<string, string> = {
 };
 
 interface MobileHeaderProps {
-  onStreakCalendarOpen?: () => void;
+  // onStreakCalendarOpen?: () => void;
   className?: string;
 }
 
 export default function MobileHeader({
-  onStreakCalendarOpen,
+  // onStreakCalendarOpen,
   className,
 }: MobileHeaderProps = {}) {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Dashboard";
-  const { recentActivity } = useProgressStore();
-
-  // Check if user has activity today
-  const hasActivityToday = recentActivity.some((activity) => {
-    const activityDate = new Date(activity.timestamp);
-    const today = new Date();
-    return activityDate.toDateString() === today.toDateString();
-  });
+  // const { recentActivity } = useProgressStore();
 
   return (
     <header
@@ -57,34 +48,22 @@ export default function MobileHeader({
       </div>
       <div className="flex items-center gap-3">
         {/* Activity Icon and Badge */}
-        <motion.button
+        {/* <button
           onClick={onStreakCalendarOpen}
           className={cn(
-            "flex items-center gap-2 p-2 rounded-lg transition-all duration-200",
-            "hover:bg-muted/50 active:scale-95",
-            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-            hasActivityToday && "animate-pulse"
+            "relative flex items-center gap-2 p-2 rounded-lg transition-colors",
+            "hover:bg-slate-100 dark:hover:bg-slate-800",
+            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           )}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
           aria-label={`Open recent activity. Activity count: ${recentActivity.length}`}
         >
           <Activity className="h-5 w-5 text-orange-500" />
-          <Badge
-            variant="secondary"
-            className="bg-primary/10 text-primary border-primary/20 font-bold text-xs px-1.5 py-0.5"
-          >
-            {recentActivity.length}
-          </Badge>
-          {hasActivityToday && (
-            <motion.div
-              className="w-2 h-2 bg-green-500 rounded-full"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2 }}
-            />
+          {recentActivity.length > 0 && (
+            <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-orange-500 text-white text-xs font-medium flex items-center justify-center min-w-[20px]">
+              {recentActivity.length > 99 ? "99+" : recentActivity.length}
+            </div>
           )}
-        </motion.button>
+        </button> */}
         <NotificationPopover className="lg:hidden" />
         {/* <ThemeToggle variant="icon" /> */}
       </div>

@@ -7,7 +7,7 @@ import {
   ProgressActions,
 } from "./types";
 import { useUserStore, addXp, getCurrentUserId } from "./userStore";
-import { getQuizStats, getSpecialtyStats } from "./quizStore";
+// import { getQuizStats, getSpecialtyStats } from "./quizStore"; // Removed - use API hooks
 import { getStudyStats } from "./studyStore";
 import { getUserStorageKey } from "./storeUtils";
 
@@ -541,9 +541,24 @@ export const useProgressStore = create<ProgressStore>()(
 
       updateStats: () => {
         const user = useUserStore.getState().user;
-        const quizStats = getQuizStats();
+        // const quizStats = getQuizStats(); // Removed - use API hooks
+        // const specialtyStats = getSpecialtyStats(); // Removed - use API hooks
+
+        // Placeholder quiz stats - should fetch from API
+        const quizStats = {
+          totalQuizzes: 0,
+          averageScore: 0,
+          bestScore: 0,
+          totalTimeSpent: 0,
+          accuracyTrend: [],
+        };
+
+        const specialtyStats: Record<
+          string,
+          { attempted: number; accuracy: number; averageTime: number }
+        > = {};
+
         const studyStats = getStudyStats();
-        const specialtyStats = getSpecialtyStats();
         const streakData = get().streakData;
         const studyTotalMinutes =
           typeof (studyStats as { totalMinutes?: number }).totalMinutes ===
@@ -698,6 +713,10 @@ export const useProgressStore = create<ProgressStore>()(
         set({ recentActivity });
       },
 
+      clearRecentActivity: () => {
+        set({ recentActivity: [] });
+      },
+
       // Helper method to update achievement progress
       updateAchievementProgress: () => {
         const { progressStats, achievements } = get();
@@ -776,7 +795,7 @@ export const useProgressStore = create<ProgressStore>()(
       partialize: (state) => ({
         streakData: state.streakData,
         achievements: state.achievements,
-        recentActivity: state.recentActivity,
+        // recentActivity is loaded from database, no need to persist in localStorage
       }),
     }
   )

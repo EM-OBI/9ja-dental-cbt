@@ -23,12 +23,12 @@
     }
   ],
 
-  // "r2_buckets": [
-  //   {
-  //     "binding": "STUDY_BUCKET",
-  //     "bucket_name": "dental-study"
-  //   }
-  // ],
+  "r2_buckets": [
+    {
+      "binding": "MY_BUCKET",
+      "bucket_name": "studybucket"
+    }
+  ],
 
   "ai": {
     "binding": "AI"

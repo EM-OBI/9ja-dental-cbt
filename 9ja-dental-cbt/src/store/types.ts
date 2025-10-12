@@ -1,4 +1,6 @@
 // Global state types for the dental CBT application
+import type { JobStatus } from "@/types/studyJob";
+export type { JobStatus } from "@/types/studyJob";
 
 export type UserRole = "user" | "admin" | "superadmin";
 
@@ -206,8 +208,8 @@ export interface UserActions {
 export interface QuizActions {
   // Data fetching
   fetchSpecialties: () => Promise<void>;
-  loadQuestionsFromDatabase: (specialty?: string) => Promise<void>;
-  loadQuizQuestionsById: (quizId: string) => Promise<void>;
+  // loadQuestionsFromDatabase removed - questions fetched when quiz starts via API
+  // loadQuizQuestionsById removed - use API instead
   // Quiz management
   startQuiz: (
     specialty: string,
@@ -226,7 +228,7 @@ export interface QuizActions {
   submitQuiz: () => QuizSession | undefined;
   resetQuiz: () => void;
   saveQuizSession: () => void;
-  loadQuizHistory: () => void;
+  // loadQuizHistory removed - use API hook instead
 }
 
 // AI-generated study materials
@@ -243,6 +245,7 @@ export interface AIStudyPackage {
   flashcards?: AIGeneratedContent;
   quiz?: AIGeneratedContent;
   jobId?: string;
+  remoteId?: string;
   error?: string;
 }
 
@@ -270,22 +273,7 @@ export interface QuizData {
   }>;
 }
 
-export interface JobStatus {
-  jobId: string;
-  status:
-    | "PENDING"
-    | "UPLOADED"
-    | "PARSING"
-    | "SUMMARIZING"
-    | "GENERATING_FLASHCARDS"
-    | "GENERATING_QUIZ"
-    | "COMPLETED"
-    | "FAILED";
-  progress: number;
-  message: string;
-  packageId?: string;
-  error?: string;
-}
+// JobStatus is imported from @/types/studyJob to keep state types in sync across client and server
 
 // UI State for Study Page
 export interface StudyPageUIState {
@@ -338,6 +326,7 @@ export interface ProgressActions {
     description: string;
     points?: number;
   }) => void;
+  clearRecentActivity: () => void;
   resetProgress: () => void;
   // Database integration
   loadProgressFromDatabase: (userId: string) => Promise<void>;

@@ -82,7 +82,8 @@ export interface QuizState {
 export interface QuizConfig {
   mode: "practice" | "challenge" | "exam";
   timeLimit: number | null;
-  specialty: string;
+  specialtyId: string;
+  specialtyName: string;
   totalQuestions: number;
   seed?: string;
   quizId?: string;

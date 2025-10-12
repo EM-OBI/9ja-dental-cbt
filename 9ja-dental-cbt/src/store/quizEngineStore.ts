@@ -30,6 +30,13 @@ export interface QuizActions {
   shuffleQuestions: (seed?: string) => void;
   bookmarkQuestion: (questionId: string) => void;
   unbookmarkQuestion: (questionId: string) => void;
+  updateQuestionsWithResults: (
+    results: Array<{
+      questionId: string;
+      correctAnswer: number;
+      explanation?: string;
+    }>
+  ) => void;
 
   // State management
   resetQuiz: () => void;
@@ -87,7 +94,7 @@ export const useQuizEngineStore = create<QuizStore>()(
             quizId: config.quizId,
             mode: config.mode,
             timeLimit: config.timeLimit,
-            specialty: config.specialty,
+            specialty: config.specialtyName || config.specialtyId,
             totalQuestions: config.totalQuestions,
             startTime: Date.now(),
           };
@@ -380,6 +387,28 @@ export const useQuizEngineStore = create<QuizStore>()(
           const newBookmarks = new Set(state.bookmarkedQuestions);
           newBookmarks.delete(questionId);
           set({ bookmarkedQuestions: newBookmarks });
+        },
+
+        updateQuestionsWithResults: (
+          results: Array<{
+            questionId: string;
+            correctAnswer: number;
+            explanation?: string;
+          }>
+        ) => {
+          const state = get();
+          const updatedQuestions = state.shuffledQuestions.map((question) => {
+            const result = results.find((r) => r.questionId === question.id);
+            if (result) {
+              return {
+                ...question,
+                correctAnswer: result.correctAnswer,
+                explanation: result.explanation || question.explanation,
+              };
+            }
+            return question;
+          });
+          set({ shuffledQuestions: updatedQuestions });
         },
 
         resetQuiz: () => {

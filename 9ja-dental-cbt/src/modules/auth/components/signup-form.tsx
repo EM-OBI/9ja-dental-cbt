@@ -24,6 +24,7 @@ import dashboardRoutes from "@/modules/dashboard/dashboard.route";
 import { signUp } from "../actions/auth.action";
 import authRoutes from "../auth.route";
 import { authClient } from "../utils/auth-client";
+import { hydrateClientAfterAuth } from "../utils/post-auth";
 
 export function SignupForm({
   className,
@@ -87,6 +88,12 @@ export function SignupForm({
     const { success, message } = await signUp(result.data);
 
     if (success) {
+      try {
+        await hydrateClientAfterAuth();
+      } catch (error) {
+        console.error("Failed to hydrate state after sign-up", error);
+      }
+
       toast.success(message.toString());
       router.push(dashboardRoutes.dashboard);
     } else {

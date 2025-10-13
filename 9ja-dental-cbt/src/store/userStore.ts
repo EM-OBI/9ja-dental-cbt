@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { User, UserActions, UserPreferences } from "./types";
 import { databaseService } from "@/services/database";
 import { authClient } from "@/modules/auth/utils/auth-client";
+import { clearUserStores } from "./storeUtils";
 
 interface UserState {
   user: User | null;
@@ -76,6 +77,13 @@ export const useUserStore = create<UserStore>()(
       },
 
       logout: () => {
+        const userId = get().user?.id;
+
+        // Clear user-specific stores
+        if (userId) {
+          clearUserStores(userId);
+        }
+
         set({
           user: null,
           isAuthenticated: false,
@@ -97,7 +105,8 @@ export const useUserStore = create<UserStore>()(
 // Helper functions
 export const initializeUser = async () => {
   // Check for authentication tokens and load user data from API
-  const { setUser, logout } = useUserStore.getState();
+  const { setUser, logout, user: existingUser } = useUserStore.getState();
+  const previousUserId = existingUser?.id ?? null;
 
   const cloneDefaultPreferences = (): UserPreferences => ({
     theme: defaultPreferences.theme,
@@ -272,6 +281,17 @@ export const initializeUser = async () => {
     if (!sessionUser) {
       logout();
       return;
+    }
+
+    // If the authenticated user changed, clear user-specific storage before rehydrating
+    if (previousUserId && previousUserId !== sessionUser.id) {
+      try {
+        clearUserStores(previousUserId);
+        const { useProgressStore } = await import("./progressStore");
+        useProgressStore.getState().resetProgress();
+      } catch (cleanupError) {
+        console.warn("Failed to reset stores for previous user", cleanupError);
+      }
     }
 
     let backendUser: Record<string, unknown> | null = null;

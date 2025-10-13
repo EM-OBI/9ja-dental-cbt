@@ -5,7 +5,7 @@ import {
   addXp,
   getCurrentUserId,
 } from "./userStore";
-import { useQuizStore, getQuizStats, getSpecialtyStats } from "./quizStore";
+import { useQuizStore } from "./quizStore";
 import {
   useStudyStore,
   getStudyStats,
@@ -47,7 +47,7 @@ export {
   addXp,
   getCurrentUserId,
 } from "./userStore";
-export { useQuizStore, getQuizStats, getSpecialtyStats } from "./quizStore";
+export { useQuizStore } from "./quizStore";
 export {
   useStudyStore,
   getStudyStats,
@@ -127,13 +127,13 @@ export const useAppState = () => {
 
 // Combined stats selector
 export const useCombinedStats = () => {
-  const quizStats = getQuizStats();
+  // getQuizStats removed - use useQuizHistory hook from API instead
   const studyStats = getStudyStats();
   const progressStats = useProgressStore((state) => state.progressStats);
   const achievements = useProgressStore((state) => state.achievements);
 
   return {
-    quiz: quizStats,
+    quiz: null, // Deprecated - use useQuizHistory hook
     study: studyStats,
     progress: progressStats,
     achievements,

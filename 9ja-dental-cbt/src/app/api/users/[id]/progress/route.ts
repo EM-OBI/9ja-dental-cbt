@@ -85,7 +85,7 @@ export async function GET(
       totalQuizzes: Number(stats.totalQuizzes) || 0,
       completedQuizzes: Number(stats.totalQuizzes) || 0,
       averageScore: Math.round(Number(stats.averageScore)) || 0,
-      totalStudyTime: userProgressData?.totalStudyTime || 0,
+      totalStudyTime: userProgressData?.totalStudyMinutes || 0,
       currentStreak: streakData?.currentCount || 0,
       longestStreak: streakData?.bestCount || 0,
       currentLevel:

@@ -14,6 +14,12 @@ interface NotificationState {
 
 type NotificationStore = NotificationState & NotificationActions;
 
+// Create a user-specific storage key
+const getNotificationStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `notifications-${userId}` : "notifications-guest";
+};
+
 export const useNotificationStore = create<NotificationStore>()(
   persist(
     (set, get) => ({
@@ -97,7 +103,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
     }),
     {
-      name: "notification-storage",
+      name: getNotificationStorageKey(),
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         notifications: state.notifications,

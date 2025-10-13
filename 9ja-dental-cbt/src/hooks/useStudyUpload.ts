@@ -1,22 +1,8 @@
 import { useState, useCallback } from "react";
+import type { JobStatusPayload } from "@/types/studyJob";
 // Note: Store integration available via useStudyStore if needed for job status updates
 
-export type JobState =
-  | "PENDING"
-  | "UPLOADED"
-  | "PARSING"
-  | "SUMMARIZING"
-  | "GENERATING_FLASHCARDS"
-  | "GENERATING_QUIZ"
-  | "COMPLETED"
-  | "FAILED";
-
-export interface JobStatus {
-  status: JobState;
-  progress: number;
-  message: string;
-  result_id?: string;
-}
+export type JobStatus = JobStatusPayload;
 
 export interface UploadParams {
   file?: File;
@@ -61,9 +47,10 @@ export function useStudyUpload() {
           throw new Error(errData.error || "Failed to initiate upload.");
         }
 
-        const { jobId, uploadUrl } = (await initRes.json()) as {
+        const { jobId, uploadUrl, uploadHeaders } = (await initRes.json()) as {
           jobId: string;
           uploadUrl: string;
+          uploadHeaders?: Record<string, string>;
         };
 
         setStatus({
@@ -75,7 +62,10 @@ export function useStudyUpload() {
         const uploadRes = await fetch(uploadUrl, {
           method: "PUT",
           body: params.file,
-          headers: { "Content-Type": "application/pdf" },
+          headers: {
+            "Content-Type": "application/pdf",
+            ...(uploadHeaders ?? {}),
+          },
         });
 
         if (!uploadRes.ok) {
@@ -124,7 +114,7 @@ export function useStudyUpload() {
             status: "COMPLETED",
             progress: 100,
             message: "Materials generated!",
-            result_id: result.id,
+            resultId: result.id,
           });
           setLoading(false);
         }
@@ -163,8 +153,8 @@ export function useStudyUpload() {
       const currentStatus = (await statusRes.json()) as JobStatus;
       setStatus(currentStatus);
 
-      if (currentStatus.status === "COMPLETED" && currentStatus.result_id) {
-        setPackageId(currentStatus.result_id);
+      if (currentStatus.status === "COMPLETED" && currentStatus.resultId) {
+        setPackageId(currentStatus.resultId);
         setLoading(false);
         return;
       }

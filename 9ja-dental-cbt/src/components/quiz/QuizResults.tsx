@@ -264,7 +264,7 @@ export function QuizResults({ onRestart }: QuizResultsProps) {
               <span>Take Another Quiz</span>
             </button>
 
-            <Link href="/dashboard" className="w-full sm:w-auto">
+            <Link href="/overview" className="w-full sm:w-auto">
               <button className="w-full px-6 py-3 bg-white hover:bg-slate-50 dark:bg-card dark:hover:bg-slate-800 text-slate-900 dark:text-foreground rounded-lg font-medium border border-slate-200 dark:border-border transition-colors">
                 Back to Dashboard
               </button>

@@ -317,9 +317,6 @@ export interface DatabaseAdapter {
   // Quiz operations
   getQuizzes(filters?: QuizFilters): Promise<PaginatedResponse<Quiz>>;
   getQuizAttempts(userId: string, limit?: number): Promise<QuizAttempt[]>;
-  createQuizAttempt(
-    attempt: Omit<QuizAttempt, "id" | "completedAt">
-  ): Promise<QuizAttempt>;
 
   // Dashboard data
   getDashboardStats(userId: string): Promise<DashboardStats>;

@@ -28,6 +28,12 @@ interface StudyState {
 
 type StudyStore = StudyState & StudyActions;
 
+// Create a user-specific storage key
+const getStudyStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `study-${userId}` : "study-guest";
+};
+
 // Study materials will be fetched from the API
 
 export const useStudyStore = create<StudyStore>()(
@@ -479,7 +485,7 @@ export const useStudyStore = create<StudyStore>()(
       },
     }),
     {
-      name: "study-storage",
+      name: getStudyStorageKey(),
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         studyMaterials: state.studyMaterials,
@@ -497,8 +503,12 @@ export const useStudyStore = create<StudyStore>()(
 export const getStudyStats = () => {
   const { studyHistory, studyMaterials } = useStudyStore.getState();
 
-  const totalHours =
-    studyHistory.reduce((total, session) => total + session.duration, 0) / 3600;
+  const totalSeconds = studyHistory.reduce(
+    (total, session) => total + session.duration,
+    0
+  );
+  const totalHours = totalSeconds / 3600;
+  const totalMinutes = Math.round(totalSeconds / 60);
   const materialsCompleted = studyMaterials.filter(
     (m) => m.progress === 100
   ).length;
@@ -506,12 +516,16 @@ export const getStudyStats = () => {
     (total, material) => total + material.notes.length,
     0
   );
+  const totalProgress = studyMaterials.reduce(
+    (total, material) => total + material.progress,
+    0
+  );
   const averageProgress =
-    studyMaterials.reduce((total, material) => total + material.progress, 0) /
-    studyMaterials.length;
+    studyMaterials.length > 0 ? totalProgress / studyMaterials.length : 0;
 
   return {
     totalHours: Math.round(totalHours * 10) / 10,
+    totalMinutes,
     materialsCompleted,
     totalMaterials: studyMaterials.length,
     totalNotes,

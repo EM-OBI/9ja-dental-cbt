@@ -1,20 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/db";
 import { specialties } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import {
+  createKVCacheFromContext,
+  CACHE_KEYS,
+  CACHE_TTL,
+} from "@/services/kvCache";
 
 /**
  * GET /api/specialties
  * Fetch all active specialties from the database
  * Optional query params:
  *   - includeQuestionCount: Include total questions per specialty
+ * Implements KV caching with 1-hour TTL
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const includeQuestionCount =
       searchParams.get("includeQuestionCount") === "true";
+
+    // Initialize KV cache using Cloudflare context
+    const cache = await createKVCacheFromContext();
+    const cacheKey = includeQuestionCount
+      ? `${CACHE_KEYS.SPECIALTIES}:with-counts`
+      : CACHE_KEYS.SPECIALTIES;
+
+    // Try to get from cache
+    const cached = await cache.get<unknown>(cacheKey);
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        data: cached,
+        cached: true,
+      });
+    }
 
     const db = await getDb();
 
@@ -38,9 +59,13 @@ export async function GET(req: NextRequest) {
         ORDER BY s.sort_order
       `);
 
+      // Cache the result
+      await cache.set(cacheKey, result, CACHE_TTL.SPECIALTIES);
+
       return NextResponse.json({
         success: true,
         data: result,
+        cached: false,
       });
     }
 
@@ -59,24 +84,13 @@ export async function GET(req: NextRequest) {
       .where(eq(specialties.isActive, true))
       .orderBy(specialties.sortOrder);
 
-    // Try to cache in KV if available
-    try {
-      const { env } = await getCloudflareContext();
-      if (env?.KV_DENTAL) {
-        await env.KV_DENTAL.put(
-          "specialties:all",
-          JSON.stringify(allSpecialties),
-          { expirationTtl: 3600 } // Cache for 1 hour
-        );
-      }
-    } catch (kvError) {
-      // KV caching is optional, don't fail if it doesn't work
-      console.warn("Failed to cache specialties in KV:", kvError);
-    }
+    // Cache the result
+    await cache.set(cacheKey, allSpecialties, CACHE_TTL.SPECIALTIES);
 
     return NextResponse.json({
       success: true,
       data: allSpecialties,
+      cached: false,
     });
   } catch (error) {
     console.error("Error fetching specialties:", error);

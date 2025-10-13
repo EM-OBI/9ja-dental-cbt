@@ -1,4 +1,3 @@
-// API Client for Hono Backend
 import {
   User,
   Quiz,
@@ -8,7 +7,8 @@ import {
   UserStreak,
   RecentActivity,
 } from "@/types/dashboard";
-import { UserPreferences, Question } from "@/types/backendTypes";
+import type { Question } from "@/types/backendTypes";
+import type { UserPreferences } from "@/store/types";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -86,9 +86,6 @@ class ApiClient {
     return data.data;
   }
 
-  // ===============================
-  // 🔐 Auth Endpoints
-  // ===============================
   // Note: Authentication is handled by Better Auth via cookies
   // These endpoints are maintained for compatibility but may not be used
 
@@ -97,7 +94,7 @@ class ApiClient {
   }
 
   // ===============================
-  // 👤 User Endpoints
+  // User Endpoints
   // ===============================
   async getUserById(id: string): Promise<User> {
     return this.request(`/api/users/${id}`);
@@ -113,7 +110,7 @@ class ApiClient {
   async updateUserPreferences(
     id: string,
     preferences: UserPreferences
-  ): Promise<User> {
+  ): Promise<UserPreferences> {
     return this.request(`/api/users/${id}/preferences`, {
       method: "PUT",
       body: JSON.stringify(preferences),
@@ -121,7 +118,7 @@ class ApiClient {
   }
 
   // ===============================
-  // 🧠 Quiz Endpoints
+  // Quiz Endpoints
   // ===============================
   async getQuizzes(filters?: {
     specialty?: string;
@@ -183,7 +180,7 @@ class ApiClient {
   }
 
   // ===============================
-  // 📊 Dashboard
+  //  Dashboard
   // ===============================
   async getDashboardStats(): Promise<DashboardStats> {
     return this.request("/api/dashboard/stats");
@@ -203,8 +200,12 @@ class ApiClient {
     return this.request(`/api/users/${userId}/streaks`);
   }
 
+  async getQuizAttempts(userId: string, limit = 10): Promise<QuizAttempt[]> {
+    return this.request(`/api/users/${userId}/quiz-attempts?limit=${limit}`);
+  }
+
   // ===============================
-  // 🎯 Study Sessions
+  // Study Sessions
   // ===============================
   async createStudySession(data: {
     specialty: string;
@@ -222,7 +223,7 @@ class ApiClient {
   }
 
   // ===============================
-  // 🔖 Bookmarks
+  //  Bookmarks
   // ===============================
   async addBookmark(
     itemType: string,
@@ -248,13 +249,13 @@ class ApiClient {
   }
 
   // ===============================
-  // 🩺 Health Check
+  // Health Check
   // ===============================
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.request("/api/health");
   }
 }
 
-// ✅ Singleton instance
+// Singleton instance
 export const apiClient = new ApiClient();
 export default apiClient;

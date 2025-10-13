@@ -11,6 +11,7 @@ interface QuizSetupProps {
   onRestartQuiz: () => void;
   isLoading?: boolean;
   specialties?: Array<{
+    id: string;
     name: string;
     questionCount: number;
     icon?: React.ReactNode;
@@ -24,7 +25,9 @@ export function QuizSetup({
 }: QuizSetupProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedMode, setSelectedMode] = useState<string>("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<string>("");
+  const [selectedSpecialtyName, setSelectedSpecialtyName] =
+    useState<string>("");
   const [selectedTimer, setSelectedTimer] = useState<string>("");
 
   const steps = [
@@ -39,7 +42,7 @@ export function QuizSetup({
       case 0:
         return selectedMode !== "";
       case 1:
-        return selectedSpecialty !== "";
+        return selectedSpecialtyId !== "";
       case 2:
         return selectedTimer !== "";
       default:
@@ -151,10 +154,13 @@ export function QuizSetup({
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {specialties.map((specialty) => (
                     <div
-                      key={specialty.name}
-                      onClick={() => setSelectedSpecialty(specialty.name)}
+                      key={specialty.id}
+                      onClick={() => {
+                        setSelectedSpecialtyId(specialty.id);
+                        setSelectedSpecialtyName(specialty.name);
+                      }}
                       className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-between ${
-                        selectedSpecialty === specialty.name
+                        selectedSpecialtyId === specialty.id
                           ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
                           : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-card"
                       }`}
@@ -238,7 +244,7 @@ export function QuizSetup({
                       Specialty:
                     </span>
                     <span className="text-sm font-medium text-slate-900 dark:text-foreground">
-                      {selectedSpecialty}
+                      {selectedSpecialtyName}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -273,7 +279,12 @@ export function QuizSetup({
                     timeLimit: selectedModeSettings?.timeLimit
                       ? (selectedTimerOption?.minutes || 30) * 60
                       : null,
-                    specialty: selectedSpecialty,
+                    specialtyId: selectedSpecialtyId,
+                    specialtyName:
+                      selectedSpecialtyName ||
+                      specialties.find((s) => s.id === selectedSpecialtyId)
+                        ?.name ||
+                      "General",
                     totalQuestions: 20,
                   };
 

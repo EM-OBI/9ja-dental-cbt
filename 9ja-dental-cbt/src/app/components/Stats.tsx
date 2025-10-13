@@ -26,7 +26,7 @@ export default function StatsSection() {
         setStats({
           questions: dashboardStats.totalQuizzes || 1000,
           satisfactionRate: `${Math.round(dashboardStats.averageScore || 98)}%`,
-          countries: dashboardStats.completedQuizzes || 1, // Using completed quizzes as countries for now
+          countries: dashboardStats.completedQuizzes || 1,
         });
       } catch (error) {
         console.error("Failed to fetch platform stats:", error);

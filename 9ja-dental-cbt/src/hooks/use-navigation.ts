@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 const useNavigation = () => {
   const pathname = usePathname();
 
-  const isHomeActive = pathname === "/dashboard";
-  const isExploreActive = pathname === "/dashboard/quiz";
-  const isNotificationsActive = pathname === "/dashboard/leaderboard";
-  const isMessagesActive = pathname === "/dashboard/progress";
+  const isHomeActive = pathname === "/overview";
+  const isExploreActive = pathname === "/quiz";
+  const isNotificationsActive = pathname === "/leaderboard";
+  const isMessagesActive = pathname === "/progress";
 
   return {
     isHomeActive,

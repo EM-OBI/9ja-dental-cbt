@@ -3,6 +3,7 @@ import { getAuthInstance as getAuth } from "@/modules/auth/utils/auth-utils";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/db";
 import {
+  studyPackages,
   studySummaries,
   studyFlashcards,
   studyQuizzes,
@@ -14,7 +15,7 @@ import { eq, and } from "drizzle-orm";
 
 /**
  * GET /api/study/packages/[id]
- * Fetch complete study package by progress ID
+ * Fetch complete study package by package ID
  */
 export async function GET(
   req: NextRequest,
@@ -30,53 +31,49 @@ export async function GET(
     }
 
     const userId = session.user.id;
-    const { id } = await params;
+    const { id: packageId } = await params;
 
     // 2. Get Cloudflare context
     const { env } = await getCloudflareContext();
     const db = await getDb();
 
-    if (!env.STUDY_BUCKET) {
+    if (!env.MY_BUCKET) {
       return NextResponse.json(
-        { error: "STUDY_BUCKET binding not available" },
+        { error: "MY_BUCKET binding not available" },
         { status: 500 }
       );
     }
 
-    const bucket = env.STUDY_BUCKET;
+    const bucket = env.MY_BUCKET;
 
-    // 3. Fetch progress record
-    const progressRecords = await db
+    // 3. Fetch package record
+    const packageRecords = await db
       .select()
-      .from(studyProgress)
-      .where(and(eq(studyProgress.id, id), eq(studyProgress.userId, userId)))
+      .from(studyPackages)
+      .where(
+        and(eq(studyPackages.id, packageId), eq(studyPackages.userId, userId))
+      )
       .limit(1);
 
-    if (progressRecords.length === 0) {
+    if (packageRecords.length === 0) {
       return NextResponse.json(
         { error: "Study package not found" },
         { status: 404 }
       );
     }
 
-    const progress = progressRecords[0];
-    const topicSlug = progress.topicSlug;
+    const pkg = packageRecords[0];
 
     // 4. Fetch summary
     const summaryRecords = await db
       .select()
       .from(studySummaries)
-      .where(
-        and(
-          eq(studySummaries.userId, userId),
-          eq(studySummaries.topicSlug, topicSlug)
-        )
-      )
+      .where(eq(studySummaries.packageId, packageId))
       .limit(1);
 
     let summaryContent = null;
     if (summaryRecords.length > 0) {
-      const summaryObj = await bucket.get(summaryRecords[0].path);
+      const summaryObj = await bucket.get(summaryRecords[0].r2Path);
       if (summaryObj) {
         summaryContent = {
           content: await summaryObj.text(),
@@ -89,17 +86,12 @@ export async function GET(
     const flashcardRecords = await db
       .select()
       .from(studyFlashcards)
-      .where(
-        and(
-          eq(studyFlashcards.userId, userId),
-          eq(studyFlashcards.topicSlug, topicSlug)
-        )
-      )
+      .where(eq(studyFlashcards.packageId, packageId))
       .limit(1);
 
     let flashcardsData = null;
     if (flashcardRecords.length > 0) {
-      const flashcardsObj = await bucket.get(flashcardRecords[0].filePath);
+      const flashcardsObj = await bucket.get(flashcardRecords[0].r2Path);
       if (flashcardsObj) {
         const jsonText = await flashcardsObj.text();
         flashcardsData = JSON.parse(jsonText);
@@ -110,17 +102,12 @@ export async function GET(
     const quizRecords = await db
       .select()
       .from(studyQuizzes)
-      .where(
-        and(
-          eq(studyQuizzes.userId, userId),
-          eq(studyQuizzes.topicSlug, topicSlug)
-        )
-      )
+      .where(eq(studyQuizzes.packageId, packageId))
       .limit(1);
 
     let quizData = null;
     if (quizRecords.length > 0) {
-      const quizObj = await bucket.get(quizRecords[0].filePath);
+      const quizObj = await bucket.get(quizRecords[0].r2Path);
       if (quizObj) {
         const jsonText = await quizObj.text();
         quizData = {
@@ -129,17 +116,26 @@ export async function GET(
       }
     }
 
-    // 7. Build response
+    // 7. Fetch progress
+    const progressRecords = await db
+      .select()
+      .from(studyProgress)
+      .where(eq(studyProgress.packageId, packageId))
+      .limit(1);
+
+    const progress = progressRecords[0];
+
+    // 8. Build response
     const studyPackage = {
-      id: progress.id,
-      topic: progress.topic,
+      id: pkg.id,
+      topic: pkg.topic,
       summary: summaryContent,
       flashcards: flashcardsData,
       quiz: quizData,
       progress: {
-        summaryDone: progress.summaryDone,
-        flashcardsDone: progress.flashcardsDone,
-        quizScore: progress.quizScore,
+        summaryViewed: progress?.summaryViewed || false,
+        flashcardsCompleted: progress?.flashcardsCompleted || false,
+        quizScore: progress?.quizScore || null,
       },
     };
 

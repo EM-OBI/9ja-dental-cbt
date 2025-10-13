@@ -28,7 +28,7 @@ export default function AdminLayout({
 
       if (!isAuthenticated || !user) {
         // Not logged in, redirect to login
-        router.push("/login?redirect=/dashboard/admin");
+        router.push("/login?redirect=/admin");
         return;
       }
 
@@ -42,7 +42,7 @@ export default function AdminLayout({
 
       if (!isAdmin) {
         // Not an admin, redirect to regular dashboard
-        router.push("/dashboard");
+        router.push("/");
         return;
       }
 

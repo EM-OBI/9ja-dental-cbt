@@ -1,5 +1,5 @@
 const dashboardRoutes = {
-    dashboard: "/dashboard",
+  dashboard: "/overview",
 } as const;
 
 export default dashboardRoutes;

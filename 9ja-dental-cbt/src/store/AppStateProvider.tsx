@@ -59,16 +59,16 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
         event.preventDefault();
         switch (event.key) {
           case "q":
-            router.push("/dashboard/quiz");
+            router.push("/quiz");
             break;
           case "s":
-            router.push("/dashboard/study");
+            router.push("/study");
             break;
           case "p":
-            router.push("/dashboard/progress");
+            router.push("/progress");
             break;
           case "h":
-            router.push("/dashboard");
+            router.push("/overview");
             break;
         }
       }

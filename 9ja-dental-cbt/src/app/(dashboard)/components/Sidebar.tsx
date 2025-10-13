@@ -36,7 +36,7 @@ export default function Sidebar({
         aria-label="Toggle mobile menu"
         type="button"
         onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-[#1D1D20] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
       >
         <Menu className="h-5 w-5" />
       </button>

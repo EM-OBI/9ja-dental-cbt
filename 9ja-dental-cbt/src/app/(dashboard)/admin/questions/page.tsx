@@ -125,7 +125,7 @@ export default function QuestionsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/dashboard/admin/questions/new">
+          <Link href="/admin/questions/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Add Question
@@ -203,7 +203,7 @@ export default function QuestionsPage() {
       ) : filteredQuestions.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-muted-foreground">No questions found</p>
-          <Link href="/dashboard/admin/questions/new">
+          <Link href="/admin/questions/new">
             <Button className="mt-4">
               <Plus className="h-4 w-4 mr-2" />
               Add Your First Question
@@ -251,7 +251,7 @@ export default function QuestionsPage() {
                   )}
                 </div>
                 <div className="flex gap-2 ml-4">
-                  <Link href={`/dashboard/admin/questions/${question.id}/edit`}>
+                  <Link href={`/admin/questions/${question.id}/edit`}>
                     <Button variant="outline" size="sm">
                       <Edit className="h-4 w-4" />
                     </Button>

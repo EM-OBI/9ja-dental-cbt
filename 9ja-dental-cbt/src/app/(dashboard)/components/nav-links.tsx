@@ -5,11 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { name: "Home", icon: LayoutDashboard, href: "/dashboard" },
-  { name: "Quiz", icon: Brain, href: "/dashboard/quiz" },
-  { name: "Study", icon: BookOpen, href: "/dashboard/study" },
-  { name: "Leaderboard", icon: Trophy, href: "/dashboard/leaderboard" },
-  { name: "Profile", icon: User, href: "/dashboard/profile" },
+  { name: "Home", icon: LayoutDashboard, href: "/overview" },
+  { name: "Quiz", icon: Brain, href: "/quiz" },
+  { name: "Study", icon: BookOpen, href: "/study" },
+  { name: "Leaderboard", icon: Trophy, href: "/leaderboard" },
+  { name: "Profile", icon: User, href: "/profile" },
 ];
 
 interface NavLinksProps {

@@ -216,7 +216,7 @@ export const StreakCalendarDrawer: React.FC<StreakCalendarDrawerProps> = ({
                   return (
                     <div
                       key={activity.id}
-                      className="p-4 bg-white dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm"
+                      className="p-4 bg-white dark:bg-[#1D1D20]/40 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm"
                     >
                       <div className="flex items-start gap-3">
                         <div

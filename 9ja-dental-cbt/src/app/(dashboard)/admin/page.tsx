@@ -38,13 +38,13 @@ export default function AdminPage() {
             Add, edit, and manage quiz questions
           </p>
           <div className="mt-4 space-y-2">
-            <Link href="/dashboard/admin/questions">
+            <Link href="/admin/questions">
               <Button className="w-full" variant="default">
                 <FileText className="h-4 w-4 mr-2" />
                 Manage Questions
               </Button>
             </Link>
-            <Link href="/dashboard/admin/questions/new">
+            <Link href="/admin/questions/new">
               <Button className="w-full" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Question
@@ -65,7 +65,7 @@ export default function AdminPage() {
             Import questions from CSV or JSON files
           </p>
           <div className="mt-4">
-            <Link href="/dashboard/admin/import">
+            <Link href="/admin/import">
               <Button className="w-full" variant="default">
                 <Upload className="h-4 w-4 mr-2" />
                 Import Questions
@@ -86,7 +86,7 @@ export default function AdminPage() {
             View system statistics and analytics
           </p>
           <div className="mt-4">
-            <Link href="/dashboard/admin/stats">
+            <Link href="/admin/stats">
               <Button className="w-full" variant="outline">
                 <Database className="h-4 w-4 mr-2" />
                 View Statistics
@@ -107,7 +107,7 @@ export default function AdminPage() {
             Manage users and permissions
           </p>
           <div className="mt-4">
-            <Link href="/dashboard/admin/users">
+            <Link href="/admin/users">
               <Button className="w-full" variant="outline">
                 <Users className="h-4 w-4 mr-2" />
                 Manage Users
@@ -128,7 +128,7 @@ export default function AdminPage() {
             Configure system settings and preferences
           </p>
           <div className="mt-4">
-            <Link href="/dashboard/admin/settings">
+            <Link href="/admin/settings">
               <Button className="w-full" variant="outline">
                 <Settings className="h-4 w-4 mr-2" />
                 System Settings
@@ -140,3 +140,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

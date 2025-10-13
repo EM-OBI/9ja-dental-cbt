@@ -240,7 +240,7 @@ export default function DatabaseTestPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* User Info */}
-          <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+          <div className="p-4 bg-slate-50 dark:bg-[#1D1D20] rounded-lg">
             <h3 className="font-medium mb-2">Current User</h3>
             {user ? (
               <div className="text-sm space-y-1">

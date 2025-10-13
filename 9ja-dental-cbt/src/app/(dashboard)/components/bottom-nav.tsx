@@ -8,22 +8,22 @@ import { cn } from "@/lib/utils";
 const links = [
   {
     name: "Home",
-    href: "/dashboard",
+    href: "/overview",
     icon: LayoutDashboard,
   },
   {
     name: "Quiz",
-    href: "/dashboard/quiz",
+    href: "/quiz",
     icon: Brain,
   },
   {
     name: "Study",
-    href: "/dashboard/study",
+    href: "/study",
     icon: BookOpen,
   },
   {
     name: "Leaderboard",
-    href: "/dashboard/leaderboard",
+    href: "/leaderboard",
     icon: Trophy,
   },
 ];
@@ -48,7 +48,7 @@ export default function BottomNav() {
     <div
       className={cn("fixed bottom-4 left-1/2 -translate-x-1/2 z-50 sm:hidden")}
     >
-      <div className="bg-white/90 dark:bg-gray-900/80 border border-slate-300 dark:border-gray-700 shadow-lg rounded-full px-3 py-2 transition-shadow hover:shadow-xl">
+      <div className="bg-white/90 dark:bg-[#1D1D20]/80 border border-slate-300 dark:border-gray-700 shadow-lg rounded-full px-3 py-2 transition-shadow hover:shadow-xl">
         <div className="flex items-center justify-center space-x-1">
           {links.map((link) => {
             const Icon = link.icon;

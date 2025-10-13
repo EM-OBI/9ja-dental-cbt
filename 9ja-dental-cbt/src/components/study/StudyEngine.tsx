@@ -293,7 +293,7 @@ export function StudyEngine({ config }: StudyEngineProps) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-8">
+          <div className="bg-white dark:bg-[#1D1D20] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-8">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-slate-900 dark:bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
                 <Brain className="w-8 h-8 text-white dark:text-slate-900" />
@@ -348,7 +348,7 @@ export function StudyEngine({ config }: StudyEngineProps) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-red-200 dark:border-red-800 shadow-xl p-8 text-center">
+          <div className="bg-white dark:bg-[#1D1D20] rounded-2xl border border-red-200 dark:border-red-800 shadow-xl p-8 text-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">⚠️</span>
             </div>
@@ -434,7 +434,7 @@ export function StudyEngine({ config }: StudyEngineProps) {
         </div>
 
         {/* Content */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-6 md:p-8">
+        <div className="bg-white dark:bg-[#1D1D20] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-6 md:p-8">
           {activeTab === "summary" && materials?.summary && (
             <div className="prose dark:prose-invert max-w-none">
               <div
@@ -479,7 +479,7 @@ export function StudyEngine({ config }: StudyEngineProps) {
                         className={`p-3 rounded-lg ${
                           optIndex === question.correctAnswer
                             ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
-                            : "bg-white dark:bg-slate-900"
+                            : "bg-white dark:bg-[#1D1D20]"
                         }`}
                       >
                         <div className="flex items-center">

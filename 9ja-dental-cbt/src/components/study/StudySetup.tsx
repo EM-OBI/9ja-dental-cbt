@@ -172,7 +172,7 @@ export function StudySetup({
         </div>
 
         {/* Step Content Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden mb-6">
+        <div className="bg-white dark:bg-[#1D1D20] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden mb-6">
           <div className="p-6 md:p-8">
             {/* Step 0: Course Details */}
             {currentStep === 0 && (

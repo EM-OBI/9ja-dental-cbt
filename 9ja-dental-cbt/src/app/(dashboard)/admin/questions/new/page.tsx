@@ -95,7 +95,7 @@ export default function NewQuestionPage() {
       };
       if (result.success) {
         alert("Question created successfully!");
-        router.push("/dashboard/admin/questions");
+        router.push("/admin/questions");
       } else {
         alert("Failed to create question: " + result.error);
       }
@@ -137,7 +137,7 @@ export default function NewQuestionPage() {
     <div className="container mx-auto p-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/dashboard/admin/questions">
+        <Link href="/admin/questions">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -378,7 +378,7 @@ export default function NewQuestionPage() {
               <Save className="h-4 w-4 mr-2" />
               {loading ? "Creating..." : "Create Question"}
             </Button>
-            <Link href="/dashboard/admin/questions" className="flex-1">
+            <Link href="/admin/questions" className="flex-1">
               <Button type="button" variant="outline" className="w-full">
                 Cancel
               </Button>
@@ -389,3 +389,4 @@ export default function NewQuestionPage() {
     </div>
   );
 }
+

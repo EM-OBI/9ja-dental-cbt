@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/app/dashboard/components/Sidebar";
+import Sidebar from "@/app/(dashboard)/components/Sidebar";
 import BottomNav from "./components/bottom-nav";
 import DesktopHeader from "./components/header/DesktopHeader";
 import MobileHeader from "./components/header/MobileHeader";
@@ -68,7 +68,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-gray-950">
+    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-[#1D1D20]">
       {/* Sidebar - Hidden on mobile and tablet, visible on large screens and up */}
       <div
         className={`w-full flex-none transition-all duration-300 ${

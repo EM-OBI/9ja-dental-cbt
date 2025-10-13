@@ -134,7 +134,7 @@ export async function PUT(
       throw new Error("Unable to extract text from PDF");
     }
 
-    const MAX_PDF_TEXT_LENGTH = 20_000;
+    const MAX_PDF_TEXT_LENGTH = 50_000;
     const truncatedText =
       extractedText.length > MAX_PDF_TEXT_LENGTH
         ? extractedText.slice(0, MAX_PDF_TEXT_LENGTH)

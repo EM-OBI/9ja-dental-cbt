@@ -308,12 +308,12 @@ export default function Dashboard() {
             />
 
             {/* Minimal Colorful Modal */}
-            <div className="fixed bottom-36 right-6 z-[68] w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="fixed bottom-36 right-6 z-[68] w-56 bg-white dark:bg-[#1D1D20] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
               {/* Take a Test */}
               <button
                 onClick={() => {
                   setIsQuickActionOpen(false);
-                  router.push("/dashboard/quiz");
+                  router.push("/quiz");
                 }}
                 className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all group border-b border-slate-100 dark:border-slate-800"
               >
@@ -334,7 +334,7 @@ export default function Dashboard() {
               <button
                 onClick={() => {
                   setIsQuickActionOpen(false);
-                  router.push("/dashboard/study");
+                  router.push("/study");
                 }}
                 className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all group"
               >

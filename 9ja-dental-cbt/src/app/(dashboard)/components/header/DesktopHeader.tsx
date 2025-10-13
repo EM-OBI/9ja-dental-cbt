@@ -8,20 +8,20 @@ interface DesktopHeaderProps {
 }
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/dashboard/quiz": "Quiz Mode",
-  "/dashboard/leaderboard": "Leaderboard",
-  "/dashboard/profile": "Account Settings",
-  "/dashboard/study": "Study",
-  "/dashboard/progress": "Progress",
+  "/overview": "Dashboard",
+  "/quiz": "Quiz Mode",
+  "/leaderboard": "Leaderboard",
+  "/profile": "Account Settings",
+  "/study": "Study",
+  "/progress": "Progress",
 };
 const pageHeadlines: Record<string, string> = {
-  "/dashboard": "Level up, create quizzes and study",
-  "/dashboard/quiz": "Create your quiz",
-  "/dashboard/leaderboard": "See how you rank among your peers",
-  "/dashboard/profile": "Manage your account and preferences",
-  "/dashboard/study": "Study and review materials",
-  "/dashboard/progress": "Track your learning progress",
+  "/overview": "Level up, create quizzes and study",
+  "/quiz": "Create your quiz",
+  "/leaderboard": "See how you rank among your peers",
+  "/profile": "Manage your account and preferences",
+  "/study": "Study and review materials",
+  "/progress": "Track your learning progress",
 };
 
 export default function DesktopHeader({

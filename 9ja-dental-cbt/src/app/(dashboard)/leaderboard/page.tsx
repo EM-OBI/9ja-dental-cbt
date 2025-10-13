@@ -60,7 +60,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
 
   return (
     <div
-      className={`flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-4 py-3 text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 ${
+      className={`flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-4 py-3 text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-[#1D1D20] dark:text-slate-100 ${
         isTopThree ? "border-slate-300 bg-slate-50 dark:bg-slate-800" : ""
       }`}
     >
@@ -180,7 +180,7 @@ export default function LeaderboardPage() {
   }, [period, refreshKey]);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 py-10 dark:bg-[#1D1D20]">
       <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4">
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -202,7 +202,7 @@ export default function LeaderboardPage() {
 
         {/* <LeaderboardSummary entries={entries} /> */}
 
-        <Card className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <Card className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#1D1D20]">
           <CardHeader className="border-b border-slate-200/60 pb-4 dark:border-slate-800">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">
               Current standings
@@ -223,7 +223,7 @@ export default function LeaderboardPage() {
                 onRetry={() => setRefreshKey((k) => k + 1)}
               />
             ) : entries.length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:border-slate-800 dark:bg-[#1D1D20]/40 dark:text-slate-400">
                 No leaderboard data available for this period yet.
               </div>
             ) : (

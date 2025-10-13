@@ -7,12 +7,12 @@ import { NotificationPopover } from "@/components/ui/NotificationPopover";
 // import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/dashboard/quiz": "Quiz Mode",
-  "/dashboard/leaderboard": "Leaderboard",
-  "/dashboard/profile": "Account Settings",
-  "/dashboard/study": "Study",
-  "/dashboard/progress": "Progress",
+  "/overview": "Dashboard",
+  "/quiz": "Quiz Mode",
+  "/leaderboard": "Leaderboard",
+  "/profile": "Account Settings",
+  "/study": "Study",
+  "/progress": "Progress",
 };
 
 interface MobileHeaderProps {

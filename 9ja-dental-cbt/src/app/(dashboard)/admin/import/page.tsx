@@ -193,7 +193,7 @@ spec_conservative_001,"What is the primary goal of conservative dentistry?","Ext
     <div className="container mx-auto p-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/dashboard/admin">
+        <Link href="/admin">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -303,7 +303,7 @@ spec_conservative_001,"What is the primary goal of conservative dentistry?","Ext
               )}
 
               {result.imported > 0 && (
-                <Link href="/dashboard/admin/questions">
+                <Link href="/admin/questions">
                   <Button className="mt-4">View Imported Questions</Button>
                 </Link>
               )}
@@ -376,3 +376,4 @@ spec_conservative_001,"What is the primary goal of conservative dentistry?","Ext
     </div>
   );
 }
+

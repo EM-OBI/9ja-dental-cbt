@@ -9,7 +9,7 @@ export default function ProgressRedirect() {
 
   useEffect(() => {
     // Redirect to dashboard overview page
-    router.replace("/dashboard");
+    router.replace("/");
   }, [router]);
 
   return (

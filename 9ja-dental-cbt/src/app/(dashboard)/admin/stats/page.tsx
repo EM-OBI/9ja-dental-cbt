@@ -78,7 +78,7 @@ export default function StatsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/admin">
+          <Link href="/admin">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -232,3 +232,4 @@ export default function StatsPage() {
     </div>
   );
 }
+

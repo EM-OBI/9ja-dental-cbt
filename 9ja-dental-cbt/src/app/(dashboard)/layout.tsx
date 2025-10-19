@@ -17,6 +17,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isStreakCalendarOpen, setIsStreakCalendarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const router = useRouter();
 
   // Load user data from database
@@ -68,42 +69,46 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-[#1D1D20]">
-      {/* Sidebar - Hidden on mobile and tablet, visible on large screens and up */}
-      <div
-        className={`w-full flex-none transition-all duration-300 ${
-          isDesktopCollapsed ? "lg:w-0" : "md:w-64"
-        }`}
-      >
-        <Sidebar
-          isDesktopCollapsed={isDesktopCollapsed}
-          setIsDesktopCollapsed={setIsDesktopCollapsed}
-        />
-      </div>
+    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-background overflow-hidden min-h-0">
+      {/* Sidebar - Drawer on mobile, fixed sidebar on desktop */}
+      <Sidebar
+        isDesktopCollapsed={isDesktopCollapsed}
+        setIsDesktopCollapsed={setIsDesktopCollapsed}
+        isMobileMenuOpen={isMobileSidebarOpen}
+        setIsMobileMenuOpen={setIsMobileSidebarOpen}
+      />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="hidden lg:block bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 z-10">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+        {/* Desktop Header - Hidden on mobile */}
+        <header className="hidden lg:block bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border z-10">
           <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />
         </header>
 
-        <MobileHeader
-        // onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
-        />
+        {/* Mobile Header - Hidden on desktop */}
+        <header className="lg:hidden bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border z-10">
+          <MobileHeader
+            isSidebarOpen={isMobileSidebarOpen}
+            onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
+            // onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
+          />
+        </header>
 
-        {/* Page Content */}
+        {/* Page Content - Scrollable Area */}
         <main
           id="dashboard-main"
           className={cn(
-            "flex-1 overflow-y-auto px-4 lg:px-6 space-y-6 scrollbar-hide pb-24 lg:pb-6",
+            "flex-1 overflow-y-auto overflow-x-hidden min-h-0",
+            "px-4 lg:px-6",
+            "pb-24 lg:pb-6",
             "pt-[5.5rem] supports-[padding:env(safe-area-inset-top)]:pt-[calc(env(safe-area-inset-top)+5rem)]",
-            "lg:pt-6"
+            "lg:pt-6",
+            null
           )}
         >
           {/* Show loading indicator for data (optional, non-blocking) */}
           {isLoadingData && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+            <div className="bg-blue-50 dark:bg-card border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-2">
                 <LoadingSpinner size="sm" className="text-blue-600" />
                 <p className="text-sm text-blue-700 dark:text-blue-300">

@@ -1,21 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, TowerControl, PanelLeft, LogOut } from "lucide-react";
+import { Menu, TowerControl, PanelLeft } from "lucide-react";
 import NavLinks from "./nav-links";
-import Link from "next/link";
 import LogoutButton from "@/modules/auth/components/logout-button";
 
 interface SidebarProps {
   isDesktopCollapsed?: boolean;
   setIsDesktopCollapsed?: (collapsed: boolean) => void;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 export default function Sidebar({
   isDesktopCollapsed = false,
   setIsDesktopCollapsed,
+  isMobileMenuOpen: controlledMobileMenuOpen,
+  setIsMobileMenuOpen: setControlledMobileMenuOpen,
 }: SidebarProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [uncontrolledMobileMenuOpen, setUncontrolledMobileMenuOpen] =
+    useState(false);
+
+  const isMobileMenuOpen =
+    controlledMobileMenuOpen ?? uncontrolledMobileMenuOpen;
+  const setIsMobileMenuOpen =
+    setControlledMobileMenuOpen ?? setUncontrolledMobileMenuOpen;
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
@@ -36,7 +45,7 @@ export default function Sidebar({
         aria-label="Toggle mobile menu"
         type="button"
         onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-[#1D1D20] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-card border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -44,12 +53,12 @@ export default function Sidebar({
       {/* Main Sidebar */}
       <aside
         className={`
-          fixed lg:relative inset-y-0 left-0 z-50
-          flex flex-col h-full
+          fixed lg:sticky inset-y-0 left-0 top-0 z-50
+          flex flex-col h-[100dvh] lg:h-screen max-h-[100dvh]
           border-r border-slate-200 dark:border-slate-800
-          bg-white dark:bg-slate-900
+          bg-white dark:bg-card
           transition-all duration-300 ease-in-out
-          overflow-y-auto
+          overflow-y-auto pb-6 lg:pb-0
           ${
             isMobileMenuOpen
               ? "translate-x-0"
@@ -60,7 +69,7 @@ export default function Sidebar({
         `}
       >
         {/* Logo/Header Section */}
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-200 dark:border-border">
           {showFullSidebar ? (
             /* Expanded Header */
             <>
@@ -102,7 +111,7 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 p-3">
+        <nav className="flex-1 p-3 overflow-y-auto">
           <NavLinks
             isCollapsed={isDesktopCollapsed}
             onLinkClick={closeMobileMenu}
@@ -112,24 +121,16 @@ export default function Sidebar({
         {/* Footer - Logout Section */}
         {showFullSidebar ? (
           /* Expanded Footer - Show on Mobile and Desktop Expanded */
-          <div className="p-3 border-t border-slate-200 dark:border-slate-800">
-            <LogoutButton />
+          <div className="mt-auto p-3 border-t border-slate-200 dark:border-slate-800 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+            <LogoutButton className="w-full justify-between gap-2" />
           </div>
         ) : (
           /* Collapsed Footer - Desktop Only */
-          <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex justify-center">
-            <button
-              title="Logout"
-              aria-label="Logout"
-              type="button"
-              onClick={() => {
-                // Add your logout logic here
-                // You might want to use the logout function from your auth
-              }}
-              className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all duration-200"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+          <div className="mt-auto p-3 border-t border-slate-200 dark:border-border flex justify-center">
+            <LogoutButton
+              showLabel={false}
+              className="h-10 w-10 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            />
           </div>
         )}
       </aside>

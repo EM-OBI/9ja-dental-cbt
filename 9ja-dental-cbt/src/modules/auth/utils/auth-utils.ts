@@ -60,10 +60,18 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return null;
     }
 
+    // Type assertion for custom fields (bio, role) added to user table
+    const user = session.user as typeof session.user & {
+      bio?: string;
+      role?: "user" | "admin";
+    };
+
     return {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      bio: user.bio,
+      role: user.role,
     };
   } catch (error) {
     console.error("Error getting current user:", error);

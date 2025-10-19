@@ -33,7 +33,7 @@ export default function DesktopHeader({
     pageHeadlines[pathname] || "Level up, create quizzes and study";
 
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 backdrop-blur-lg">
+    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 border-b border-slate-200 dark:border-border bg-white dark:bg-card backdrop-blur-lg">
       <div className="flex items-center gap-4">
         {/* Space for toggle button when sidebar is collapsed */}
         <div

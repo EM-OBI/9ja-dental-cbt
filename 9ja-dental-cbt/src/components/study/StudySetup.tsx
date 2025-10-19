@@ -1,8 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { BookOpen, Upload, FileText, ChevronRight, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import {
+  BookOpen,
+  Upload,
+  FileText,
+  ChevronRight,
+  Check,
+  Archive,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,10 +24,15 @@ interface StudySetupProps {
   }>;
 }
 
+export type StudySourceType = "topic" | "notes" | "pdf" | "existing";
+export type StudyMode = "generate" | "view";
+
 export interface StudyConfig {
+  mode: StudyMode;
+  packageId?: string;
   courseName: string;
   specialty: string;
-  source: "topic" | "notes" | "pdf";
+  source: StudySourceType;
   content: string;
   fileName?: string;
   file?: File;
@@ -51,7 +63,7 @@ export function StudySetup({
   const [currentStep, setCurrentStep] = useState(0);
   const [courseName, setCourseName] = useState("");
   const [specialty, setSpecialty] = useState("");
-  const [source, setSource] = useState<"topic" | "notes" | "pdf">("topic");
+  const [source, setSource] = useState<StudySourceType>("topic");
   const [topicInput, setTopicInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -96,6 +108,7 @@ export function StudySetup({
 
   const handleStartStudy = () => {
     const config: StudyConfig = {
+      mode: "generate",
       courseName,
       specialty,
       source,
@@ -127,15 +140,15 @@ export function StudySetup({
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-4 md:p-6">
+    <div className="min-h-full bg-transparent p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 dark:text-foreground mb-2">
-            AI Study Assistant
+            Study Setup
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Generate personalized study materials with AI
+            Configure your AI study materials
           </p>
         </div>
 
@@ -171,131 +184,120 @@ export function StudySetup({
           </div>
         </div>
 
-        {/* Step Content Card */}
-        <div className="bg-white dark:bg-[#1D1D20] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden mb-6">
-          <div className="p-6 md:p-8">
-            {/* Step 0: Course Details */}
-            {currentStep === 0 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <BookOpen className="w-8 h-8 text-white dark:text-slate-900" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-foreground">
-                    Course Details
-                  </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Tell us about your study topic
-                  </p>
+        {/* Main Content Card */}
+        <div className="bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border p-6">
+          {/* Step 0: Course Details */}
+          {currentStep === 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground mb-6 text-center">
+                Course Details
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="courseName"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block"
+                  >
+                    Course Name
+                  </Label>
+                  <Input
+                    id="courseName"
+                    placeholder="e.g., Advanced Periodontal Disease"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    className="h-10"
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label
-                      htmlFor="courseName"
-                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                    >
-                      Course Name
-                    </Label>
-                    <Input
-                      id="courseName"
-                      placeholder="e.g., Advanced Periodontal Disease"
-                      value={courseName}
-                      onChange={(e) => setCourseName(e.target.value)}
-                      className="mt-2"
-                    />
-                  </div>
+                <div>
+                  <Label
+                    htmlFor="specialty"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block"
+                  >
+                    Select Specialty
+                  </Label>
+                  <select
+                    id="specialty"
+                    title="Select your dental specialty"
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                    className="w-full h-10 px-3 py-2 border border-slate-300 dark:border-border rounded-lg bg-white dark:bg-input text-slate-900 dark:text-foreground focus:border-slate-900 dark:focus:border-slate-100 focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 focus:outline-none transition-all"
+                  >
+                    <option value="">Choose a specialty...</option>
+                    {SPECIALTY_OPTIONS.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
 
-                  <div>
-                    <Label
-                      htmlFor="specialty"
-                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                    >
-                      Select Specialty
-                    </Label>
-                    <select
-                      id="specialty"
-                      title="Select your dental specialty"
-                      value={specialty}
-                      onChange={(e) => setSpecialty(e.target.value)}
-                      className="mt-2 w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground focus:border-orange-500 dark:focus:border-orange-400 focus:ring-orange-500/20 focus:outline-none"
-                    >
-                      <option value="">Choose a specialty...</option>
-                      {SPECIALTY_OPTIONS.map((spec) => (
-                        <option key={spec} value={spec}>
-                          {spec}
-                        </option>
-                      ))}
-                    </select>
+          {/* Step 1: Study Material */}
+          {currentStep === 1 && (
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground mb-6 text-center">
+                Choose Your Input Method
+              </h2>
+
+              {/* Source Type Selector */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div
+                  onClick={() => setSource("topic")}
+                  className={`p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                    source === "topic"
+                      ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
+                      : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-card"
+                  }`}
+                >
+                  <div className="text-center">
+                    <BookOpen className="w-6 h-6 mx-auto mb-3 text-slate-700 dark:text-slate-300" />
+                    <div className="text-sm font-medium text-slate-900 dark:text-foreground">
+                      Topic
+                    </div>
+                  </div>
+                </div>
+                <div
+                  onClick={() => setSource("notes")}
+                  className={`p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                    source === "notes"
+                      ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
+                      : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-card"
+                  }`}
+                >
+                  <div className="text-center">
+                    <FileText className="w-6 h-6 mx-auto mb-3 text-slate-700 dark:text-slate-300" />
+                    <div className="text-sm font-medium text-slate-900 dark:text-foreground">
+                      Notes
+                    </div>
+                  </div>
+                </div>
+                <div
+                  onClick={() => setSource("pdf")}
+                  className={`p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                    source === "pdf"
+                      ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
+                      : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-card"
+                  }`}
+                >
+                  <div className="text-center">
+                    <Upload className="w-6 h-6 mx-auto mb-3 text-slate-700 dark:text-slate-300" />
+                    <div className="text-sm font-medium text-slate-900 dark:text-foreground">
+                      PDF
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Step 1: Study Material */}
-            {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-white dark:text-slate-900" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-foreground">
-                    Study Material
-                  </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Choose your input method
-                  </p>
-                </div>
-
-                {/* Source Type Selector */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  <button
-                    onClick={() => setSource("topic")}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      source === "topic"
-                        ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
-                        : "border-slate-200 dark:border-slate-700 hover:border-slate-400"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <BookOpen className="w-6 h-6 mx-auto mb-2" />
-                      <div className="text-sm font-medium">Topic</div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setSource("notes")}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      source === "notes"
-                        ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
-                        : "border-slate-200 dark:border-slate-700 hover:border-slate-400"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <FileText className="w-6 h-6 mx-auto mb-2" />
-                      <div className="text-sm font-medium">Notes</div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setSource("pdf")}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      source === "pdf"
-                        ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
-                        : "border-slate-200 dark:border-slate-700 hover:border-slate-400"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <Upload className="w-6 h-6 mx-auto mb-2" />
-                      <div className="text-sm font-medium">PDF</div>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Content Input */}
+              {/* Content Input */}
+              <div>
                 {source === "topic" && (
                   <div>
                     <Label
                       htmlFor="topic"
-                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block"
                     >
                       Study Topic
                     </Label>
@@ -304,7 +306,7 @@ export function StudySetup({
                       placeholder="e.g., Gingivitis and Periodontitis"
                       value={topicInput}
                       onChange={(e) => setTopicInput(e.target.value)}
-                      className="mt-2"
+                      className="h-10"
                     />
                   </div>
                 )}
@@ -313,7 +315,7 @@ export function StudySetup({
                   <div>
                     <Label
                       htmlFor="notes"
-                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block"
                     >
                       Study Notes
                     </Label>
@@ -323,7 +325,7 @@ export function StudySetup({
                       rows={6}
                       value={notesInput}
                       onChange={(e) => setNotesInput(e.target.value)}
-                      className="mt-2"
+                      className="resize-none"
                     />
                   </div>
                 )}
@@ -332,11 +334,11 @@ export function StudySetup({
                   <div>
                     <Label
                       htmlFor="pdf"
-                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block"
                     >
                       Upload Study Material
                     </Label>
-                    <div className="mt-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center hover:border-orange-400 dark:hover:border-orange-500 transition-colors bg-orange-50/30 dark:bg-orange-950/10">
+                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors bg-slate-50/50 dark:bg-slate-800/50">
                       <input
                         id="pdf"
                         type="file"
@@ -344,9 +346,9 @@ export function StudySetup({
                         onChange={handleFileSelect}
                         className="hidden"
                       />
-                      <label htmlFor="pdf" className="cursor-pointer">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-950 flex items-center justify-center">
-                          <Upload className="h-6 w-6 text-white" />
+                      <label htmlFor="pdf" className="cursor-pointer block">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
+                          <Upload className="h-6 w-6 text-white dark:text-slate-900" />
                         </div>
                         <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           {selectedFile
@@ -363,69 +365,51 @@ export function StudySetup({
                   </div>
                 )}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Step 2: Material Types */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-white dark:text-slate-900" />
+          {/* Step 2: Material Types */}
+          {currentStep === 2 && (
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground mb-6 text-center">
+                Select Material Types
+              </h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {MATERIAL_TYPES.map((type) => (
+                  <div
+                    key={type.key}
+                    onClick={() => toggleMaterialType(type.key)}
+                    className={`p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                      materialTypes.includes(type.key)
+                        ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
+                        : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-card"
+                    }`}
+                  >
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-foreground mb-2">
+                      {type.label}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {type.description}
+                    </p>
                   </div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-foreground">
-                    Material Types
-                  </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    What would you like to generate?
-                  </p>
-                </div>
-
-                <div className="grid gap-4">
-                  {MATERIAL_TYPES.map((type) => (
-                    <button
-                      key={type.key}
-                      onClick={() => toggleMaterialType(type.key)}
-                      className={`p-4 rounded-xl border-2 transition-all text-left ${
-                        materialTypes.includes(type.key)
-                          ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
-                          : "border-slate-200 dark:border-slate-700 hover:border-slate-400"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-slate-900 dark:text-foreground">
-                            {type.label}
-                          </div>
-                          <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            {type.description}
-                          </div>
-                        </div>
-                        {materialTypes.includes(type.key) && (
-                          <Check className="w-5 h-5 text-slate-900 dark:text-slate-100" />
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Step 3: Review & Generate */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Check className="w-8 h-8 text-white dark:text-slate-900" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-foreground">
-                    Ready to Generate
-                  </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Review your configuration
-                  </p>
-                </div>
+          {/* Step 3: Review & Generate */}
+          {currentStep === 3 && (
+            <div className="text-center">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground mb-6">
+                Ready to Generate
+              </h2>
 
-                <div className="space-y-4 bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
+              {/* Summary */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-5 mb-8 max-w-md mx-auto border border-slate-200 dark:border-border">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-4">
+                  Study Package Summary
+                </h3>
+                <div className="space-y-2.5 text-left">
                   <div className="flex justify-between">
                     <span className="text-sm text-slate-600 dark:text-slate-400">
                       Course:
@@ -460,44 +444,61 @@ export function StudySetup({
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Navigation */}
-          <div className="border-t border-slate-200 dark:border-slate-700 p-6 bg-slate-50 dark:bg-slate-800/50">
-            <div className="flex justify-between gap-4">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-                disabled={currentStep === 0 || isLoading}
-                className="flex-1"
-              >
-                Back
-              </Button>
-              <Button
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8 pt-6 border-t border-slate-200 dark:border-border">
+            <button
+              onClick={handleBack}
+              disabled={currentStep === 0}
+              className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Back
+            </button>
+
+            {currentStep < 3 && (
+              <button
                 onClick={handleNext}
-                disabled={!canProceed() || isLoading}
-                className="flex-1 bg-slate-900 hover:bg-slate-700 text-white"
+                disabled={!canProceed()}
+                className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-1.5 disabled:cursor-not-allowed"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+
+            {currentStep === 3 && (
+              <button
+                onClick={handleNext}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-1.5 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Generating...
-                  </>
-                ) : currentStep === steps.length - 1 ? (
-                  <>
-                    Generate Materials
-                    <Check className="ml-2 w-4 h-4" />
+                    <LoadingSpinner size="sm" label={null} />
+                    <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    Next
-                    <ChevronRight className="ml-2 w-4 h-4" />
+                    <span>Generate Materials</span>
+                    <Check className="w-4 h-4" />
                   </>
                 )}
-              </Button>
-            </div>
+              </button>
+            )}
           </div>
+        </div>
+
+        {/* View Saved Packages Button */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/study/saved"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-foreground transition-colors"
+          >
+            <Archive className="w-4 h-4" />
+            <span>Saved Materials</span>
+          </Link>
         </div>
       </div>
     </div>

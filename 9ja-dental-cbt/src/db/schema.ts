@@ -20,6 +20,10 @@ export const user = sqliteTable("user", {
     .default(false)
     .notNull(),
   image: text("image"),
+  bio: text("bio"), // User biography/description
+  role: text("role", { enum: ["user", "admin"] })
+    .default("user")
+    .notNull(), // Role for access control
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())
     .notNull(),
@@ -654,7 +658,6 @@ export const specialtiesRelations = relations(specialties, ({ many }) => ({
   quizzes: many(quizzes),
   quizSessions: many(quizSessions),
   quizResults: many(quizResults),
-  userProgress: many(userProgress),
   userSpecialtyProgress: many(userSpecialtyProgress),
   studySessions: many(studySessions),
 }));

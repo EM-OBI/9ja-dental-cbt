@@ -56,9 +56,9 @@ export default function Dashboard() {
 
   if (isUserLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-background py-4 md:py-6">
+      <div className="py-4 md:py-6">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-background rounded-xl border border-slate-200 dark:border-border">
+          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border">
             <LoadingSpinner
               size="xl"
               className="mb-4 text-slate-900 dark:text-slate-400"
@@ -74,7 +74,7 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-background py-4 md:py-6">
+      <div className="py-4 md:py-6">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <ErrorState
             title="Unable to load data"
@@ -88,9 +88,9 @@ export default function Dashboard() {
 
   if (!hasUser) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-background py-4 md:py-6">
+      <div className="py-4 md:py-6">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-background rounded-xl p-8 border border-slate-200 dark:border-border">
+          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-card rounded-xl p-8 border border-slate-200 dark:border-border">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-foreground">
               Authentication required
             </h3>
@@ -105,9 +105,9 @@ export default function Dashboard() {
 
   if (!progressData) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-background py-4 md:py-6">
+      <div className="py-4 md:py-6">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-background rounded-xl p-8 border border-slate-200 dark:border-border">
+          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-card rounded-xl p-8 border border-slate-200 dark:border-border">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-foreground">
               No data yet
             </h3>
@@ -151,33 +151,73 @@ export default function Dashboard() {
     return parts.join(" ");
   };
 
+  const toNumber = (value: unknown, fallback = 0) => {
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : fallback;
+    }
+    const parsed = Number(value ?? fallback);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const resolvedTotalQuizzes = toNumber(
+    progressData.totalQuizzes ?? progressStats?.quizzes?.total,
+    0
+  );
+
+  const resolvedCompletedQuizzes = toNumber(
+    progressData.completedQuizzes ?? progressStats?.quizzes?.completed,
+    resolvedTotalQuizzes
+  );
+
+  const resolvedAverageScore = toNumber(
+    progressData.averageScore ?? progressStats?.quizzes?.averageScore,
+    0
+  );
+
+  const resolvedStudyMinutes = toNumber(
+    progressData.totalStudyTime ??
+      progressStats?.study?.totalMinutes ??
+      Math.round((progressStats?.study?.totalHours ?? 0) * 60),
+    0
+  );
+
+  const resolvedCurrentStreak = toNumber(
+    streakData?.currentStreak ??
+      progressData.currentStreak ??
+      progressStats?.streaks?.currentStreak,
+    0
+  );
+
+  const resolvedLongestStreak = toNumber(
+    streakData?.longestStreak ??
+      progressData.longestStreak ??
+      progressStats?.streaks?.longestStreak,
+    0
+  );
+
   const completionRate =
-    progressData.totalQuizzes > 0
-      ? Math.round(
-          (progressData.completedQuizzes / progressData.totalQuizzes) * 100
-        )
+    resolvedTotalQuizzes > 0
+      ? Math.round((resolvedCompletedQuizzes / resolvedTotalQuizzes) * 100)
       : 0;
 
-  const totalStudyMinutes =
-    progressData.totalStudyTime ??
-    Math.round((progressStats?.study?.totalHours ?? 0) * 60);
-
-  const studyTimeDisplay = formatStudyTime(totalStudyMinutes);
+  const studyTimeDisplay = formatStudyTime(resolvedStudyMinutes);
 
   const levelSubtitle = progressStats?.level?.current
     ? `Level ${progressStats.level.current}`
     : `${progressData.currentLevel} level`;
 
   const studySubtitle =
-    totalStudyMinutes > 0
-      ? `${levelSubtitle} • ${formatNumber(totalStudyMinutes)} minutes tracked`
+    resolvedStudyMinutes > 0
+      ? `${levelSubtitle} • ${formatNumber(
+          resolvedStudyMinutes
+        )} minutes tracked`
       : `${levelSubtitle} • No study time logged yet`;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background py-4 md:py-6">
+    <div className="py-4 md:py-6">
       <div className="mx-auto max-w-7xl px-4 md:px-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between bg-white dark:bg-card rounded-xl p-5 md:p-6 border border-slate-200 dark:border-border">
+        <div className="flex items-center justify_between bg-white dark:bg-card rounded-xl p-5 md:p-6 border border-slate-200 dark:border-border">
           <div>
             <h1 className="text-xl md:text-2xl font-semibold text-slate-900 dark:text-foreground mb-1">
               {getGreeting()}, {userName}
@@ -204,11 +244,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <DashboardCard
                 title="Quizzes Completed"
-                value={formatNumber(progressData.completedQuizzes)}
+                value={formatNumber(resolvedCompletedQuizzes)}
                 subtitle={
-                  progressData.totalQuizzes > 0
+                  resolvedTotalQuizzes > 0
                     ? `${completionRate}% of ${formatNumber(
-                        progressData.totalQuizzes
+                        resolvedTotalQuizzes
                       )} total`
                     : "Start your first quiz to see progress"
                 }
@@ -221,9 +261,9 @@ export default function Dashboard() {
 
               <DashboardCard
                 title="Average Score"
-                value={`${formatPercentage(progressData.averageScore)}%`}
+                value={`${formatPercentage(resolvedAverageScore)}%`}
                 subtitle={
-                  progressData.totalQuizzes > 0
+                  resolvedTotalQuizzes > 0
                     ? "Accuracy across completed quizzes"
                     : "Complete a quiz to unlock insights"
                 }
@@ -247,21 +287,11 @@ export default function Dashboard() {
 
               <DashboardCard
                 title="Current Streak"
-                value={`${
-                  streakData?.currentStreak ?? progressData.currentStreak
-                }`}
-                subtitle={`Best: ${
-                  streakData?.longestStreak ?? progressData.longestStreak
-                } days`}
+                value={`${resolvedCurrentStreak}`}
+                subtitle={`Best: ${resolvedLongestStreak} days`}
                 trend={{
-                  value:
-                    (streakData?.currentStreak ?? progressData.currentStreak) >
-                    0
-                      ? 100
-                      : -50,
-                  isPositive:
-                    (streakData?.currentStreak ?? progressData.currentStreak) >
-                    0,
+                  value: resolvedCurrentStreak > 0 ? 100 : -50,
+                  isPositive: resolvedCurrentStreak > 0,
                   period: "yesterday",
                 }}
               />
@@ -308,7 +338,7 @@ export default function Dashboard() {
             />
 
             {/* Minimal Colorful Modal */}
-            <div className="fixed bottom-36 right-6 z-[68] w-56 bg-white dark:bg-[#1D1D20] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="fixed bottom-36 right-6 z-[68] w-56 bg-white dark:bg-card rounded-2xl shadow-2xl border border-slate-200 dark:border-border overflow-hidden">
               {/* Take a Test */}
               <button
                 onClick={() => {

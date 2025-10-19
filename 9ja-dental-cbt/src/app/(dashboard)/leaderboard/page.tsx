@@ -22,6 +22,9 @@ const periodOptions: Array<{ label: string; value: LeaderboardPeriod }> = [
 const formatNumber = (value: number) =>
   value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
+const formatPercent = (value: number) =>
+  `${Math.round(Number.isFinite(value) ? value : 0)}%`;
+
 const getInitials = (name: string) =>
   name
     .split(" ")
@@ -60,7 +63,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
 
   return (
     <div
-      className={`flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-4 py-3 text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-[#1D1D20] dark:text-slate-100 ${
+      className={`flex items-center justify-between rounded-xl border border-slate-200/70 bg-white px-4 py-3 text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-border dark:bg-card dark:text-slate-100 ${
         isTopThree ? "border-slate-300 bg-slate-50 dark:bg-slate-800" : ""
       }`}
     >
@@ -78,17 +81,24 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
           <p className="text-sm font-semibold text-slate-900 dark:text-white">
             {entry.userName}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Level {entry.level} • {entry.quizzesCompleted} quizzes
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span>Level {entry.level}</span>
+            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+            <span>{entry.quizzesCompleted} quizzes</span>
+            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+            <span>{formatNumber(entry.totalScore)} pts</span>
+            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+            <span>{formatPercent(entry.averageScore)} avg</span>
+          </div>
         </div>
       </div>
       <div className="text-right">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          {formatNumber(entry.totalScore)} pts
+        <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          Ranking metrics
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Avg. score {entry.averageScore}%
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+          {formatNumber(entry.totalScore)} pts ·{" "}
+          {formatPercent(entry.averageScore)}
         </p>
       </div>
     </div>
@@ -180,7 +190,7 @@ export default function LeaderboardPage() {
   }, [period, refreshKey]);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 dark:bg-[#1D1D20]">
+    <div className="py-10 bg-slate-50 dark:bg-[#1D1D20]">
       <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4">
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -202,7 +212,7 @@ export default function LeaderboardPage() {
 
         {/* <LeaderboardSummary entries={entries} /> */}
 
-        <Card className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#1D1D20]">
+        <Card className="border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
           <CardHeader className="border-b border-slate-200/60 pb-4 dark:border-slate-800">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">
               Current standings

@@ -263,7 +263,7 @@ export default function QuizPage() {
   // Show results if quiz is completed
   if (session?.endTime) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-background">
+      <div className="py-6 bg-slate-50 dark:bg-background">
         <QuizResults onRestart={handleRestartQuiz} />
       </div>
     );
@@ -272,7 +272,7 @@ export default function QuizPage() {
   // Show quiz engine if setup is complete and quiz config exists
   if (isSetupComplete && quizConfig) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-background">
+      <div className="py-6 bg-slate-50 dark:bg-background">
         <QuizEngine config={quizConfig} onExit={handleRestartQuiz} />
       </div>
     );
@@ -280,7 +280,7 @@ export default function QuizPage() {
 
   // Show quiz setup by default
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background">
+    <div className="py-6 bg-slate-50 dark:bg-background">
       {quizError && (
         <div className="max-w-4xl mx-auto pt-6 px-4">
           <ErrorAlert

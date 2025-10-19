@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  UnifiedProgressData,
-  ProgressData,
-  StudySession,
-} from "@/types/progress";
+import { UnifiedProgressData, ProgressData } from "@/types/progress";
 import { DashboardStats } from "@/types/dashboard";
 import { databaseService } from "@/services/database";
 
@@ -14,6 +10,7 @@ const apiProgressService = {
     options?: { includeHistory?: boolean; limit?: number }
   ): Promise<UnifiedProgressData> {
     try {
+      void options; // Reserved for future filtering options
       // Use the proper database service that calls the Hono backend
       const data = await databaseService.getUserProgress(userId);
 
@@ -111,7 +108,7 @@ const transformDashboardStatsToUnified = (
   };
 };
 
-const transformProgressDataToUnified = (
+export const transformProgressDataToUnified = (
   data: ProgressData
 ): UnifiedProgressData => {
   return {

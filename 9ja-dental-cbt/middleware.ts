@@ -18,11 +18,8 @@ export async function middleware(request: NextRequest) {
 
     if (isAdminRoute) {
       // Check if user has admin role
-      const user = session.user as { role?: string; email?: string };
-      const isAdmin =
-        user.role === "admin" ||
-        user.role === "superadmin" ||
-        user.email?.includes("admin"); // Temporary fallback
+      const user = session.user as { role?: string };
+      const isAdmin = user.role === "admin" || user.role === "superadmin";
 
       if (!isAdmin) {
         // Not an admin, redirect to regular dashboard with error message

@@ -242,6 +242,7 @@ export class ErrorHandler {
 
   // Report error to external service (in production)
   private reportError(error: AppError): void {
+    void error; // Placeholder until external reporting is wired up
     // In a real app, you'd send this to an error reporting service
     // like Sentry, LogRocket, or Bugsnag
     if (process.env.NEXT_PUBLIC_SENTRY_DSN) {

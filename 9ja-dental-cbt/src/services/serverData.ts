@@ -900,7 +900,38 @@ export async function getSpecialtyById(id: string) {
     return handleDatabaseError(error, "fetch specialty");
   }
 }
+export async function createSpecialty(
+  specialtyData: typeof specialties.$inferInsert
+) {
+  try {
+    const db = await getDb();
 
+    // Check if specialty with same slug already exists
+    if (specialtyData.slug) {
+      const existingSpecialty = await db
+        .select()
+        .from(specialties)
+        .where(eq(specialties.slug, specialtyData.slug))
+        .limit(1);
+
+      if (existingSpecialty.length > 0) {
+        throw new Error("Specialty with this slug already exists");
+      }
+    }
+
+    const [newSpecialty] = await db
+      .insert(specialties)
+      .values({
+        ...specialtyData,
+        id: specialtyData.id || nanoid(),
+      })
+      .returning();
+
+    return newSpecialty;
+  } catch (error) {
+    return handleDatabaseError(error, "create specialty");
+  }
+}
 // ============================================
 // QUESTIONS OPERATIONS
 // ============================================

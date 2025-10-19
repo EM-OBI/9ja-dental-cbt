@@ -1,43 +1,13 @@
 // Main store exports and initialization
-import {
-  useUserStore,
-  initializeUser,
-  addXp,
-  getCurrentUserId,
-} from "./userStore";
+import { useUserStore, initializeUser } from "./userStore";
 import { useQuizStore } from "./quizStore";
-import {
-  useStudyStore,
-  getStudyStats,
-  getRecentMaterials,
-  getBookmarkedMaterials,
-  searchMaterials,
-} from "./studyStore";
-import {
-  useProgressStore,
-  getTodaysActivity,
-  getWeeklyProgress,
-  getMonthlyProgress,
-  getUnlockedAchievements,
-  getPendingAchievements,
-} from "./progressStore";
-import {
-  useThemeStore,
-  useThemeMode,
-  useThemeConfig,
-  useThemeColors,
-  useThemeAccessibility,
-  useThemeStyles,
-  initializeTheme,
-} from "./themeStore";
+import { useStudyStore, getStudyStats } from "./studyStore";
+import { useProgressStore } from "./progressStore";
+import { useThemeStore, initializeTheme } from "./themeStore";
 import {
   useNotificationStore,
   requestNotificationPermission,
   showAchievementNotification,
-  showStreakNotification,
-  showReminderNotification,
-  getNotificationsByType,
-  getRecentNotifications,
 } from "./notificationStore";
 
 // Re-export everything

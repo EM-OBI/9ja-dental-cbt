@@ -1,54 +1,47 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Edit,
-  Save,
-  X,
-  AlertTriangle,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AvatarUploader } from "@/components/profile/AvatarUploader";
 import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
-import { SubscriptionCard } from "@/components/profile/SubscriptionCard";
 import { DeleteAccountDialog } from "@/components/profile/DeleteAccountDialog";
+import { ProfileDetailsTab } from "@/components/profile/ProfileDetailsTab";
+import { ProfileHeaderCard } from "@/components/profile/ProfileHeaderCard";
+import {
+  ProfileTab,
+  ProfileTabNavigation,
+} from "@/components/profile/ProfileTabNavigation";
+import { ProfileSettingsTab } from "@/components/profile/ProfileSettingsTab";
+import { SubscriptionCard } from "@/components/profile/SubscriptionCard";
 import { useUserStore } from "@/store/userStore";
 import { useThemeStore } from "@/store/themeStore";
 import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
-import { cn } from "@/lib/utils";
+import type { ProfileFormData } from "@/components/profile/ProfileDetailsTab";
+import type { UserPreferences } from "@/store/types";
+
+const DEFAULT_FORM_STATE: ProfileFormData = {
+  name: "",
+  email: "",
+  bio: "",
+};
 
 export default function ProfilePage() {
   const { user, updateUser, updatePreferences } = useUserStore();
-  const { mode, setMode } = useThemeStore();
+  const { mode, setMode, fontScale, setFontScale } = useThemeStore();
 
   // Get progress data for specialty mastery
   const userId = user?.id ?? "";
   const { progressData } = useUnifiedProgressData(userId, false);
 
   // Custom tab state management
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
 
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>(() => ({
+    ...DEFAULT_FORM_STATE,
     name: user?.name || "",
     email: user?.email || "",
-    bio: "",
-  });
+    bio: user?.bio || "",
+  }));
 
   // Preferences API state
   const [preferenceSaveStatus, setPreferenceSaveStatus] = useState<
@@ -85,9 +78,30 @@ export default function ProfilePage() {
     }
   }, [user?.id, updatePreferences]);
 
+  // Keep form data in sync when user data changes (unless actively editing)
+  useEffect(() => {
+    if (!user || isEditing) return;
+
+    setFormData({
+      ...DEFAULT_FORM_STATE,
+      name: user.name,
+      email: user.email,
+      bio: user.bio || "",
+    });
+  }, [user, isEditing]);
+
+  // Clear pending preference saves on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Debounced save to API
   const savePreferencesToAPI = useCallback(
-    async (preferences: Record<string, unknown>) => {
+    async (preferences: UserPreferences) => {
       if (!user?.id) return;
 
       // Clear any pending save
@@ -133,20 +147,26 @@ export default function ProfilePage() {
     );
   }
 
+  const handleFormChange = (updates: Partial<ProfileFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
   const handleSaveProfile = () => {
     updateUser({
       ...user,
       name: formData.name,
       email: formData.email,
+      bio: formData.bio,
     });
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setFormData({
+      ...DEFAULT_FORM_STATE,
       name: user.name,
       email: user.email,
-      bio: "",
+      bio: user.bio || "",
     });
     setIsEditing(false);
   };
@@ -186,553 +206,97 @@ export default function ProfilePage() {
     key: string,
     value: boolean | string | number
   ) => {
-    const updatedPreferences = { ...user.preferences };
+    if (!user) return;
 
-    if (key === "notifications.studyReminders") {
-      updatedPreferences.notifications.studyReminders = value as boolean;
-    } else if (key === "notifications.streakAlerts") {
-      updatedPreferences.notifications.streakAlerts = value as boolean;
-    } else if (key === "notifications.progressReports") {
-      updatedPreferences.notifications.progressReports = value as boolean;
-    } else if (key === "notifications.achievements") {
-      updatedPreferences.notifications.achievements = value as boolean;
-    } else if (key === "quiz.defaultMode") {
-      updatedPreferences.quiz.defaultMode = value as "study" | "exam";
-    } else if (key === "quiz.showExplanations") {
-      updatedPreferences.quiz.showExplanations = value as boolean;
-    } else if (key === "quiz.autoSubmit") {
-      updatedPreferences.quiz.autoSubmit = value as boolean;
-    } else if (key === "quiz.timePerQuestion") {
-      updatedPreferences.quiz.timePerQuestion = value as number;
+    const updatedPreferences: UserPreferences = {
+      ...user.preferences,
+      notifications: { ...user.preferences.notifications },
+      quiz: { ...user.preferences.quiz },
+      study: { ...user.preferences.study },
+    };
+
+    const segments = key.split(".");
+    const preferencesRecord = updatedPreferences as unknown as Record<
+      string,
+      unknown
+    >;
+
+    if (segments.length === 1) {
+      preferencesRecord[segments[0]] = value;
+    } else {
+      let cursor = preferencesRecord;
+
+      segments.forEach((segment, index) => {
+        if (index === segments.length - 1) {
+          cursor[segment] = value;
+          return;
+        }
+
+        const nextValue = cursor[segment];
+        if (typeof nextValue === "object" && nextValue !== null) {
+          cursor[segment] = {
+            ...(nextValue as Record<string, unknown>),
+          };
+          cursor = cursor[segment] as Record<string, unknown>;
+        } else {
+          cursor[segment] = {};
+          cursor = cursor[segment] as Record<string, unknown>;
+        }
+      });
     }
 
-    // Update local state immediately for responsive UI
     updatePreferences(updatedPreferences);
-
-    // Auto-save to API (debounced)
     savePreferencesToAPI(updatedPreferences);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/20 to-yellow-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="py-6 bg-gradient-to-br from-amber-50/30 via-orange-50/20 to-yellow-50/30 dark:bg-card">
       <div className="max-w-6xl mx-auto space-y-8 p-6">
-        {/* Header */}
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-amber-200/50 dark:border-slate-700 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">
-                Account Settings
-              </h1>
-              <p className="text-amber-700 dark:text-amber-300 mt-2 text-lg font-medium">
-                Manage your account, preferences, and achievements
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center space-x-2 bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-700 hover:text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300"
-            >
-              <Edit className="h-4 w-4" />
-              <span>Edit Profile</span>
-            </Button>
-          </div>
-        </div>
+        <ProfileHeaderCard
+          isEditing={isEditing}
+          onToggleEdit={() => setIsEditing((previous) => !previous)}
+        />
 
-        {/* Custom Tabs */}
         <div className="space-y-8">
-          {/* Tab Navigation */}
-          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-2 border border-amber-200/50 dark:border-slate-700 overflow-hidden">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={cn(
-                  "flex items-center justify-center px-3 py-3 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 min-h-[2.5rem] touch-manipulation",
-                  activeTab === "profile"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-slate-700/50 hover:text-amber-700 dark:hover:text-amber-300 active:scale-95"
-                )}
-              >
-                <span className="truncate">Profile</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("achievements")}
-                className={cn(
-                  "flex items-center justify-center px-3 py-3 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 min-h-[2.5rem] touch-manipulation",
-                  activeTab === "achievements"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-slate-700/50 hover:text-amber-700 dark:hover:text-amber-300 active:scale-95"
-                )}
-              >
-                <span className="truncate">Achievements</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("settings")}
-                className={cn(
-                  "flex items-center justify-center px-3 py-3 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 min-h-[2.5rem] touch-manipulation",
-                  activeTab === "settings"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-slate-700/50 hover:text-amber-700 dark:hover:text-amber-300 active:scale-95"
-                )}
-              >
-                <span className="truncate">Settings</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("subscription")}
-                className={cn(
-                  "flex items-center justify-center px-3 py-3 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 min-h-[2.5rem] touch-manipulation",
-                  activeTab === "subscription"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-slate-700/50 hover:text-amber-700 dark:hover:text-amber-300 active:scale-95"
-                )}
-              >
-                <span className="truncate">Subscription</span>
-              </button>
-            </div>
-          </div>
+          <ProfileTabNavigation
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
-          {/* Tab Content */}
-          {activeTab === "profile" && (
-            <div className="space-y-8">
-              <Card className="p-8 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-amber-200/50 dark:border-slate-700 shadow-lg">
-                <div className="grid md:grid-cols-3 gap-8">
-                  {/* Avatar Section */}
-                  <div className="md:col-span-1">
-                    <div className="space-y-4">
-                      <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-                        Profile Picture
-                      </h3>
-                      <AvatarUploader
-                        currentAvatar={user.avatar}
-                        userName={user.name}
-                        onAvatarChange={handleAvatarChange}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Profile Form */}
-                  <div className="md:col-span-2 space-y-6">
-                    <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-                      Personal Information
-                    </h3>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="username"
-                            className="text-amber-700 dark:text-amber-300 font-medium"
-                          >
-                            Username
-                          </Label>
-                          <Input
-                            id="username"
-                            value={formData.name}
-                            onChange={(e) =>
-                              setFormData({ ...formData, name: e.target.value })
-                            }
-                            disabled={!isEditing}
-                            className={cn(
-                              "border-amber-300 focus:border-amber-500 focus:ring-amber-500/20",
-                              !isEditing &&
-                                "bg-amber-50/50 dark:bg-amber-900/10"
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="email"
-                            className="text-amber-700 dark:text-amber-300 font-medium"
-                          >
-                            Email
-                          </Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                email: e.target.value,
-                              })
-                            }
-                            disabled={true}
-                            className="bg-muted"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Email cannot be changed. Contact support if needed.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="bio">Bio</Label>
-                        <Textarea
-                          id="bio"
-                          value={formData.bio}
-                          onChange={(e) =>
-                            setFormData({ ...formData, bio: e.target.value })
-                          }
-                          disabled={!isEditing}
-                          className={cn(!isEditing && "bg-muted")}
-                          placeholder="Tell us about yourself..."
-                          rows={4}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    {isEditing && (
-                      <div className="flex space-x-3">
-                        <Button
-                          onClick={handleSaveProfile}
-                          className="flex items-center space-x-2"
-                        >
-                          <Save className="h-4 w-4" />
-                          <span>Save Changes</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={handleCancelEdit}
-                          className="flex items-center space-x-2"
-                        >
-                          <X className="h-4 w-4" />
-                          <span>Cancel</span>
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* User Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-primary">
-                          {user.level}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Level</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-primary">
-                          {user.xp.toLocaleString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">XP</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-primary">
-                          {user.subscription}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Plan</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-primary">
-                          {new Date(user.joinedDate).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Joined</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+          {activeTab === "profile" && user && (
+            <ProfileDetailsTab
+              user={user}
+              formData={formData}
+              isEditing={isEditing}
+              onFormChange={handleFormChange}
+              onSave={handleSaveProfile}
+              onCancel={handleCancelEdit}
+              onAvatarChange={handleAvatarChange}
+            />
           )}
 
-          {/* Achievements Tab */}
           {activeTab === "achievements" && (
-            <div className="space-y-6">
-              <AchievementsGrid
-                specialtyCoverage={progressData?.specialtyCoverage}
-              />
-            </div>
+            <AchievementsGrid
+              specialtyCoverage={progressData?.specialtyCoverage}
+            />
           )}
 
-          {/* Settings Tab */}
-          {activeTab === "settings" && (
-            <div className="space-y-6">
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold">Preferences</h3>
-                  {preferenceSaveStatus === "saving" && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Saving...</span>
-                    </div>
-                  )}
-                  {preferenceSaveStatus === "saved" && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Saved</span>
-                    </div>
-                  )}
-                  {preferenceSaveStatus === "error" && (
-                    <div className="flex items-center gap-2 text-sm text-destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>Failed to save</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-6">
-                  {/* Theme Settings */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Appearance</h4>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="dark-mode">Dark Mode</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Toggle between light and dark themes
-                        </p>
-                      </div>
-                      <Switch
-                        id="dark-mode"
-                        checked={mode === "dark"}
-                        onCheckedChange={(checked) =>
-                          setMode(checked ? "dark" : "light")
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="font-size">Font Size</Label>
-                      <Select
-                        value={
-                          user.preferences?.study?.defaultFocusTime?.toString() ||
-                          "medium"
-                        }
-                        onValueChange={(value) =>
-                          handlePreferenceChange("fontSize", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select font size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="small">Small</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Notification Settings */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Notifications</h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="study-reminders">
-                            Study Reminders
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Get notified about your study schedule
-                          </p>
-                        </div>
-                        <Switch
-                          id="study-reminders"
-                          checked={
-                            user.preferences.notifications.studyReminders
-                          }
-                          onCheckedChange={(checked) =>
-                            handlePreferenceChange(
-                              "notifications.studyReminders",
-                              checked
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="streak-alerts">Streak Alerts</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Get notified about your study streaks
-                          </p>
-                        </div>
-                        <Switch
-                          id="streak-alerts"
-                          checked={user.preferences.notifications.streakAlerts}
-                          onCheckedChange={(checked) =>
-                            handlePreferenceChange(
-                              "notifications.streakAlerts",
-                              checked
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="progress-reports">
-                            Progress Reports
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Receive weekly progress summaries
-                          </p>
-                        </div>
-                        <Switch
-                          id="progress-reports"
-                          checked={
-                            user.preferences.notifications.progressReports
-                          }
-                          onCheckedChange={(checked) =>
-                            handlePreferenceChange(
-                              "notifications.progressReports",
-                              checked
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="achievements">
-                            Achievement Notifications
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Get notified when you earn achievements
-                          </p>
-                        </div>
-                        <Switch
-                          id="achievements"
-                          checked={user.preferences.notifications.achievements}
-                          onCheckedChange={(checked) =>
-                            handlePreferenceChange(
-                              "notifications.achievements",
-                              checked
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quiz Settings */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Quiz Preferences</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="default-mode">Default Quiz Mode</Label>
-                        <Select
-                          value={user.preferences.quiz.defaultMode}
-                          onValueChange={(value) =>
-                            handlePreferenceChange("quiz.defaultMode", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="study">Study Mode</SelectItem>
-                            <SelectItem value="exam">Exam Mode</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="time-per-question">
-                          Time Per Question (seconds)
-                        </Label>
-                        <Select
-                          value={user.preferences.quiz.timePerQuestion.toString()}
-                          onValueChange={(value) =>
-                            handlePreferenceChange(
-                              "quiz.timePerQuestion",
-                              parseInt(value)
-                            )
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="30">30 seconds</SelectItem>
-                            <SelectItem value="60">60 seconds</SelectItem>
-                            <SelectItem value="90">90 seconds</SelectItem>
-                            <SelectItem value="120">2 minutes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="show-explanations">
-                          Show Explanations
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          Display explanations after answering questions
-                        </p>
-                      </div>
-                      <Switch
-                        id="show-explanations"
-                        checked={user.preferences.quiz.showExplanations}
-                        onCheckedChange={(checked) =>
-                          handlePreferenceChange(
-                            "quiz.showExplanations",
-                            checked
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="auto-submit">Auto Submit</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Automatically submit when time runs out
-                        </p>
-                      </div>
-                      <Switch
-                        id="auto-submit"
-                        checked={user.preferences.quiz.autoSubmit}
-                        onCheckedChange={(checked) =>
-                          handlePreferenceChange("quiz.autoSubmit", checked)
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Danger Zone */}
-                  <div className="space-y-4 pt-6 border-t border-destructive/20">
-                    <h4 className="font-medium text-destructive">
-                      Danger Zone
-                    </h4>
-                    <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <Label className="text-destructive font-medium">
-                            Delete Account
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Permanently delete your account and all associated
-                            data. This action cannot be undone.
-                          </p>
-                          <div className="text-xs text-muted-foreground space-y-1 mt-2">
-                            <p>
-                              • All your quiz progress and achievements will be
-                              lost
-                            </p>
-                            <p>
-                              • Your subscription will be immediately cancelled
-                            </p>
-                            <p>
-                              • Your study materials and notes will be deleted
-                            </p>
-                            <p>• This action is irreversible</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleDeleteAccount}
-                          className="ml-4 flex items-center space-x-2"
-                        >
-                          <AlertTriangle className="h-4 w-4" />
-                          <span>Delete Account</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+          {activeTab === "settings" && user && (
+            <ProfileSettingsTab
+              user={user}
+              mode={mode}
+              fontScale={fontScale}
+              preferenceSaveStatus={preferenceSaveStatus}
+              onPreferenceChange={handlePreferenceChange}
+              onToggleDarkMode={(checked) =>
+                setMode(checked ? "dark" : "light")
+              }
+              onFontScaleChange={setFontScale}
+              onDeleteAccount={handleDeleteAccount}
+            />
           )}
 
-          {/* Subscription Tab */}
-          {activeTab === "subscription" && (
-            <div className="space-y-6">
-              <SubscriptionCard />
-            </div>
-          )}
+          {activeTab === "subscription" && <SubscriptionCard />}
         </div>
 
         <DeleteAccountDialog

@@ -48,7 +48,7 @@ export default function BottomNav() {
     <div
       className={cn("fixed bottom-4 left-1/2 -translate-x-1/2 z-50 sm:hidden")}
     >
-      <div className="bg-white/90 dark:bg-[#1D1D20]/80 border border-slate-300 dark:border-gray-700 shadow-lg rounded-full px-3 py-2 transition-shadow hover:shadow-xl">
+      <div className="bg-white/90 dark:bg-card/80 border border-slate-300 dark:border-border shadow-lg rounded-full px-3 py-2 transition-shadow hover:shadow-xl">
         <div className="flex items-center justify-center space-x-1">
           {links.map((link) => {
             const Icon = link.icon;
@@ -88,7 +88,7 @@ export default function BottomNav() {
                   )}
 
                   {/* Hover effect */}
-                  <span className="absolute inset-0 bg-slate-100 dark:bg-gray-800/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <span className="absolute inset-0 bg-slate-100 dark:bg-card/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </Link>
               </div>
             );

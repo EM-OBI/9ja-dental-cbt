@@ -60,7 +60,7 @@ export default function Hero() {
       </div> */}
 
       {/* Content */}
-      <span className="px-3 py-1 text-xs font-medium text-white glass-effect rounded-full mb-4 border border-white border-opacity-20 relative z-20">
+      <span className="px-3 py-1 text-xs font-medium dark:text-white text-black glass-effect rounded-full mb-4 border border-white border-opacity-20 relative z-20">
         Testing Software
       </span>
 
@@ -85,23 +85,7 @@ export default function Hero() {
           className="group relative px-5 sm:px-7 py-3.5 font-medium text-white bg-blue-600/70  hover:bg-blue-800 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            <span>Get started</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              data-lucide="arrow-right"
-              className="lucide lucide-arrow-right w-4 h-4 group-hover:translate-x-1 transition-transform"
-              strokeWidth={1.5}
-            >
-              <path d="M5 12h14"></path>
-              <path d="m12 5 7 7-7 7"></path>
-            </svg>
+            Get started
           </span>
           <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>
@@ -111,21 +95,7 @@ export default function Hero() {
           className="group relative px-5 sm:px-7 py-3.5 font-medium text-gray-800 dark:text-gray-200 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
         >
           <span className="relative z-10 flex items-center justify-center gap-2 ">
-            <span>Learn more</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-chevron-down transition-transform duration-300 group-hover:translate-y-0.5"
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+            Learn more
           </span>
           <span className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>

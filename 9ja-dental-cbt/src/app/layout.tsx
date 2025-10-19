@@ -51,9 +51,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${googleSans.variable} ${playfair.variable} ${allura.variable} ${dancing.variable}`}
+      className={`${inter.variable} ${googleSans.variable} ${playfair.variable} ${allura.variable} ${dancing.variable} h-full`}
     >
-      <body className="bg-background text-foreground min-h-screen antialiased">
+      <body className="bg-background text-foreground h-full antialiased">
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

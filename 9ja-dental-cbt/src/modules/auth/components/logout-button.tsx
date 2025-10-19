@@ -11,8 +11,17 @@ import { useQuizStore } from "@/store/quizStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useStudyStore } from "@/store/studyStore";
 import { useNotificationStore } from "@/store/notificationStore";
+import { cn } from "@/lib/utils";
 
-export default function LogoutButton() {
+interface LogoutButtonProps {
+  showLabel?: boolean;
+  className?: string;
+}
+
+export default function LogoutButton({
+  showLabel = true,
+  className,
+}: LogoutButtonProps = {}) {
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
   const userName = user?.email;
@@ -41,9 +50,16 @@ export default function LogoutButton() {
   };
 
   return (
-    // todo: improve styling by adding the name and avatar
-    <Button variant="ghost" onClick={handleLogout}>
-      {userName} <LogOut className="size-4" />
+    <Button
+      variant="ghost"
+      onClick={handleLogout}
+      aria-label="Sign out"
+      className={cn(showLabel ? "" : "px-2", className)}
+    >
+      {showLabel && (
+        <span className="mr-2 truncate">{userName ?? "Sign out"}</span>
+      )}
+      <LogOut className="size-4" />
     </Button>
   );
 }

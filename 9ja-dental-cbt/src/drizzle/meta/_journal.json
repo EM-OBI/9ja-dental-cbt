@@ -5,29 +5,15 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1759315284238,
-      "tag": "0000_powerful_calypso",
+      "when": 1760482362595,
+      "tag": "0000_narrow_marvel_apes",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1759338604545,
-      "tag": "0001_closed_hawkeye",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1759651945450,
-      "tag": "0002_brave_phil_sheldon",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1759910553526,
-      "tag": "0003_sweet_nico_minoru",
+      "when": 1760483035902,
+      "tag": "0001_majestic_warbird",
       "breakpoints": true
     }
   ]

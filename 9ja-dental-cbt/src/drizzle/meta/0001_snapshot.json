@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "60a1f076-e648-4eec-abdc-80257cecd33e",
-  "prevId": "05ea1c2e-3108-41f0-861a-c0c3c699838b",
+  "id": "ac59b225-4790-4140-bb15-4f8ec6a9ad1c",
+  "prevId": "f9e20040-5f19-4c46-a04f-8fe3450578fa",
   "tables": {
     "account": {
       "name": "account",
@@ -409,7 +409,16 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "daily_activity_user_day_idx": {
+          "name": "daily_activity_user_day_idx",
+          "columns": [
+            "user_id",
+            "activity_date"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "daily_activity_user_id_user_id_fk": {
           "name": "daily_activity_user_id_user_id_fk",
@@ -1336,6 +1345,434 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "study_flashcards": {
+      "name": "study_flashcards",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "package_id": {
+          "name": "package_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "r2_path": {
+          "name": "r2_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'llama-3-8b-instruct'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "study_flashcards_package_idx": {
+          "name": "study_flashcards_package_idx",
+          "columns": [
+            "package_id"
+          ],
+          "isUnique": false
+        },
+        "study_flashcards_user_idx": {
+          "name": "study_flashcards_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "study_flashcards_package_id_study_packages_id_fk": {
+          "name": "study_flashcards_package_id_study_packages_id_fk",
+          "tableFrom": "study_flashcards",
+          "tableTo": "study_packages",
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "study_flashcards_user_id_user_id_fk": {
+          "name": "study_flashcards_user_id_user_id_fk",
+          "tableFrom": "study_flashcards",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "study_packages": {
+      "name": "study_packages",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "topic": {
+          "name": "topic",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "topic_slug": {
+          "name": "topic_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_path": {
+          "name": "source_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'completed'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "study_packages_user_idx": {
+          "name": "study_packages_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "study_packages_created_idx": {
+          "name": "study_packages_created_idx",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "study_packages_user_id_user_id_fk": {
+          "name": "study_packages_user_id_user_id_fk",
+          "tableFrom": "study_packages",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "study_progress": {
+      "name": "study_progress",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "package_id": {
+          "name": "package_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "summary_viewed": {
+          "name": "summary_viewed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "flashcards_completed": {
+          "name": "flashcards_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "quiz_score": {
+          "name": "quiz_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "quiz_attempts": {
+          "name": "quiz_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "last_accessed_at": {
+          "name": "last_accessed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "study_progress_package_user_idx": {
+          "name": "study_progress_package_user_idx",
+          "columns": [
+            "package_id",
+            "user_id"
+          ],
+          "isUnique": true
+        },
+        "study_progress_user_idx": {
+          "name": "study_progress_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "study_progress_package_id_study_packages_id_fk": {
+          "name": "study_progress_package_id_study_packages_id_fk",
+          "tableFrom": "study_progress",
+          "tableTo": "study_packages",
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "study_progress_user_id_user_id_fk": {
+          "name": "study_progress_user_id_user_id_fk",
+          "tableFrom": "study_progress",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "study_quizzes": {
+      "name": "study_quizzes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "package_id": {
+          "name": "package_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "r2_path": {
+          "name": "r2_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "num_questions": {
+          "name": "num_questions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'llama-3-8b-instruct'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "study_quizzes_package_idx": {
+          "name": "study_quizzes_package_idx",
+          "columns": [
+            "package_id"
+          ],
+          "isUnique": false
+        },
+        "study_quizzes_user_idx": {
+          "name": "study_quizzes_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "study_quizzes_package_id_study_packages_id_fk": {
+          "name": "study_quizzes_package_id_study_packages_id_fk",
+          "tableFrom": "study_quizzes",
+          "tableTo": "study_packages",
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "study_quizzes_user_id_user_id_fk": {
+          "name": "study_quizzes_user_id_user_id_fk",
+          "tableFrom": "study_quizzes",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "study_sessions": {
       "name": "study_sessions",
       "columns": {
@@ -1472,6 +1909,108 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "study_summaries": {
+      "name": "study_summaries",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "package_id": {
+          "name": "package_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "r2_path": {
+          "name": "r2_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'llama-3-8b-instruct'"
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "study_summaries_package_idx": {
+          "name": "study_summaries_package_idx",
+          "columns": [
+            "package_id"
+          ],
+          "isUnique": false
+        },
+        "study_summaries_user_idx": {
+          "name": "study_summaries_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "study_summaries_package_id_study_packages_id_fk": {
+          "name": "study_summaries_package_id_study_packages_id_fk",
+          "tableFrom": "study_summaries",
+          "tableTo": "study_packages",
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "study_summaries_user_id_user_id_fk": {
+          "name": "study_summaries_user_id_user_id_fk",
+          "tableFrom": "study_summaries",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "system_settings": {
       "name": "system_settings",
       "columns": {
@@ -1586,6 +2125,21 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "bio": {
+          "name": "bio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
         },
         "created_at": {
           "name": "created_at",
@@ -1734,101 +2288,54 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "user_preferences": {
-      "name": "user_preferences",
+    "user_profiles": {
+      "name": "user_profiles",
       "columns": {
-        "id": {
-          "name": "id",
+        "user_id": {
+          "name": "user_id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
-        "user_id": {
-          "name": "user_id",
+        "subscription": {
+          "name": "subscription",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "theme": {
-          "name": "theme",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false,
-          "default": "'system'"
+          "default": "'free'"
         },
-        "notifications": {
-          "name": "notifications",
+        "level": {
+          "name": "level",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
-          "default": true
+          "default": 1
         },
-        "difficulty": {
-          "name": "difficulty",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'medium'"
-        },
-        "study_reminders": {
-          "name": "study_reminders",
+        "xp": {
+          "name": "xp",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
-          "default": true
+          "default": 0
         },
-        "language": {
-          "name": "language",
+        "preferences": {
+          "name": "preferences",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
-          "default": "'en'"
+          "default": "'{}'"
         },
-        "timezone": {
-          "name": "timezone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'UTC'"
-        },
-        "email_notifications": {
-          "name": "email_notifications",
+        "last_login_at": {
+          "name": "last_login_at",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": true
-        },
-        "push_notifications": {
-          "name": "push_notifications",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": true
-        },
-        "preferred_study_time": {
-          "name": "preferred_study_time",
-          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "daily_goal": {
-          "name": "daily_goal",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 10
         },
         "created_at": {
           "name": "created_at",
@@ -1845,19 +2352,11 @@
           "autoincrement": false
         }
       },
-      "indexes": {
-        "user_preferences_user_id_unique": {
-          "name": "user_preferences_user_id_unique",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
-        "user_preferences_user_id_user_id_fk": {
-          "name": "user_preferences_user_id_user_id_fk",
-          "tableFrom": "user_preferences",
+        "user_profiles_user_id_user_id_fk": {
+          "name": "user_profiles_user_id_user_id_fk",
+          "tableFrom": "user_profiles",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
@@ -1890,12 +2389,37 @@
           "notNull": true,
           "autoincrement": false
         },
-        "specialty_id": {
-          "name": "specialty_id",
-          "type": "text",
+        "total_quizzes": {
+          "name": "total_quizzes",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 0
+        },
+        "completed_quizzes": {
+          "name": "completed_quizzes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "average_score": {
+          "name": "average_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "best_score": {
+          "name": "best_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
         },
         "total_questions_answered": {
           "name": "total_questions_answered",
@@ -1913,56 +2437,218 @@
           "autoincrement": false,
           "default": 0
         },
-        "accuracy_rate": {
-          "name": "accuracy_rate",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
-        },
-        "average_time_per_question": {
-          "name": "average_time_per_question",
+        "total_time_spent": {
+          "name": "total_time_spent",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": 0
         },
-        "total_study_time": {
-          "name": "total_study_time",
+        "total_study_minutes": {
+          "name": "total_study_minutes",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": 0
         },
-        "questions_per_difficulty": {
-          "name": "questions_per_difficulty",
-          "type": "text",
+        "materials_completed": {
+          "name": "materials_completed",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'{\"easy\": 0, \"medium\": 0, \"hard\": 0}'"
+          "default": 0
         },
-        "weekly_goals": {
-          "name": "weekly_goals",
+        "notes_created": {
+          "name": "notes_created",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "focus_sessions": {
+          "name": "focus_sessions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "average_focus_time": {
+          "name": "average_focus_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "specialty_stats": {
+          "name": "specialty_stats",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": "'{}'"
         },
-        "monthly_goals": {
-          "name": "monthly_goals",
+        "recent_activity": {
+          "name": "recent_activity",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'{}'"
+          "default": "'[]'"
         },
         "last_activity_date": {
           "name": "last_activity_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "user_progress_user_idx": {
+          "name": "user_progress_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "user_progress_user_id_user_id_fk": {
+          "name": "user_progress_user_id_user_id_fk",
+          "tableFrom": "user_progress",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "user_specialty_progress": {
+      "name": "user_specialty_progress",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "specialty_id": {
+          "name": "specialty_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quizzes_completed": {
+          "name": "quizzes_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "questions_answered": {
+          "name": "questions_answered",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "correct_answers": {
+          "name": "correct_answers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "average_score": {
+          "name": "average_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "best_score": {
+          "name": "best_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "total_time_spent": {
+          "name": "total_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "study_minutes": {
+          "name": "study_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "materials_completed": {
+          "name": "materials_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "notes_count": {
+          "name": "notes_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "last_activity_at": {
+          "name": "last_activity_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -1983,11 +2669,34 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "user_specialty_progress_user_specialty_idx": {
+          "name": "user_specialty_progress_user_specialty_idx",
+          "columns": [
+            "user_id",
+            "specialty_id"
+          ],
+          "isUnique": true
+        },
+        "user_specialty_progress_user_idx": {
+          "name": "user_specialty_progress_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "user_specialty_progress_specialty_idx": {
+          "name": "user_specialty_progress_specialty_idx",
+          "columns": [
+            "specialty_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "user_progress_user_id_user_id_fk": {
-          "name": "user_progress_user_id_user_id_fk",
-          "tableFrom": "user_progress",
+        "user_specialty_progress_user_id_user_id_fk": {
+          "name": "user_specialty_progress_user_id_user_id_fk",
+          "tableFrom": "user_specialty_progress",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
@@ -1998,9 +2707,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "user_progress_specialty_id_specialties_id_fk": {
-          "name": "user_progress_specialty_id_specialties_id_fk",
-          "tableFrom": "user_progress",
+        "user_specialty_progress_specialty_id_specialties_id_fk": {
+          "name": "user_specialty_progress_specialty_id_specialties_id_fk",
+          "tableFrom": "user_specialty_progress",
           "tableTo": "specialties",
           "columnsFrom": [
             "specialty_id"
@@ -2008,7 +2717,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

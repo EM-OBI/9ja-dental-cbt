@@ -169,6 +169,93 @@ const generateEmptyStreakHistory = () => {
   return history;
 };
 
+const normalizeStreakHistoryFromCalendar = (
+  calendar?: Array<{
+    date?: string;
+    active?: boolean;
+    activityTypes?: unknown;
+    activityCount?: unknown;
+    streakMaintained?: boolean;
+  }>
+): StreakData["streakHistory"] => {
+  const baseHistory = generateEmptyStreakHistory();
+
+  if (!Array.isArray(calendar) || calendar.length === 0) {
+    return baseHistory;
+  }
+
+  type StreakHistoryEntry = StreakData["streakHistory"][number];
+  type StreakActivityType = StreakHistoryEntry["activityTypes"][number];
+
+  const asActivityType = (value: unknown): StreakActivityType | null => {
+    if (typeof value !== "string") return null;
+
+    switch (value.toLowerCase().trim()) {
+      case "quiz":
+        return "quiz";
+      case "study":
+        return "study";
+      case "review":
+        return "review";
+      case "login":
+        return "login";
+      case "streak":
+        return "streak";
+      default:
+        return null;
+    }
+  };
+
+  const historyByDate = new Map<string, StreakHistoryEntry>(
+    baseHistory.map((entry) => [entry.date, { ...entry }])
+  );
+
+  for (const entry of calendar) {
+    if (!entry || typeof entry.date !== "string") continue;
+
+    const normalizedDate = entry.date.split("T")[0];
+    const rawActivityTypes = Array.isArray(entry.activityTypes)
+      ? entry.activityTypes
+      : [];
+    const activityTypes = Array.from(
+      new Set(
+        rawActivityTypes
+          .map(asActivityType)
+          .filter((type): type is StreakActivityType => Boolean(type))
+      )
+    );
+
+    const normalizedActive = Boolean(
+      entry.active || entry.streakMaintained || activityTypes.length > 0
+    );
+    const normalizedActivityCount = Math.max(
+      typeof entry.activityCount === "number"
+        ? entry.activityCount
+        : activityTypes.length,
+      normalizedActive ? 1 : 0
+    );
+
+    const safeActivityTypes: StreakHistoryEntry["activityTypes"] =
+      normalizedActive
+        ? activityTypes.length > 0
+          ? activityTypes
+          : ["login"]
+        : [];
+
+    historyByDate.set(normalizedDate, {
+      date: normalizedDate,
+      active: normalizedActive,
+      activityTypes: safeActivityTypes,
+      activityCount: normalizedActive ? normalizedActivityCount : 0,
+    });
+  }
+
+  return Array.from(historyByDate.entries())
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .slice(-30)
+    .map(([, value]) => value);
+};
+
 // Calculate current streak from history
 const calculateCurrentStreak = (history: StreakData["streakHistory"]) => {
   let streak = 0;
@@ -312,6 +399,13 @@ export const useProgressStore = create<ProgressStore>()(
                   lastActivityDate: string | null;
                 };
               };
+              streakCalendar?: Array<{
+                date?: string;
+                active?: boolean;
+                activityTypes?: string[];
+                activityCount?: number;
+                streakMaintained?: boolean;
+              }>;
             };
           };
 
@@ -355,6 +449,11 @@ export const useProgressStore = create<ProgressStore>()(
 
             const apiProgress = (progressData.data || {}) as ProgressApiPayload;
             const apiStreaksData = streaksData.data;
+            const streakHistory = normalizeStreakHistoryFromCalendar(
+              apiStreaksData.streakCalendar
+            );
+            const derivedCurrentStreak = calculateCurrentStreak(streakHistory);
+            const derivedLongestStreak = calculateLongestStreak(streakHistory);
 
             const totalStudyMinutes = Number(
               apiProgress.totalStudyMinutes ?? apiProgress.totalStudyTime ?? 0
@@ -450,10 +549,25 @@ export const useProgressStore = create<ProgressStore>()(
                 apiProgress.lastActivityDate ||
                 apiStreaksData.lastActivityDate ||
                 new Date().toISOString().split("T")[0],
-              streakHistory: get().streakData.streakHistory,
+              streakHistory,
               weeklyGoal: 5,
               monthlyGoal: 20,
             };
+
+            updatedStreakData.currentStreak = Math.max(
+              updatedStreakData.currentStreak,
+              derivedCurrentStreak
+            );
+            updatedStreakData.longestStreak = Math.max(
+              updatedStreakData.longestStreak,
+              derivedLongestStreak
+            );
+            const mostRecentActiveDay = [...streakHistory]
+              .reverse()
+              .find((day) => day.active);
+            if (mostRecentActiveDay) {
+              updatedStreakData.lastActivityDate = mostRecentActiveDay.date;
+            }
 
             // Update progress stats with real data
             const updatedProgressStats: ProgressStats = {
@@ -483,14 +597,8 @@ export const useProgressStore = create<ProgressStore>()(
               },
               streaks: {
                 ...updatedStreakData,
-                currentStreak: Number(
-                  apiStreaksData.currentStreak ??
-                    updatedStreakData.currentStreak
-                ),
-                longestStreak: Number(
-                  apiStreaksData.longestStreak ??
-                    updatedStreakData.longestStreak
-                ),
+                currentStreak: updatedStreakData.currentStreak,
+                longestStreak: updatedStreakData.longestStreak,
               },
               level: {
                 current: Number(apiProgress.currentLevel ?? 1),
@@ -601,7 +709,9 @@ export const useProgressStore = create<ProgressStore>()(
         set({ progressStats: updatedStats, streakData: resolvedStreakData });
       },
 
-      updateStreak: (activityType: "quiz" | "study" | "review" | "login") => {
+      updateStreak: (
+        activityType: "quiz" | "study" | "review" | "login" | "streak"
+      ) => {
         const currentStreakData = get().streakData;
         const today = new Date().toISOString().split("T")[0];
         const resolvedUserId = getCurrentUserId() ?? currentStreakData.userId;

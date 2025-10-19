@@ -64,7 +64,9 @@ export interface QuizState {
   // UI state
   isActive: boolean;
   isSubmitting: boolean;
+  isFinishing: boolean;
   isLoading: boolean;
+  hasSubmittedResults: boolean;
 
   // User interactions
   bookmarkedQuestions: Set<string>;

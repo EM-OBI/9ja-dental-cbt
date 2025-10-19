@@ -64,13 +64,76 @@ const initialState: QuizState = {
   session: null,
   isActive: false,
   isSubmitting: false,
+  isFinishing: false,
   isLoading: false,
+  hasSubmittedResults: false,
   bookmarkedQuestions: new Set(),
   wrongAnswers: new Set(),
   timeSpentPerQuestion: {},
   startTime: null,
   lastQuestionStartTime: null,
   seed: "",
+};
+
+const getSecureRandom = () => {
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    const buffer = new Uint32Array(1);
+    crypto.getRandomValues(buffer);
+    return buffer[0] / (0xffffffff + 1);
+  }
+
+  return Math.random();
+};
+
+const shuffleQuestionOptions = (question: Question, seed: string): Question => {
+  const optionPairs = question.options.map((option, index) => ({
+    option,
+    originalIndex: index,
+  }));
+
+  const combinedSeed = `${seed}-${getSecureRandom()}`;
+  const shuffledPairs = seededShuffle(optionPairs, combinedSeed);
+  const updatedCorrectIndex = shuffledPairs.findIndex(
+    (pair) => pair.originalIndex === question.correctAnswer
+  );
+
+  return {
+    ...question,
+    options: shuffledPairs.map((pair) => pair.option),
+    correctAnswer:
+      updatedCorrectIndex >= 0 ? updatedCorrectIndex : question.correctAnswer,
+  };
+};
+
+const ensureDistinctCorrectIndex = (
+  question: Question,
+  previousIndex: number | null
+): Question => {
+  if (
+    previousIndex === null ||
+    question.correctAnswer !== previousIndex ||
+    question.options.length <= 1
+  ) {
+    return question;
+  }
+
+  const optionsCopy = [...question.options];
+  const swapPool = optionsCopy
+    .map((_, idx) => idx)
+    .filter((idx) => idx !== question.correctAnswer);
+  const swapIndex =
+    swapPool[Math.floor(getSecureRandom() * swapPool.length)] ?? 0;
+
+  [optionsCopy[question.correctAnswer], optionsCopy[swapIndex]] = [
+    optionsCopy[swapIndex],
+    optionsCopy[question.correctAnswer],
+  ];
+
+  return {
+    ...question,
+    options: optionsCopy,
+    correctAnswer: swapIndex,
+  };
 };
 
 // Create a user-specific storage key
@@ -87,7 +150,25 @@ export const useQuizEngineStore = create<QuizStore>()(
 
         initializeQuiz: (questions: Question[], config: QuizConfig) => {
           const seed = config.seed || `${Date.now()}-${Math.random()}`;
-          const shuffledQuestions = seededShuffle(questions, seed);
+          let previousCorrectIndex: number | null = null;
+          const questionsWithOptionShuffle = questions.map(
+            (question, index) => {
+              const shuffledQuestion = shuffleQuestionOptions(
+                question,
+                `${seed}-${question.id ?? index}`
+              );
+              const adjustedQuestion = ensureDistinctCorrectIndex(
+                shuffledQuestion,
+                previousCorrectIndex
+              );
+              previousCorrectIndex = adjustedQuestion.correctAnswer;
+              return adjustedQuestion;
+            }
+          );
+          const shuffledQuestions = seededShuffle(
+            questionsWithOptionShuffle,
+            seed
+          );
 
           const session: QuizSession = {
             id: config.sessionId || `quiz-${Date.now()}`,
@@ -112,13 +193,47 @@ export const useQuizEngineStore = create<QuizStore>()(
             session,
             isActive: false,
             isSubmitting: false,
+            isFinishing: false,
             isLoading: false,
+            hasSubmittedResults: false,
             bookmarkedQuestions: new Set(),
             wrongAnswers: new Set(),
             timeSpentPerQuestion: {},
             startTime: null,
             lastQuestionStartTime: null,
             seed,
+          });
+        },
+
+        shuffleQuestions: (seed?: string) => {
+          const state = get();
+          const newSeed = seed || `${Date.now()}-${Math.random()}`;
+          let previousCorrectIndex: number | null = null;
+          const optionShuffledQuestions = state.questions.map(
+            (question, index) => {
+              const shuffledQuestion = shuffleQuestionOptions(
+                question,
+                `${newSeed}-${question.id ?? index}`
+              );
+              const adjustedQuestion = ensureDistinctCorrectIndex(
+                shuffledQuestion,
+                previousCorrectIndex
+              );
+              previousCorrectIndex = adjustedQuestion.correctAnswer;
+              return adjustedQuestion;
+            }
+          );
+          const totalToUse =
+            state.session?.totalQuestions ?? optionShuffledQuestions.length;
+          const shuffled = seededShuffle(
+            optionShuffledQuestions,
+            newSeed
+          ).slice(0, totalToUse);
+
+          set({
+            shuffledQuestions: shuffled,
+            seed: newSeed,
+            currentQuestionIndex: 0,
           });
         },
 
@@ -232,96 +347,131 @@ export const useQuizEngineStore = create<QuizStore>()(
             return;
           }
 
-          if (state.session.endTime) {
+          if (state.isFinishing) {
             console.debug(
-              "Quiz session already completed; skipping duplicate finish call."
+              "Quiz submission already in progress; ignoring duplicate finish request."
             );
             return;
           }
 
+          if (state.hasSubmittedResults) {
+            console.debug(
+              "Quiz results already submitted; skipping duplicate finish call."
+            );
+            return;
+          }
+
+          if (!state.session.id) {
+            console.warn(
+              "Quiz session is missing an identifier; cannot submit results."
+            );
+            return;
+          }
+
+          const sessionId = state.session.id;
+
           const endTime = Date.now();
+          const scoreBeforeSubmit = state.score;
+          const correctAnswersLocal = state.answers.filter(
+            (answer) => answer.isCorrect
+          ).length;
+          const totalQuestions = state.shuffledQuestions.length;
+          const durationSeconds = state.startTime
+            ? Math.max(0, Math.round((endTime - state.startTime) / 1000))
+            : 0;
 
           console.log(
             "Quiz finished! Reason:",
             state.timeRemaining === 0 ? "Time expired" : "Manual finish"
           );
 
-          const updatedSession = {
-            ...state.session,
-            endTime,
-          };
-
-          set({
-            session: updatedSession,
-            isActive: false,
+          const answersMap: Record<string, number> = {};
+          state.answers.forEach((answer) => {
+            if (answer.selectedOption !== null) {
+              answersMap[answer.questionId] = answer.selectedOption;
+            }
           });
 
-          const userId = getCurrentUserId();
-          if (!userId) {
-            console.warn(
-              "No authenticated user found; skipping activity tracking."
-            );
-            return;
-          }
-
-          const totalQuestions = state.shuffledQuestions.length;
-          const answeredQuestions = state.answers.length;
-          const correctAnswers = state.answers.filter(
-            (answer) => answer.isCorrect
-          ).length;
-          const pointsEarned = state.score;
-          const durationSeconds = state.startTime
-            ? Math.max(0, Math.round((endTime - state.startTime) / 1000))
-            : null;
-
-          if (totalQuestions === 0) {
-            console.warn(
-              "Quiz finished without loaded questions; skipping activity tracking."
-            );
-            return;
-          }
-
-          const payload = {
-            activityType: "quiz" as const,
-            questionsAnswered: answeredQuestions,
-            correctAnswers,
-            pointsEarned,
-            xpEarned: pointsEarned,
-            quizzesCompleted: 1,
-            durationSeconds: durationSeconds ?? undefined,
-            quizId: state.session.quizId,
-            metadata: {
-              totalQuestions,
-            },
-          };
+          set({
+            isActive: false,
+            isFinishing: true,
+          });
 
           void (async () => {
             try {
-              const response = await fetch(
-                `/api/users/${userId}/daily-activity`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                }
-              );
+              const response = await fetch("/api/quiz/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  sessionId,
+                  answers: answersMap,
+                  timeTaken: durationSeconds,
+                }),
+              });
 
               if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Failed to record daily activity:", errorText);
+                const errorText = await response.text().catch(() => "");
+                console.error(
+                  "Failed to submit quiz results:",
+                  errorText || response.statusText
+                );
+
+                if (response.status === 400 && errorText.includes("already")) {
+                  set((current) => ({
+                    session: current.session
+                      ? { ...current.session, endTime }
+                      : current.session,
+                    hasSubmittedResults: true,
+                  }));
+                }
                 return;
               }
+
+              const result = (await response.json()) as {
+                score?: number;
+                correctAnswers?: number;
+                totalQuestions?: number;
+                pointsEarned?: number;
+                xpEarned?: number;
+              };
+
+              set((current) => ({
+                session: current.session
+                  ? { ...current.session, endTime }
+                  : current.session,
+                score:
+                  typeof result.score === "number"
+                    ? result.score
+                    : current.score,
+                hasSubmittedResults: true,
+              }));
 
               const progressStore = useProgressStore.getState();
               progressStore.updateStreak("quiz");
               progressStore.addActivity({
                 type: "quiz",
-                description: `Completed a quiz with ${correctAnswers}/${totalQuestions} correct answers`,
-                points: pointsEarned,
+                description: `Completed a quiz with ${
+                  result.correctAnswers ?? correctAnswersLocal
+                }/${result.totalQuestions ?? totalQuestions} correct answers`,
+                points: result.pointsEarned ?? scoreBeforeSubmit,
               });
               progressStore.updateStats();
+
+              const userId = getCurrentUserId();
+              if (userId) {
+                progressStore
+                  .loadProgressFromDatabase(userId)
+                  .catch((err) =>
+                    console.error(
+                      "[ProgressTracking] Failed to refresh progress store:",
+                      err
+                    )
+                  );
+              }
             } catch (error) {
-              console.error("Error recording daily activity:", error);
+              console.error("Error submitting quiz results:", error);
+            } finally {
+              set({ isFinishing: false });
             }
           })();
         },
@@ -360,18 +510,6 @@ export const useQuizEngineStore = create<QuizStore>()(
           set({
             isActive: true,
             lastQuestionStartTime: Date.now(),
-          });
-        },
-
-        shuffleQuestions: (seed?: string) => {
-          const state = get();
-          const newSeed = seed || `${Date.now()}-${Math.random()}`;
-          const shuffled = seededShuffle(state.questions, newSeed);
-
-          set({
-            shuffledQuestions: shuffled,
-            seed: newSeed,
-            currentQuestionIndex: 0,
           });
         },
 

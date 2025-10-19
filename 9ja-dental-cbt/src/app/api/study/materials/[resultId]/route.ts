@@ -8,6 +8,7 @@ import {
   studySummaries,
   studyFlashcards,
   studyQuizzes,
+  studyProgress,
 } from "@/db/schema";
 
 export async function GET(
@@ -52,23 +53,29 @@ export async function GET(
     console.log("[Materials API] Package found:", packageRecord.topic);
 
     // Fetch all materials for this package
-    const [summaryResults, flashcardResults, quizResults] = await Promise.all([
-      db
-        .select()
-        .from(studySummaries)
-        .where(eq(studySummaries.packageId, packageId))
-        .limit(1),
-      db
-        .select()
-        .from(studyFlashcards)
-        .where(eq(studyFlashcards.packageId, packageId))
-        .limit(1),
-      db
-        .select()
-        .from(studyQuizzes)
-        .where(eq(studyQuizzes.packageId, packageId))
-        .limit(1),
-    ]);
+    const [summaryResults, flashcardResults, quizResults, progressResults] =
+      await Promise.all([
+        db
+          .select()
+          .from(studySummaries)
+          .where(eq(studySummaries.packageId, packageId))
+          .limit(1),
+        db
+          .select()
+          .from(studyFlashcards)
+          .where(eq(studyFlashcards.packageId, packageId))
+          .limit(1),
+        db
+          .select()
+          .from(studyQuizzes)
+          .where(eq(studyQuizzes.packageId, packageId))
+          .limit(1),
+        db
+          .select()
+          .from(studyProgress)
+          .where(eq(studyProgress.packageId, packageId))
+          .limit(1),
+      ]);
 
     console.log("[Materials API] Query results:", {
       summaryCount: summaryResults.length,
@@ -161,24 +168,78 @@ export async function GET(
       }
 
       const content = object ? await object.text() : "{}";
-      const parsed = JSON.parse(content);
+      let parsed: unknown;
+
+      try {
+        parsed = JSON.parse(content);
+      } catch (parseError) {
+        console.error("[Materials API] Failed to parse quiz JSON", {
+          error: parseError,
+          preview: content.slice(0, 120),
+        });
+        parsed = [];
+      }
+
+      const normalized = (() => {
+        if (Array.isArray(parsed)) {
+          return {
+            questions: parsed,
+            multipleChoice: parsed,
+            trueFalse: [] as unknown[],
+          };
+        }
+
+        if (parsed && typeof parsed === "object") {
+          const payload = parsed as Record<string, unknown>;
+          const questions = Array.isArray(payload.questions)
+            ? (payload.questions as unknown[])
+            : [];
+          const multipleChoice = Array.isArray(payload.multipleChoice)
+            ? (payload.multipleChoice as unknown[])
+            : questions;
+          const trueFalse = Array.isArray(payload.trueFalse)
+            ? (payload.trueFalse as unknown[])
+            : [];
+
+          return {
+            questions,
+            multipleChoice,
+            trueFalse,
+          };
+        }
+
+        return {
+          questions: [] as unknown[],
+          multipleChoice: [] as unknown[],
+          trueFalse: [] as unknown[],
+        };
+      })();
 
       materials.quiz = {
         id: quiz.id,
         type: "quiz",
-        content: parsed.questions || parsed, // Handle both formats
+        content: normalized,
         generatedAt: quiz.createdAt,
         model: quiz.model,
       };
-      console.log(
-        "[Materials API] Quiz questions count:",
-        (parsed.questions || parsed).length
-      );
+      console.log("[Materials API] Quiz pools counts:", {
+        multipleChoice: normalized.multipleChoice.length,
+        trueFalse: normalized.trueFalse.length,
+      });
     } else {
       console.log("[Materials API] No quiz found in database");
     }
 
     console.log("[Materials API] Returning materials:", Object.keys(materials));
+
+    const progressRecord = progressResults[0];
+
+    if (progressRecord) {
+      await db
+        .update(studyProgress)
+        .set({ lastAccessedAt: new Date(), updatedAt: new Date() })
+        .where(eq(studyProgress.id, progressRecord.id));
+    }
 
     return NextResponse.json({
       success: true,
@@ -188,6 +249,15 @@ export async function GET(
         createdAt: packageRecord.createdAt,
       },
       materials,
+      progress: progressRecord
+        ? {
+            summaryViewed: Boolean(progressRecord.summaryViewed),
+            flashcardsCompleted: Boolean(progressRecord.flashcardsCompleted),
+            quizScore: progressRecord.quizScore,
+            quizAttempts: progressRecord.quizAttempts,
+            lastAccessedAt: progressRecord.lastAccessedAt,
+          }
+        : null,
     });
   } catch (error) {
     console.error("[Materials API] Error:", error);

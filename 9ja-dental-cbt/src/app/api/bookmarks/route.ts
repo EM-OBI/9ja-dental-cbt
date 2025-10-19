@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthInstance as getAuth } from "@/modules/auth/utils/auth-utils";
 import { getDb } from "@/db";
-import { bookmarks, questions } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { bookmarks, questions, specialties } from "@/db/schema";
+import { eq, and, desc, like, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 // POST /api/bookmarks - Add a new bookmark
@@ -122,111 +122,88 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const category = url.searchParams.get("category");
     const difficulty = url.searchParams.get("difficulty");
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = parseInt(url.searchParams.get("limit") || "10");
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limitParam = parseInt(url.searchParams.get("limit") || "10");
+    const limit = Math.max(1, Math.min(50, limitParam || 10));
+    const offset = (page - 1) * limit;
 
-    // TODO: Implement actual bookmark retrieval from database
-    // For now, return mock bookmark data
-    const mockBookmarks = [
-      {
-        id: "bookmark-1",
-        userId: session.user.id,
-        questionId: "q1",
-        quizId: "quiz-1",
-        note: "Important concept for finals",
-        createdAt: new Date("2024-01-15T10:30:00Z"),
-        question: {
-          id: "q1",
-          question: "What is the primary cause of dental caries?",
-          type: "multiple-choice" as const,
-          options: [
-            "Genetic factors",
-            "Bacterial action on sugars",
-            "Physical trauma",
-            "Chemical erosion",
-          ],
-          correctAnswer: "Bacterial action on sugars",
-          explanation:
-            "Dental caries is primarily caused by bacterial fermentation of dietary sugars.",
-          category: "Conservative Dentistry",
-          difficulty: "medium" as const,
-        },
-      },
-      {
-        id: "bookmark-2",
-        userId: session.user.id,
-        questionId: "q5",
-        quizId: "quiz-2",
-        note: "Review for prosthodontics exam",
-        createdAt: new Date("2024-01-14T15:20:00Z"),
-        question: {
-          id: "q5",
-          question: "What is the ideal taper for crown preparation?",
-          type: "multiple-choice" as const,
-          options: [
-            "2-5 degrees",
-            "6-12 degrees",
-            "15-20 degrees",
-            "25-30 degrees",
-          ],
-          correctAnswer: "6-12 degrees",
-          explanation:
-            "The ideal taper for crown preparation is 6-12 degrees to provide adequate retention and resistance.",
-          category: "Prosthodontics",
-          difficulty: "hard" as const,
-        },
-      },
-      {
-        id: "bookmark-3",
-        userId: session.user.id,
-        questionId: "q3",
-        quizId: "quiz-3",
-        note: "Surgical technique to remember",
-        createdAt: new Date("2024-01-13T09:45:00Z"),
-        question: {
-          id: "q3",
-          question:
-            "What is the most common complication after tooth extraction?",
-          type: "multiple-choice" as const,
-          options: ["Bleeding", "Dry socket", "Infection", "Nerve damage"],
-          correctAnswer: "Dry socket",
-          explanation:
-            "Dry socket (alveolar osteitis) is the most common complication following tooth extraction.",
-          category: "Oral Surgery",
-          difficulty: "easy" as const,
-        },
-      },
+    const db = await getDb();
+
+    const filters = [
+      eq(bookmarks.userId, session.user.id),
+      eq(bookmarks.itemType, "question" as const),
     ];
 
-    // Apply filters
-    let filteredBookmarks = mockBookmarks;
     if (category) {
-      filteredBookmarks = filteredBookmarks.filter((bookmark) =>
-        bookmark.question.category
-          .toLowerCase()
-          .includes(category.toLowerCase())
-      );
+      filters.push(like(specialties.name, `%${category}%`));
     }
+
     if (difficulty) {
-      filteredBookmarks = filteredBookmarks.filter(
-        (bookmark) => bookmark.question.difficulty === difficulty
+      filters.push(
+        eq(questions.difficulty, difficulty as "easy" | "medium" | "hard")
       );
     }
 
-    // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const paginatedBookmarks = filteredBookmarks.slice(
-      startIndex,
-      startIndex + limit
+    const whereClause = filters.length > 1 ? and(...filters) : filters[0];
+
+    const [{ count } = { count: 0 }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookmarks)
+      .innerJoin(questions, eq(bookmarks.itemId, questions.id))
+      .innerJoin(specialties, eq(questions.specialtyId, specialties.id))
+      .where(whereClause);
+
+    const bookmarkRows = await db
+      .select({
+        bookmark: bookmarks,
+        question: questions,
+        specialtyName: specialties.name,
+      })
+      .from(bookmarks)
+      .innerJoin(questions, eq(bookmarks.itemId, questions.id))
+      .innerJoin(specialties, eq(questions.specialtyId, specialties.id))
+      .where(whereClause)
+      .orderBy(desc(bookmarks.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const bookmarksResponse = bookmarkRows.map(
+      ({ bookmark, question, specialtyName }) => {
+        let options: unknown[] = [];
+        try {
+          options = JSON.parse(question.options ?? "[]");
+        } catch (parseError) {
+          console.error("Failed to parse question options", parseError);
+        }
+
+        return {
+          id: bookmark.id,
+          userId: bookmark.userId,
+          questionId: question.id,
+          quizId: null,
+          note: bookmark.notes ?? "",
+          createdAt: bookmark.createdAt,
+          question: {
+            id: question.id,
+            question: question.text,
+            type: question.type === "mcq" ? "multiple-choice" : question.type,
+            options,
+            correctAnswer: question.correctAnswer,
+            explanation: question.explanation,
+            category: specialtyName,
+            difficulty: question.difficulty,
+          },
+        };
+      }
     );
 
     return NextResponse.json({
       success: true,
       data: {
-        bookmarks: paginatedBookmarks,
-        total: filteredBookmarks.length,
-        page: page,
-        limit: limit,
+        bookmarks: bookmarksResponse,
+        total: count,
+        page,
+        limit,
       },
     });
   } catch (error) {

@@ -9,14 +9,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthInstance as getAuth } from "@/modules/auth/utils/auth-utils";
 import { getDb } from "@/db";
-import {
-  quizSessions,
-  quizResults,
-  userProgress,
-  userSpecialtyProgress,
-} from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { quizSessions, quizResults } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { createKVCacheFromContext, CACHE_KEYS } from "@/services/kvCache";
+import { trackQuizCompletion } from "@/services/progressTracking";
 
 // Removed: export const runtime = "edge";
 // OpenNext for Cloudflare requires edge runtime routes to be in separate files
@@ -173,96 +169,16 @@ export async function POST(request: NextRequest) {
       completedAt: new Date(),
     });
 
-    // Update user progress
-    const userProgressRecord = await db
-      .select()
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId))
-      .get();
-
-    if (userProgressRecord) {
-      const newTotalQuizzes = (userProgressRecord.totalQuizzes || 0) + 1;
-      const newCompletedQuizzes =
-        (userProgressRecord.completedQuizzes || 0) + 1;
-      const newAverageScore =
-        ((userProgressRecord.averageScore || 0) * (newCompletedQuizzes - 1) +
-          score) /
-        newCompletedQuizzes;
-
-      await db
-        .update(userProgress)
-        .set({
-          totalQuizzes: newTotalQuizzes,
-          completedQuizzes: newCompletedQuizzes,
-          averageScore: newAverageScore,
-          updatedAt: new Date(),
-        })
-        .where(eq(userProgress.userId, userId));
-    }
-
-    // Update specialty progress if applicable
-    if (session.specialtyId) {
-      const specialtyProgress = await db
-        .select()
-        .from(userSpecialtyProgress)
-        .where(
-          and(
-            eq(userSpecialtyProgress.userId, userId),
-            eq(userSpecialtyProgress.specialtyId, session.specialtyId)
-          )
-        )
-        .get();
-
-      if (specialtyProgress) {
-        const newQuizzesCompleted =
-          (specialtyProgress.quizzesCompleted || 0) + 1;
-        const newQuestionsAnswered =
-          (specialtyProgress.questionsAnswered || 0) + totalQuestions;
-        const newCorrectAnswers =
-          (specialtyProgress.correctAnswers || 0) + correctCount;
-        const newAverageScore =
-          ((specialtyProgress.averageScore || 0) * (newQuizzesCompleted - 1) +
-            score) /
-          newQuizzesCompleted;
-        const newBestScore = Math.max(specialtyProgress.bestScore || 0, score);
-        const newTotalTimeSpent =
-          (specialtyProgress.totalTimeSpent || 0) + timeTaken;
-
-        await db
-          .update(userSpecialtyProgress)
-          .set({
-            quizzesCompleted: newQuizzesCompleted,
-            questionsAnswered: newQuestionsAnswered,
-            correctAnswers: newCorrectAnswers,
-            averageScore: newAverageScore,
-            bestScore: newBestScore,
-            totalTimeSpent: newTotalTimeSpent,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(userSpecialtyProgress.userId, userId),
-              eq(userSpecialtyProgress.specialtyId, session.specialtyId)
-            )
-          );
-      } else {
-        // Create new specialty progress record
-        await db.insert(userSpecialtyProgress).values({
-          id: `sp_${Date.now()}_${userId.substring(0, 8)}`,
-          userId,
-          specialtyId: session.specialtyId,
-          quizzesCompleted: 1,
-          questionsAnswered: totalQuestions,
-          correctAnswers: correctCount,
-          averageScore: score,
-          bestScore: score,
-          totalTimeSpent: timeTaken,
-          studyMinutes: 0,
-          materialsCompleted: 0,
-          notesCount: 0,
-        });
-      }
-    }
+    // Update all progress tracking tables (user_progress, user_specialty_progress, daily_activity)
+    await trackQuizCompletion(db, userId, {
+      specialtyId: session.specialtyId,
+      score,
+      correctAnswers: correctCount,
+      totalQuestions,
+      timeTaken,
+      pointsEarned,
+      xpEarned,
+    });
 
     console.log(`[api/quiz/submit] Quiz submitted successfully: ${sessionId}`);
 
@@ -285,6 +201,7 @@ export async function POST(request: NextRequest) {
       cache.invalidateUserCache(userId),
       // Delete the quiz session cache
       cache.delete(CACHE_KEYS.QUIZ_SESSION(sessionId)),
+      cache.invalidateLeaderboards(),
     ]);
 
     return NextResponse.json(response);

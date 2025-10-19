@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthInstance as getAuth } from "@/modules/auth/utils/auth-utils";
 import { getUserProgress } from "@/services/serverData";
+import { calculateLevelFromXp, calculateXpForLevel } from "@/lib/leveling";
 
 // GET /api/users/[id]/progress - Get user progress
 export async function GET(
@@ -25,6 +26,8 @@ export async function GET(
     const { progressData, quizStats, currentStreak, recentActivity } =
       await getUserProgress(id);
 
+    const recentActivityList = recentActivity ?? [];
+
     // Calculate progress metrics from real data
     const stats = quizStats || {
       totalQuizzes: 0,
@@ -36,8 +39,8 @@ export async function GET(
     const userProgressData = progressData;
 
     // Transform daily activity into weekly progress
-    const weeklyProgress = recentActivity
-      .map((activity, index) => {
+    const weeklyProgress = recentActivityList
+      .map((activity) => {
         const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const date = new Date(activity.activityDate);
         const correctAnswers = activity.correctAnswers || 0;
@@ -54,7 +57,7 @@ export async function GET(
       .slice(0, 7);
 
     // Transform recent activity for display
-    const formattedActivity = recentActivity
+    const formattedActivity = recentActivityList
       .slice(0, 3)
       .map((activity, index) => {
         const quizzesCompleted = activity.quizzesCompleted || 0;
@@ -81,6 +84,12 @@ export async function GET(
         };
       });
 
+    const totalXp = Number(userProgressData?.xpEarned) || 0;
+    const currentLevel = calculateLevelFromXp(totalXp);
+    const nextLevel = currentLevel + 1;
+    const xpForNextLevel = calculateXpForLevel(nextLevel);
+    const pointsToNextLevel = Math.max(xpForNextLevel - totalXp, 0);
+
     const progressMetrics = {
       totalQuizzes: Number(stats.totalQuizzes) || 0,
       completedQuizzes: Number(stats.totalQuizzes) || 0,
@@ -88,10 +97,8 @@ export async function GET(
       totalStudyTime: userProgressData?.totalStudyMinutes || 0,
       currentStreak: streakData?.currentCount || 0,
       longestStreak: streakData?.bestCount || 0,
-      currentLevel:
-        Math.floor((userProgressData?.totalQuestionsAnswered || 0) / 100) + 1,
-      pointsToNextLevel:
-        1000 - ((userProgressData?.totalQuestionsAnswered || 0) % 100) * 10,
+      currentLevel,
+      pointsToNextLevel,
       weeklyProgress:
         weeklyProgress.length > 0
           ? weeklyProgress

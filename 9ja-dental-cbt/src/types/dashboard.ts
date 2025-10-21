@@ -158,7 +158,7 @@ export interface DatabaseAdapter {
   getUserStreak(userId: string): Promise<UserStreak>;
   getLeaderboard(
     limit?: number,
-    period?: "daily" | "weekly" | "monthly"
+    period?: "daily" | "weekly" | "monthly" | "all-time"
   ): Promise<LeaderboardEntry[]>;
   getUserProgress(userId: string): Promise<DashboardStats>;
 }

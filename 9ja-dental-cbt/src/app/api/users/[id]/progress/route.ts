@@ -52,6 +52,7 @@ export async function GET(
               ? Math.round((correctAnswers / questionsAnswered) * 100)
               : 0,
           time: activity.studyMinutes || 0,
+          quizzesCompleted: activity.quizzesCompleted || 0,
         };
       })
       .slice(0, 7);

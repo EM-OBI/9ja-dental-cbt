@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { UnifiedProgressData, ProgressData } from "@/types/progress";
+import {
+  UnifiedProgressData,
+  ProgressData,
+  WeeklyProgressSummary,
+} from "@/types/progress";
 import { DashboardStats } from "@/types/dashboard";
 import { databaseService } from "@/services/database";
 
@@ -31,6 +35,15 @@ const apiProgressService = {
     // In the future, this could trigger backend cache refresh
     console.log(`Refreshing progress data for user ${userId}`);
   },
+};
+
+const toNumeric = (value: unknown, fallback = 0): number => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 };
 
 // Data transformation utilities
@@ -105,6 +118,21 @@ const transformDashboardStatsToUnified = (
     bookmarkedQuestions: [],
     performanceCharts: [],
     badges: [],
+    weeklyProgress: (data.weeklyProgress ?? []).map(
+      (entry): WeeklyProgressSummary => {
+        const rawDate =
+          entry.date instanceof Date
+            ? entry.date
+            : new Date(entry.date ?? new Date());
+
+        return {
+          date: rawDate.toISOString().split("T")[0],
+          quizzesTaken: toNumeric(entry.quizzesTaken, 0),
+          studyMinutes: toNumeric(entry.studyMinutes, 0),
+          averageScore: toNumeric(entry.averageScore, 0),
+        };
+      }
+    ),
   };
 };
 
@@ -168,6 +196,14 @@ export const transformProgressDataToUnified = (
         completionPercentage: 92,
       },
     ],
+    weeklyProgress: data.performanceCharts.slice(-7).map(
+      (entry): WeeklyProgressSummary => ({
+        date: entry.date,
+        quizzesTaken: 0,
+        studyMinutes: entry.timeSpent,
+        averageScore: entry.accuracy,
+      })
+    ),
   };
 };
 
@@ -339,6 +375,20 @@ const mockUnifiedProgressService = {
           category: "Accuracy",
         },
       ],
+
+      weeklyProgress: Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
+        const studyMinutes = 20 + Math.floor(Math.random() * 40);
+        const quizzesTaken = 1 + Math.floor(Math.random() * 3);
+        return {
+          date,
+          quizzesTaken,
+          studyMinutes,
+          averageScore: 70 + Math.random() * 25,
+        } satisfies WeeklyProgressSummary;
+      }),
     };
   },
 };

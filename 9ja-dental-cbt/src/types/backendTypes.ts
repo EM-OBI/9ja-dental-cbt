@@ -180,7 +180,7 @@ export interface Achievement {
 export interface LeaderboardEntry {
   id: string;
   user_id: string;
-  timeframe: "daily" | "weekly" | "monthly";
+  timeframe: "daily" | "weekly" | "monthly" | "all-time";
   score: number;
   rank: number;
   entry_date: string;

@@ -136,7 +136,13 @@ const mapLeaderboardEntry = (
 };
 
 const mapWeeklyProgress = (
-  items: Array<{ day?: string; score?: number; time?: number }> = []
+  items: Array<{
+    day?: string;
+    score?: number;
+    time?: number;
+    quizzesCompleted?: number;
+    quizzes?: number;
+  }> = []
 ): WeeklyProgress[] => {
   const today = new Date();
   return items.map((item, index) => {
@@ -144,7 +150,7 @@ const mapWeeklyProgress = (
     progressDate.setDate(today.getDate() - (items.length - 1 - index));
     return {
       date: progressDate,
-      quizzesTaken: 0,
+      quizzesTaken: ensureNumber(item.quizzesCompleted ?? item.quizzes ?? 0),
       studyMinutes: ensureNumber(item.time),
       averageScore: ensureNumber(item.score),
     } satisfies WeeklyProgress;
@@ -356,7 +362,7 @@ export class DatabaseService {
 
   async getLeaderboard(
     limit = 10,
-    period: "daily" | "weekly" | "monthly" = "weekly"
+    period: "daily" | "weekly" | "monthly" | "all-time" = "weekly"
   ): Promise<LeaderboardEntry[]> {
     const response = await jsonFetch<
       ApiSuccess<{

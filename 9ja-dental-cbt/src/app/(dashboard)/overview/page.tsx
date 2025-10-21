@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { RefreshCcw, Plus, BookOpen, ClipboardCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { RefreshCcw } from "lucide-react";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -12,11 +11,9 @@ import { useUserStore } from "@/store";
 import { useProgressStore } from "@/store/progressStore";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorAlert";
+import type { WeeklyProgressSummary } from "@/types/progress";
 
 export default function Dashboard() {
-  const router = useRouter();
-  const [isQuickActionOpen, setIsQuickActionOpen] = useState(false);
-
   const { user, isLoading: isUserLoading } = useUserStore();
   const userId = user?.id ?? "";
   const userName = user?.name?.trim() || user?.email?.split("@")[0] || "there";
@@ -213,13 +210,110 @@ export default function Dashboard() {
         )} minutes tracked`
       : `${levelSubtitle} • No study time logged yet`;
 
+  const weeklyProgressEntries: WeeklyProgressSummary[] =
+    progressData.weeklyProgress ?? [];
+
+  const calculateTrendFromWeekly = (
+    selector: (entry: WeeklyProgressSummary) => number,
+    options: {
+      segmentSize?: number;
+      mode?: "sum" | "average";
+      asAbsolute?: boolean;
+    } = {}
+  ) => {
+    const { segmentSize = 3, mode = "sum", asAbsolute = false } = options;
+
+    if (!weeklyProgressEntries.length) {
+      return { value: 0, isPositive: false } as const;
+    }
+
+    const sortedEntries = [...weeklyProgressEntries].sort((a, b) => {
+      const left = new Date(a.date).getTime();
+      const right = new Date(b.date).getTime();
+      return left - right;
+    });
+
+    const safeSegmentSize = Math.min(
+      segmentSize,
+      Math.floor(sortedEntries.length / 2)
+    );
+
+    if (safeSegmentSize <= 0) {
+      return { value: 0, isPositive: false } as const;
+    }
+
+    const currentSegment = sortedEntries.slice(-safeSegmentSize);
+    const previousSegment = sortedEntries.slice(
+      -safeSegmentSize * 2,
+      -safeSegmentSize
+    );
+
+    if (!previousSegment.length) {
+      return { value: 0, isPositive: false } as const;
+    }
+
+    const aggregate = (segment: typeof currentSegment) => {
+      const values = segment.map((entry) => {
+        const rawValue = Number(selector(entry));
+        return Number.isFinite(rawValue) ? rawValue : 0;
+      });
+      const total = values.reduce((sum, value) => sum + value, 0);
+
+      if (mode === "average") {
+        return values.length > 0 ? total / values.length : 0;
+      }
+
+      return total;
+    };
+
+    const currentValue = aggregate(currentSegment);
+    const previousValue = aggregate(previousSegment);
+    const delta = currentValue - previousValue;
+    const isPositive = delta >= 0;
+
+    if (asAbsolute) {
+      return {
+        value: Math.round(delta),
+        isPositive,
+      } as const;
+    }
+
+    if (previousValue === 0) {
+      if (currentValue === 0) {
+        return { value: 0, isPositive: false } as const;
+      }
+      return {
+        value: currentValue > 0 ? 100 : -100,
+        isPositive: currentValue > 0,
+      } as const;
+    }
+
+    const percentChange = (delta / Math.abs(previousValue)) * 100;
+    return {
+      value: Math.round(percentChange),
+      isPositive,
+    } as const;
+  };
+
+  const quizzesTrend = calculateTrendFromWeekly((entry) => entry.quizzesTaken, {
+    mode: "sum",
+  });
+  const averageScoreTrend = calculateTrendFromWeekly(
+    (entry) => entry.averageScore,
+    { mode: "average", asAbsolute: true }
+  );
+  const studyTimeTrend = calculateTrendFromWeekly(
+    (entry) => entry.studyMinutes,
+    { mode: "sum" }
+  );
+
   return (
-    <div className="py-4 md:py-6">
+    <div className="py-4">
       <div className="mx-auto max-w-7xl px-4 md:px-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify_between bg-white dark:bg-card rounded-xl p-5 md:p-6 border border-slate-200 dark:border-border">
+        <div className="flex items-center justify-between bg-white dark:bg-card rounded-lg p-4 border border-slate-200 dark:border-border">
           <div>
-            <h1 className="text-xl md:text-2xl font-semibold text-slate-900 dark:text-foreground mb-1">
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground mb-1">
               {getGreeting()}, {userName}
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -252,11 +346,6 @@ export default function Dashboard() {
                       )} total`
                     : "Start your first quiz to see progress"
                 }
-                trend={{
-                  value: 12,
-                  isPositive: true,
-                  period: "last week",
-                }}
               />
 
               <DashboardCard
@@ -268,9 +357,9 @@ export default function Dashboard() {
                     : "Complete a quiz to unlock insights"
                 }
                 trend={{
-                  value: 5.2,
-                  isPositive: true,
-                  period: "last month",
+                  value: averageScoreTrend.value,
+                  isPositive: averageScoreTrend.isPositive,
+                  period: "since last update",
                 }}
               />
 
@@ -279,9 +368,9 @@ export default function Dashboard() {
                 value={studyTimeDisplay}
                 subtitle={studySubtitle}
                 trend={{
-                  value: 8,
-                  isPositive: true,
-                  period: "last week",
+                  value: studyTimeTrend.value,
+                  isPositive: studyTimeTrend.isPositive,
+                  period: "since last update",
                 }}
               />
 
@@ -307,82 +396,11 @@ export default function Dashboard() {
 
           {/* Right Sidebar - Streak Calendar (Desktop Only) */}
           <div className="hidden lg:block lg:w-80 xl:w-96">
-            <div className="bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border sticky top-6">
+            <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border sticky top-6">
               <StreakCalendar />
             </div>
           </div>
         </div>
-
-        {/* Floating Action Button */}
-        <button
-          onClick={() => setIsQuickActionOpen(!isQuickActionOpen)}
-          className={`fixed bottom-20 right-6 w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group ${
-            isQuickActionOpen ? "z-[70]" : "z-50"
-          }`}
-          aria-label="Quick Actions"
-        >
-          <Plus
-            className={`w-6 h-6 transition-transform duration-200 ${
-              isQuickActionOpen ? "rotate-45" : "group-hover:rotate-90"
-            }`}
-          />
-        </button>
-
-        {/* Quick Action Popup - Positioned near FAB */}
-        {isQuickActionOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-[65] bg-black/20"
-              onClick={() => setIsQuickActionOpen(false)}
-            />
-
-            {/* Minimal Colorful Modal */}
-            <div className="fixed bottom-36 right-6 z-[68] w-56 bg-white dark:bg-card rounded-2xl shadow-2xl border border-slate-200 dark:border-border overflow-hidden">
-              {/* Take a Test */}
-              <button
-                onClick={() => {
-                  setIsQuickActionOpen(false);
-                  router.push("/quiz");
-                }}
-                className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all group border-b border-slate-100 dark:border-slate-800"
-              >
-                <div className="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                  <ClipboardCheck className="w-5 h-5" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                    Take a Test
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Start quiz
-                  </p>
-                </div>
-              </button>
-
-              {/* Study Materials */}
-              <button
-                onClick={() => {
-                  setIsQuickActionOpen(false);
-                  router.push("/study");
-                }}
-                className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all group"
-              >
-                <div className="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                    Study
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Review topics
-                  </p>
-                </div>
-              </button>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

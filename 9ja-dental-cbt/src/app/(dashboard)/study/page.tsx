@@ -38,10 +38,10 @@ export default function StudyEnginePage() {
 
   if (isSetupComplete && studyConfig) {
     return (
-      <div className="min-h-full bg-slate-50">
-        <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="min-h-full">
+        <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-lg font-semibold text-slate-900">
+            <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
               Your AI-generated materials
             </h1>
             <Button
@@ -61,7 +61,7 @@ export default function StudyEnginePage() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50">
+    <div className="min-h-full bg-slate-50 dark:bg-background">
       <StudySetup onStartStudy={handleStartStudy} />
     </div>
   );

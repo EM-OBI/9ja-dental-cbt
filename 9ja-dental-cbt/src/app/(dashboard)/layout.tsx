@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-background overflow-hidden min-h-0">
+    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-background min-h-0">
       {/* Sidebar - Drawer on mobile, fixed sidebar on desktop */}
       <Sidebar
         isDesktopCollapsed={isDesktopCollapsed}
@@ -79,7 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Desktop Header - Hidden on mobile */}
         <header className="hidden lg:block bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border z-10">
           <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />

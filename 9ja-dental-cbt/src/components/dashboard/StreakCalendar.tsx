@@ -54,7 +54,7 @@ export default function StreakCalendar({
   const allActivityDates = [...activityDates, ...streakDates];
 
   return (
-    <div className={cn("p-4", className)}>
+    <div className={cn("p-6", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

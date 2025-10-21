@@ -120,20 +120,20 @@ export default function PricingPlans() {
 
   return (
     <section id="pricing">
-      <div className="bg-gray-200 dark:bg-black min-h-screen antialiased flex items-center justify-center">
-        <div className="w-full max-w-7xl px-8 py-12">
+      <div className="bg-gray-200 dark:bg-black py-16 antialiased flex items-center justify-center">
+        <div className="w-full max-w-7xl px-4 md:px-6">
           {/* Pricing header section */}
           <div className="flex flex-col items-center text-center mb-12">
-            <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 dark:text-white gradient-text">
-              Dental Specialty Quiz,
+            <h1 className="mb-4 text-4xl font-semibold tracking-tight text-gray-900 dark:text-white">
+              Dental Specialty Quiz
               <span className="text-blue-600 dark:text-blue-400"> Plans</span>
             </h1>
-            <p className="mb-8 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
+            <p className="mb-6 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
               Prep smarter. Pass confidently. Pick a plan that fits your stage.
             </p>
 
             {/* Billing toggle */}
-            <div className="flex items-center justify-center mb-10 space-x-3">
+            <div className="flex items-center justify-center mb-8 space-x-3">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Monthly
               </span>
@@ -172,59 +172,59 @@ export default function PricingPlans() {
           </div>
 
           {/* Pricing cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 ms-center w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto w-full">
             {plans.map((plan, index) => (
               <div
                 key={index}
-                className="group relative p-8 rounded-2xl overflow-hidden transition-all duration-300 border border-gray-100/80 dark:border-white/10 bg-white dark:bg-black hover:shadow-2xl will-change-transform shadow dark:shadow-lg w-full max-w-[400px] min-h-[520px]"
+                className="group relative p-6 rounded-lg overflow-hidden transition-all duration-300 border border-gray-200 dark:border-white/10 bg-white dark:bg-black hover:shadow-md shadow-sm w-full"
               >
-                <div className="relative flex flex-col space-y-6 h-full justify-between">
+                <div className="relative flex flex-col space-y-4 h-full justify-between">
                   <div>
-                    <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 group-hover:bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 transition-all duration-300 text-blue-500 dark:text-blue-400">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400">
                         {plan.icon}
                       </div>
-                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 transition-colors duration-300 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40">
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                         {plan.badge}
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-gray-900 dark:text-white tracking-tight text-2xl mt-2">
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-xl mb-2">
                       {plan.name}
                     </h3>
 
-                    <div className="flex items-baseline">
+                    <div className="flex items-baseline mb-3">
                       <span
                         className={`${
                           isAnnual ? "hidden" : ""
-                        } text-5xl font-bold text-gray-900 dark:text-white`}
+                        } text-4xl font-semibold text-gray-900 dark:text-white`}
                       >
                         {plan.monthlyPrice}
                       </span>
                       <span
                         className={`${
                           isAnnual ? "" : "hidden"
-                        } text-5xl font-bold text-gray-900 dark:text-white`}
+                        } text-4xl font-semibold text-gray-900 dark:text-white`}
                       >
                         {plan.annualPrice}
                       </span>
-                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         /month
                       </span>
                     </div>
 
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                       {plan.description}
                     </p>
 
-                    <ul className="space-y-4 mt-3">
+                    <ul className="space-y-3">
                       {plan.features.map((feature, featureIndex) => (
                         <li
                           key={featureIndex}
-                          className="flex items-center text-gray-700 dark:text-gray-300"
+                          className="flex items-start text-sm text-gray-700 dark:text-gray-300"
                         >
                           <svg
-                            className="w-5 h-5 mr-3 text-green-500"
+                            className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-green-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -249,7 +249,7 @@ export default function PricingPlans() {
                     <button
                       type="button"
                       disabled
-                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-gray-800 dark:text-gray-200 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-300 border border-gray-200 dark:border-gray-700 cursor-not-allowed shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                      className="mt-4 w-full min-w-[120px] inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-60"
                     >
                       Coming soon
                     </button>
@@ -263,13 +263,13 @@ export default function PricingPlans() {
                           )}`
                         )
                       }
-                      className="mt-4 w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-gray-800 dark:text-gray-200 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-300 border border-gray-200 dark:border-gray-700 cursor-pointer shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                      className="mt-4 w-full min-w-[120px] inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium text-gray-800 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-300 dark:border-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                     >
                       {plan.cta}
                     </button>
                   )}
                 </div>
-                <div className="absolute inset-0 -z-10 rounded-2xl p-px bg-gradient-to-br from-transparent via-blue-100/40 to-transparent dark:via-blue-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 -z-10 rounded-lg p-px bg-gradient-to-br from-transparent via-blue-100/20 to-transparent dark:via-blue-800/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
             ))}
           </div>

@@ -250,14 +250,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="py-6 bg-gradient-to-br from-amber-50/30 via-orange-50/20 to-yellow-50/30 dark:bg-card">
-      <div className="max-w-6xl mx-auto space-y-8 p-6">
+    <div className="py-4 bg-gradient-to-br from-amber-50/30 via-orange-50/20 to-yellow-50/30 dark:bg-background">
+      <div className="max-w-6xl mx-auto space-y-6 px-4 md:px-6">
         <ProfileHeaderCard
           isEditing={isEditing}
           onToggleEdit={() => setIsEditing((previous) => !previous)}
         />
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           <ProfileTabNavigation
             activeTab={activeTab}
             onTabChange={setActiveTab}

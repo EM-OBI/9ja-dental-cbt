@@ -12,15 +12,15 @@ export default function DashboardCard({
   return (
     <div
       className={cn(
-        "bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border p-5 transition-all hover:border-slate-300 dark:hover:border-slate-600",
+        "bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-6 transition-all hover:border-slate-300 dark:hover:border-slate-600",
         className
       )}
     >
-      <div className="space-y-1">
+      <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-muted-foreground">
           {title}
         </p>
-        <p className="text-3xl font-semibold text-slate-900 dark:text-foreground">
+        <p className="text-4xl font-semibold text-slate-900 dark:text-foreground">
           {value}
         </p>
         {subtitle && (
@@ -31,7 +31,7 @@ export default function DashboardCard({
       </div>
 
       {trend && (
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-border/50">
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-border/50">
           <div className="flex items-baseline gap-2">
             <span
               className={cn(

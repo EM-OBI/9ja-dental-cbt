@@ -78,6 +78,7 @@ export async function GET(req: NextRequest) {
       .select({
         id: quizResults.id,
         score: quizResults.score,
+        correctAnswers: quizResults.correctAnswers,
         totalQuestions: quizResults.totalQuestions,
         timeTaken: quizResults.timeTaken,
         completedAt: quizResults.completedAt,
@@ -93,6 +94,7 @@ export async function GET(req: NextRequest) {
     const quizResultsData = results.map((r) => ({
       id: r.id,
       score: r.score,
+      correct_answers: r.correctAnswers,
       total_questions: r.totalQuestions,
       time_spent: r.timeTaken,
       completed_at: r.completedAt ? r.completedAt.getTime() : Date.now(),
@@ -106,7 +108,10 @@ export async function GET(req: NextRequest) {
       (sum, r) => sum + r.total_questions,
       0
     );
-    const correctAnswers = quizResultsData.reduce((sum, r) => sum + r.score, 0);
+    const correctAnswers = quizResultsData.reduce(
+      (sum, r) => sum + (r.correct_answers ?? 0),
+      0
+    );
     const totalTimeSpent = quizResultsData.reduce(
       (sum, r) => sum + (r.time_spent || 0),
       0
@@ -117,11 +122,7 @@ export async function GET(req: NextRequest) {
         : 0;
     const bestScore =
       totalQuizzes > 0
-        ? Math.max(
-            ...quizResultsData.map((r) =>
-              Math.round((r.score / r.total_questions) * 100)
-            )
-          )
+        ? Math.max(...quizResultsData.map((r) => r.score ?? 0))
         : 0;
 
     // Get streak data from user_streaks table
@@ -147,7 +148,7 @@ export async function GET(req: NextRequest) {
       string,
       {
         quizCount: number;
-        totalScore: number;
+        totalCorrect: number;
         totalQuestions: number;
         lastAttempt: number;
       }
@@ -157,14 +158,14 @@ export async function GET(req: NextRequest) {
       const specialty = result.specialty_name || "General";
       const existing = specialtyMap.get(specialty) || {
         quizCount: 0,
-        totalScore: 0,
+        totalCorrect: 0,
         totalQuestions: 0,
         lastAttempt: 0,
       };
 
       specialtyMap.set(specialty, {
         quizCount: existing.quizCount + 1,
-        totalScore: existing.totalScore + result.score,
+        totalCorrect: existing.totalCorrect + (result.correct_answers ?? 0),
         totalQuestions: existing.totalQuestions + result.total_questions,
         lastAttempt: Math.max(existing.lastAttempt, result.completed_at),
       });
@@ -174,7 +175,9 @@ export async function GET(req: NextRequest) {
       .map(([specialty, data]) => ({
         specialty,
         quizCount: data.quizCount,
-        averageScore: Math.round((data.totalScore / data.totalQuestions) * 100),
+        averageScore: Math.round(
+          (data.totalCorrect / data.totalQuestions) * 100
+        ),
         lastAttempt: new Date(data.lastAttempt).toISOString(),
       }))
       .sort((a, b) => b.quizCount - a.quizCount);
@@ -184,7 +187,7 @@ export async function GET(req: NextRequest) {
       .filter(([, data]) => data.quizCount >= 2)
       .map(([specialty, data]) => ({
         topic: specialty,
-        score: Math.round((data.totalScore / data.totalQuestions) * 100),
+        score: Math.round((data.totalCorrect / data.totalQuestions) * 100),
         attempts: data.quizCount,
       }));
 
@@ -205,7 +208,7 @@ export async function GET(req: NextRequest) {
     const performanceByDay = new Map<
       string,
       {
-        totalScore: number;
+        totalCorrect: number;
         totalQuestions: number;
         quizCount: number;
       }
@@ -214,13 +217,13 @@ export async function GET(req: NextRequest) {
     recentQuizzes.forEach((result) => {
       const dateKey = new Date(result.completed_at).toISOString().split("T")[0];
       const existing = performanceByDay.get(dateKey) || {
-        totalScore: 0,
+        totalCorrect: 0,
         totalQuestions: 0,
         quizCount: 0,
       };
 
       performanceByDay.set(dateKey, {
-        totalScore: existing.totalScore + result.score,
+        totalCorrect: existing.totalCorrect + (result.correct_answers ?? 0),
         totalQuestions: existing.totalQuestions + result.total_questions,
         quizCount: existing.quizCount + 1,
       });
@@ -229,7 +232,7 @@ export async function GET(req: NextRequest) {
     const recentPerformance = Array.from(performanceByDay.entries())
       .map(([date, data]) => ({
         date,
-        score: Math.round((data.totalScore / data.totalQuestions) * 100),
+        score: Math.round((data.totalCorrect / data.totalQuestions) * 100),
         quizCount: data.quizCount,
       }))
       .sort((a, b) => a.date.localeCompare(b.date));

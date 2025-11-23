@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { RefreshCcw } from "lucide-react";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import StreakCalendar from "@/components/dashboard/StreakCalendar";
@@ -9,11 +9,19 @@ import { useUnifiedProgressData } from "@/hooks/useUnifiedProgressData";
 import { useRefreshUserData } from "@/hooks/useLoadUserData";
 import { useUserStore } from "@/store";
 import { useProgressStore } from "@/store/progressStore";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/ui/ErrorAlert";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import type { WeeklyProgressSummary } from "@/types/progress";
 
 export default function Dashboard() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const { user, isLoading: isUserLoading } = useUserStore();
   const userId = user?.id ?? "";
   const userName = user?.name?.trim() || user?.email?.split("@")[0] || "there";
@@ -52,27 +60,13 @@ export default function Dashboard() {
   };
 
   if (isUserLoading || isLoading) {
-    return (
-      <div className="py-4 md:py-6">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border">
-            <LoadingSpinner
-              size="xl"
-              className="mb-4 text-slate-900 dark:text-slate-400"
-            />
-            <p className="text-slate-600 dark:text-slate-400 font-medium">
-              Loading dashboard...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="py-4 md:py-6">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
+      <div className="py-6 md:py-8">
+        <div className="mx-auto max-w-7xl space-y-8">
           <ErrorState
             title="Unable to load data"
             message={error}
@@ -85,13 +79,13 @@ export default function Dashboard() {
 
   if (!hasUser) {
     return (
-      <div className="py-4 md:py-6">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-card rounded-xl p-8 border border-slate-200 dark:border-border">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-foreground">
+      <div className="py-6 md:py-8">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               Authentication required
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-center mt-2">
+            <p className="text-gray-500 dark:text-gray-400 text-center mt-2">
               Please sign in to view your dashboard
             </p>
           </div>
@@ -102,13 +96,13 @@ export default function Dashboard() {
 
   if (!progressData) {
     return (
-      <div className="py-4 md:py-6">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-card rounded-xl p-8 border border-slate-200 dark:border-border">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-foreground">
+      <div className="py-6 md:py-8">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               No data yet
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-center mt-2">
+            <p className="text-gray-500 dark:text-gray-400 text-center mt-2">
               Complete your first quiz to see your progress
             </p>
           </div>
@@ -173,22 +167,22 @@ export default function Dashboard() {
 
   const resolvedStudyMinutes = toNumber(
     progressData.totalStudyTime ??
-      progressStats?.study?.totalMinutes ??
-      Math.round((progressStats?.study?.totalHours ?? 0) * 60),
+    progressStats?.study?.totalMinutes ??
+    Math.round((progressStats?.study?.totalHours ?? 0) * 60),
     0
   );
 
   const resolvedCurrentStreak = toNumber(
     streakData?.currentStreak ??
-      progressData.currentStreak ??
-      progressStats?.streaks?.currentStreak,
+    progressData.currentStreak ??
+    progressStats?.streaks?.currentStreak,
     0
   );
 
   const resolvedLongestStreak = toNumber(
     streakData?.longestStreak ??
-      progressData.longestStreak ??
-      progressStats?.streaks?.longestStreak,
+    progressData.longestStreak ??
+    progressStats?.streaks?.longestStreak,
     0
   );
 
@@ -206,8 +200,8 @@ export default function Dashboard() {
   const studySubtitle =
     resolvedStudyMinutes > 0
       ? `${levelSubtitle} • ${formatNumber(
-          resolvedStudyMinutes
-        )} minutes tracked`
+        resolvedStudyMinutes
+      )} minutes tracked`
       : `${levelSubtitle} • No study time logged yet`;
 
   const weeklyProgressEntries: WeeklyProgressSummary[] =
@@ -308,15 +302,15 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="py-4">
-      <div className="mx-auto max-w-7xl px-4 md:px-6 space-y-6">
+    <div className="py-6 md:py-8">
+      <div className="mx-auto max-w-7xl space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between bg-white dark:bg-card rounded-lg p-4 border border-slate-200 dark:border-border">
+        <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground mb-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1.5">
               {getGreeting()}, {userName}
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-gray-500 dark:text-gray-400">
               Track your progress and keep learning
             </p>
           </div>
@@ -325,27 +319,32 @@ export default function Dashboard() {
             aria-label="Refresh Data"
             type="button"
             onClick={handleRefresh}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg transition-colors"
+            className="p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 rounded-xl transition-all duration-200"
           >
             <RefreshCcw className="w-5 h-5" />
           </button>
         </div>
 
         {/* Main Content Area with Sidebar Layout */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Side - Stats Cards (2x2 Grid) */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <DashboardCard
                 title="Quizzes Completed"
                 value={formatNumber(resolvedCompletedQuizzes)}
                 subtitle={
                   resolvedTotalQuizzes > 0
                     ? `${completionRate}% of ${formatNumber(
-                        resolvedTotalQuizzes
-                      )} total`
+                      resolvedTotalQuizzes
+                    )} total`
                     : "Start your first quiz to see progress"
                 }
+                trend={{
+                  value: quizzesTrend.value,
+                  isPositive: quizzesTrend.isPositive,
+                  period: "since last update",
+                }}
               />
 
               <DashboardCard
@@ -387,8 +386,8 @@ export default function Dashboard() {
             </div>
 
             {/* Streak Calendar - Mobile Only (below cards) */}
-            <div className="lg:hidden mt-6">
-              <div className="bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border">
+            <div className="lg:hidden mt-8">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
                 <StreakCalendar />
               </div>
             </div>
@@ -396,7 +395,7 @@ export default function Dashboard() {
 
           {/* Right Sidebar - Streak Calendar (Desktop Only) */}
           <div className="hidden lg:block lg:w-80 xl:w-96">
-            <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border sticky top-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm sticky top-24 overflow-hidden">
               <StreakCalendar />
             </div>
           </div>

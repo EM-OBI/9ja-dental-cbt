@@ -1,153 +1,60 @@
-import { useEffect, useState, useCallback } from "react";
-import { useUserStore } from "@/store/userStore";
-import { useProgressStore } from "@/store/progressStore";
-import { useStudyStore } from "@/store/studyStore";
-// import { useQuizStore } from "@/store/quizStore"; // Removed - use API hooks
-import { trackLoginActivity } from "@/utils/activityTracker";
+import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@/hooks/queries/useUserQuery";
+import { useStudyHistory } from "@/hooks/queries/useStudyQueries";
+import { useProgress, useStreaks } from "@/hooks/queries/useProgressQueries";
+import { QUERY_KEYS } from "@/lib/queryKeys";
 
 /**
  * Custom hook to load all user data from the database
  *
  * This hook centralizes data loading for:
+ * - User profile
  * - User progress (streaks, achievements, level, XP)
  * - Study sessions and history
- * - Quiz history and statistics
  *
  * Call this hook in the dashboard layout to ensure data is loaded
  * once when the user logs in.
  *
  * Features:
- * - Automatic loading on mount
+ * - Automatic loading on mount (via TanStack Query)
  * - Loading state management
  * - Error handling
- * - Prevents redundant loads with 5-minute cache
+ * - Caching handled by TanStack Query
  *
  * @returns Object with loading state and manual refresh function
  */
 export function useLoadUserData() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Get user ID from user store
-  const userId = useUserStore((state) => state.user?.id);
+  // We need the user ID to fetch data, but useUser handles fetching the user itself
+  const { data: user, isLoading: isUserLoading, error: userError } = useUser();
+  const userId = user?.id;
 
-  // Get store methods
-  const loadProgressFromDatabase = useProgressStore(
-    (state) => state.loadProgressFromDatabase
-  );
-  const loadStudySessionsFromDatabase = useStudyStore(
-    (state) => state.loadStudySessionsFromDatabase
-  );
-  // const loadQuizHistory = useQuizStore((state) => state.loadQuizHistory);
-  // const loadQuestions = useQuizStore(
-  //   (state) => state.loadQuestionsFromDatabase
-  // );
-  // Quiz history and questions removed from store - use API hooks instead
+  // Fetch other data dependent on userId
+  const { isLoading: isStudyLoading, error: studyError } = useStudyHistory(userId);
+  const { isLoading: isProgressLoading, error: progressError } = useProgress(userId);
+  const { isLoading: isStreaksLoading, error: streaksError } = useStreaks(userId);
 
-  // Get last fetched timestamp to implement caching
-  const lastFetched = useProgressStore((state) => state.lastFetched);
+  const isLoading = isUserLoading || isStudyLoading || isProgressLoading || isStreaksLoading;
+
+  const error = userError?.message ||
+    studyError?.message ||
+    progressError?.message ||
+    streaksError?.message ||
+    null;
 
   /**
-   * Load all user data from the database
-   * Implements 5-minute cache to avoid redundant API calls
-   */
-  const loadAllData = useCallback(
-    async (force = false) => {
-      if (!userId) {
-        return;
-      }
-
-      // Check cache (5 minutes)
-      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-      const now = Date.now();
-
-      if (!force && lastFetched && now - lastFetched < CACHE_DURATION) {
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Track login activity first (important for streaks)
-        await trackLoginActivity(userId);
-
-        // Load all data in parallel for better performance
-        await Promise.all([
-          // Load progress data (streaks, achievements, level, XP)
-          loadProgressFromDatabase(userId).catch((err: Error) =>
-            console.error("[useLoadUserData] ❌ Failed to load progress:", err)
-          ),
-
-          // Load study sessions
-          loadStudySessionsFromDatabase(userId).catch((err: Error) =>
-            console.error(
-              "[useLoadUserData] ❌ Failed to load study sessions:",
-              err
-            )
-          ),
-
-          // Load quiz history - REMOVED (use API hooks)
-          // Quiz data now fetched on-demand from API endpoints
-
-          // Load available quizzes - REMOVED (use API hooks)
-          // Quizzes and questions now fetched when needed
-        ]);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load user data";
-        console.error("[useLoadUserData] Error loading data:", err);
-        setError(errorMessage);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
-      userId,
-      lastFetched,
-      loadProgressFromDatabase,
-      loadStudySessionsFromDatabase,
-      // loadQuizHistory and loadQuestions removed - use API hooks instead
-    ]
-  );
-
-  /**
-   * Manually refresh all data (bypasses cache)
+   * Manually refresh all data (invalidates queries)
    */
   const refresh = useCallback(() => {
-    loadAllData(true);
-  }, [loadAllData]);
-
-  // Load data on mount or when user ID changes
-  useEffect(() => {
-    if (!userId) {
-      setIsLoading(false);
-      return;
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.all });
+    if (userId) {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.study.history(userId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.progress.stats(userId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.progress.streaks(userId) });
     }
-
-    // Create abort controller for cleanup
-    const abortController = new AbortController();
-    let isMounted = true;
-
-    const loadData = async () => {
-      try {
-        await loadAllData();
-      } catch (error) {
-        // Only set error if component is still mounted
-        if (isMounted && !abortController.signal.aborted) {
-          console.error("[useLoadUserData] Load failed:", error);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMounted = false;
-      abortController.abort(); // Cancel any pending requests
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]); // Only depend on userId, loadAllData is stable via useCallback
+  }, [queryClient, userId]);
 
   return {
     isLoading,
@@ -163,38 +70,21 @@ export function useLoadUserData() {
  * - After completing a quiz
  * - After finishing a study session
  * - After earning an achievement
- *
- * @example
- * ```tsx
- * const { refreshUserData } = useRefreshUserData();
- *
- * const handleQuizComplete = async () => {
- *   await saveQuizResults();
- *   refreshUserData(); // Refresh to show new stats
- * };
- * ```
  */
 export function useRefreshUserData() {
-  const userId = useUserStore((state) => state.user?.id);
-  const loadProgressFromDatabase = useProgressStore(
-    (state) => state.loadProgressFromDatabase
-  );
-  const loadStudySessionsFromDatabase = useStudyStore(
-    (state) => state.loadStudySessionsFromDatabase
-  );
+  const queryClient = useQueryClient();
+  const { data: user } = useUser();
+  const userId = user?.id;
 
   const refreshUserData = async () => {
-    if (!userId) return;
-
-    try {
-      await Promise.all([
-        loadProgressFromDatabase(userId),
-        loadStudySessionsFromDatabase(userId),
-      ]);
-    } catch (error) {
-      console.error("[useRefreshUserData] ❌ Failed to refresh data:", error);
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.all });
+    if (userId) {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.study.history(userId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.progress.stats(userId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.progress.streaks(userId) });
     }
   };
 
   return { refreshUserData };
 }
+

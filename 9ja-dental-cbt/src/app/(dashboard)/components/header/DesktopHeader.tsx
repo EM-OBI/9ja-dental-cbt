@@ -33,31 +33,30 @@ export default function DesktopHeader({
     pageHeadlines[pathname] || "Level up, create quizzes and study";
 
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-3 border-b border-slate-200 dark:border-border bg-white dark:bg-card backdrop-blur-lg">
+    <header className="flex items-center justify-between gap-4 px-8 py-4 border-b border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-40">
       <div className="flex items-center gap-4">
         {/* Space for toggle button when sidebar is collapsed */}
         <div
-          className={`transition-all duration-300 ${
-            isDesktopCollapsed ? "lg:w-12" : "lg:w-0"
-          }`}
+          className={`transition-all duration-300 ${isDesktopCollapsed ? "lg:w-12" : "lg:w-0"
+            }`}
         ></div>
         <div className="lg:hidden w-8"></div>
         <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
             {title}
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-0.5">
             {headline}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <NotificationPopover />
         <button
-          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           title="Help"
         >
-          <HelpCircle className="h-5 w-5 text-slate-700 dark:text-white" />
+          <HelpCircle className="h-5 w-5" />
         </button>
       </div>
     </header>

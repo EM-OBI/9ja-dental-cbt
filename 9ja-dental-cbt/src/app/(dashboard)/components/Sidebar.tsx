@@ -58,11 +58,10 @@ export default function Sidebar({
           border-r border-slate-200 dark:border-slate-800
           bg-white dark:bg-card
           transition-all duration-300 ease-in-out
-          overflow-y-auto pb-6 lg:pb-0
-          ${
-            isMobileMenuOpen
-              ? "translate-x-0"
-              : "-translate-x-full lg:translate-x-0"
+          overflow-y-auto overflow-x-hidden pb-6 lg:pb-0
+          ${isMobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
           }
           ${isDesktopCollapsed ? "lg:w-20" : "lg:w-64"}
           w-64
@@ -111,7 +110,7 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 p-3 overflow-y-auto">
+        <nav className="flex-1 p-3">
           <NavLinks
             isCollapsed={isDesktopCollapsed}
             onLinkClick={closeMobileMenu}

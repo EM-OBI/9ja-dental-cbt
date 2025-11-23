@@ -10,14 +10,38 @@ import { getAuthInstance } from "@/modules/auth/utils/auth-utils";
 // #region SERVER ACTIONS
 
 export const signIn = async ({
-  email,
+  emailOrUsername,
   password,
 }: SignInSchema): Promise<AuthResponse> => {
   try {
     const auth = await getAuthInstance();
+
+    // Determine if input is email or username
+    const isEmail = emailOrUsername.includes("@");
+    let emailToUse = emailOrUsername;
+
+    // If it's a username, query database to get the email
+    if (!isEmail) {
+      const { getDb } = await import("@/db");
+      const { user } = await import("@/db/schema");
+      const { eq } = await import("drizzle-orm");
+      const db = await getDb();
+
+      const userRecord = await db.select().from(user).where(eq(user.name, emailOrUsername)).limit(1);
+
+      if (!userRecord || userRecord.length === 0) {
+        return {
+          success: false,
+          message: "Invalid credentials",
+        };
+      }
+
+      emailToUse = userRecord[0].email;
+    }
+
     await auth.api.signInEmail({
       body: {
-        email,
+        email: emailToUse,
         password,
       },
       headers: await import("next/headers").then((m) => m.headers()),
@@ -58,9 +82,17 @@ export const signUp = async ({
     };
   } catch (error) {
     const err = error as Error;
+    let message = err.message || "An unknown error occured.";
+
+    if (message.includes("UNIQUE constraint failed: user.name")) {
+      message = "Username is already taken. Please choose another one.";
+    } else if (message.includes("UNIQUE constraint failed: user.email")) {
+      message = "Email is already registered. Please sign in instead.";
+    }
+
     return {
       success: false,
-      message: err.message || "An unknown error occured.",
+      message,
     };
   }
 };

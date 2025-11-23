@@ -31,9 +31,10 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [formData, setFormData] = useState<SignInSchema>({
-    email: "",
+    emailOrUsername: "",
     password: "",
   });
   const [errors, setErrors] = useState<
@@ -42,7 +43,7 @@ export function LoginForm({
 
   const signInWithGoogle = async () => {
     try {
-      setIsLoading(true);
+      setIsGoogleLoading(true);
       await authClient.signIn.social({
         provider: "google",
         callbackURL: dashboardRoutes.dashboard,
@@ -50,7 +51,7 @@ export function LoginForm({
     } catch (error) {
       console.error("Google sign-in error:", error);
       toast.error("Failed to sign in with Google");
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
@@ -65,7 +66,7 @@ export function LoginForm({
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsLoading(true);
+    setIsEmailLoading(true);
     setErrors({});
 
     // Validate with Zod
@@ -80,7 +81,7 @@ export function LoginForm({
         }
       });
       setErrors(fieldErrors);
-      setIsLoading(false);
+      setIsEmailLoading(false);
       return;
     }
 
@@ -96,9 +97,15 @@ export function LoginForm({
       toast.success(message.toString());
       router.push(dashboardRoutes.dashboard);
     } else {
-      toast.error(message.toString());
+      // Show specific error message for unverified email
+      if (message.toString().toLowerCase().includes("verify") ||
+        message.toString().toLowerCase().includes("verification")) {
+        toast.error("Please verify your email before logging in. Check your inbox for the verification link.");
+      } else {
+        toast.error(message.toString());
+      }
     }
-    setIsLoading(false);
+    setIsEmailLoading(false);
   }
 
   return (
@@ -116,9 +123,9 @@ export function LoginForm({
                 variant="outline"
                 className="w-full"
                 onClick={signInWithGoogle}
-                disabled={isLoading}
+                disabled={isGoogleLoading || isEmailLoading}
               >
-                {isLoading ? (
+                {isGoogleLoading ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" label={null} />
                     Signing in...
@@ -146,18 +153,18 @@ export function LoginForm({
               </div>
               <div className="grid gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="emailOrUsername">Email or Username</Label>
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="mail@mail.com"
-                    value={formData.email}
+                    id="emailOrUsername"
+                    name="emailOrUsername"
+                    type="text"
+                    placeholder="mail@mail.com or username"
+                    value={formData.emailOrUsername}
                     onChange={handleChange}
-                    className={errors.email ? "border-red-500" : ""}
+                    className={errors.emailOrUsername ? "border-red-500" : ""}
                   />
-                  {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email}</p>
+                  {errors.emailOrUsername && (
+                    <p className="text-sm text-red-500">{errors.emailOrUsername}</p>
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
@@ -183,8 +190,8 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isGoogleLoading || isEmailLoading}>
+                  {isEmailLoading ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" label={null} />
                       Loading...

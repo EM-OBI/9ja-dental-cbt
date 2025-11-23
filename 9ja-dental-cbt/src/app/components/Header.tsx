@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import MobileMenu from "./MobileMenu";
 import Link from "next/link";
 
@@ -90,7 +90,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
             >
               <Link
-                href="/"
+                href="/welcome"
                 className="text-2xl font-bold dark:bg-gray-50 bg-gray-900 bg-clip-text text-transparent flex items-center"
               >
                 DentalCBT
@@ -133,10 +133,9 @@ export default function Header() {
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
-                href="/dashboard"
+                href="/overview"
                 className="hidden md:flex items-center space-x-2 px-4 py-2 bg-blue-600/70 text-white rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
               >
-                <LogIn className="w-4 h-4" />
                 <span className="text-sm font-medium">Dashboard</span>
               </Link>
             </motion.div>

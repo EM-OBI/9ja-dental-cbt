@@ -7,6 +7,7 @@ import {
   isToday,
   subDays,
 } from "date-fns";
+import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/store/progressStore";
 
@@ -53,30 +54,60 @@ export default function StreakCalendar({
   const allActivityDates = [...activityDates, ...streakDates];
 
   return (
-    <div className={cn("p-5 overflow-auto hidden sm:block", className)}>
+    <div className={cn("p-6", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-foreground">
-          {title}
-        </h3>
-        <div className="text-sm font-semibold tabular-nums text-slate-900 dark:text-foreground">
-          {streakData.currentStreak} days
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              "flex items-center justify-center w-8 h-8 rounded-full",
+              streakData.currentStreak > 0
+                ? "bg-orange-100 dark:bg-orange-950/30"
+                : "bg-slate-100 dark:bg-slate-800"
+            )}
+          >
+            <Flame
+              className={cn(
+                "w-4 h-4",
+                streakData.currentStreak > 0
+                  ? "text-orange-500 dark:text-orange-400"
+                  : "text-slate-400 dark:text-slate-500"
+              )}
+            />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-foreground">
+              {title}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Keep your momentum going
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-slate-900 dark:text-foreground">
+            {streakData.currentStreak}
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">days</div>
         </div>
       </div>
 
       {/* Mini Calendar */}
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {/* Week day headers */}
-        <div className="grid grid-cols-7 gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-            <div key={day} className="text-center py-1">
+        <div className="grid grid-cols-7 gap-1.5">
+          {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => (
+            <div
+              key={idx}
+              className="text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+            >
               {day}
             </div>
           ))}
         </div>
 
         {/* Week days */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1.5">
           {weekDays.map((day, index) => {
             const hasActivity = allActivityDates.some((activityDate: Date) =>
               isSameDay(activityDate, day)
@@ -87,16 +118,16 @@ export default function StreakCalendar({
               <div
                 key={index}
                 className={cn(
-                  "aspect-square flex items-center justify-center text-xs rounded transition-colors font-medium",
+                  "aspect-square flex items-center justify-center text-xs rounded-lg transition-all font-medium relative",
                   {
-                    "bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900":
-                      hasActivity,
-                    "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400":
+                    "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm":
+                      hasActivity && !isCurrentDay,
+                    "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md ring-2 ring-amber-300 dark:ring-amber-600 scale-110":
+                      hasActivity && isCurrentDay,
+                    "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500":
                       !hasActivity && !isCurrentDay,
-                    "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 ring-1 ring-slate-300 dark:ring-slate-600":
+                    "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 ring-2 ring-slate-300 dark:ring-slate-600":
                       isCurrentDay && !hasActivity,
-                    "bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 ring-2 ring-slate-400 dark:ring-slate-500":
-                      isCurrentDay && hasActivity,
                   }
                 )}
               >
@@ -106,11 +137,25 @@ export default function StreakCalendar({
           })}
         </div>
 
-        {/* Streak Info */}
-        <div className="pt-3 border-t border-slate-100 dark:border-border/50">
-          <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-            <span>Current: {streakData.currentStreak}</span>
-            <span>Best: {streakData.longestStreak}</span>
+        {/* Streak Stats */}
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+            <span className="text-xs text-slate-600 dark:text-slate-400">
+              Current:{" "}
+              <span className="font-semibold text-slate-900 dark:text-foreground">
+                {streakData.currentStreak}
+              </span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+            <span className="text-xs text-slate-600 dark:text-slate-400">
+              Best:{" "}
+              <span className="font-semibold text-slate-900 dark:text-foreground">
+                {streakData.longestStreak}
+              </span>
+            </span>
           </div>
         </div>
       </div>

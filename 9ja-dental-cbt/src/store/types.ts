@@ -1,4 +1,6 @@
 // Global state types for the dental CBT application
+import type { JobStatus } from "@/types/studyJob";
+export type { JobStatus } from "@/types/studyJob";
 
 export type UserRole = "user" | "admin" | "superadmin";
 
@@ -7,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  bio?: string;
   role?: UserRole; // User role for authorization
   subscription: "free" | "premium" | "enterprise";
   level: number;
@@ -119,7 +122,7 @@ export interface StreakData {
   streakHistory: Array<{
     date: string;
     active: boolean;
-    activityTypes: ("quiz" | "study" | "review")[];
+    activityTypes: ("quiz" | "study" | "review" | "login" | "streak")[];
     activityCount: number;
   }>;
   weeklyGoal: number;
@@ -172,6 +175,7 @@ export interface ProgressStats {
   };
   study: {
     totalHours: number;
+    totalMinutes: number;
     materialsCompleted: number;
     notesCreated: number;
     focusSessions: number;
@@ -205,8 +209,8 @@ export interface UserActions {
 export interface QuizActions {
   // Data fetching
   fetchSpecialties: () => Promise<void>;
-  loadQuestionsFromDatabase: (specialty?: string) => Promise<void>;
-  loadQuizQuestionsById: (quizId: string) => Promise<void>;
+  // loadQuestionsFromDatabase removed - questions fetched when quiz starts via API
+  // loadQuizQuestionsById removed - use API instead
   // Quiz management
   startQuiz: (
     specialty: string,
@@ -225,7 +229,7 @@ export interface QuizActions {
   submitQuiz: () => QuizSession | undefined;
   resetQuiz: () => void;
   saveQuizSession: () => void;
-  loadQuizHistory: () => void;
+  // loadQuizHistory removed - use API hook instead
 }
 
 // AI-generated study materials
@@ -242,6 +246,7 @@ export interface AIStudyPackage {
   flashcards?: AIGeneratedContent;
   quiz?: AIGeneratedContent;
   jobId?: string;
+  remoteId?: string;
   error?: string;
 }
 
@@ -269,22 +274,7 @@ export interface QuizData {
   }>;
 }
 
-export interface JobStatus {
-  jobId: string;
-  status:
-    | "PENDING"
-    | "UPLOADED"
-    | "PARSING"
-    | "SUMMARIZING"
-    | "GENERATING_FLASHCARDS"
-    | "GENERATING_QUIZ"
-    | "COMPLETED"
-    | "FAILED";
-  progress: number;
-  message: string;
-  packageId?: string;
-  error?: string;
-}
+// JobStatus is imported from @/types/studyJob to keep state types in sync across client and server
 
 // UI State for Study Page
 export interface StudyPageUIState {
@@ -330,13 +320,17 @@ export interface StudyActions {
 export interface ProgressActions {
   initializeStreakData: () => void;
   updateStats: () => void;
-  updateStreak: (activityType: "quiz" | "study" | "review") => void;
+  updateStreak: (
+    activityType: "quiz" | "study" | "review" | "login" | "streak"
+  ) => void;
   unlockAchievement: (achievementId: string) => void;
   addActivity: (activity: {
     type: "quiz" | "study" | "achievement" | "streak";
     description: string;
     points?: number;
   }) => void;
+  clearRecentActivity: () => void;
+  resetProgress: () => void;
   // Database integration
   loadProgressFromDatabase: (userId: string) => Promise<void>;
 }

@@ -121,7 +121,7 @@ export function NotificationPopover({ className }: NotificationPopoverProps) {
         sideOffset={8}
       >
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="font-semibold text-slate-900 dark:text-white">
+          <h3 className="font-semibold text-xs text-slate-900 dark:text-white">
             Notifications
           </h3>
           {hasNotifications && (

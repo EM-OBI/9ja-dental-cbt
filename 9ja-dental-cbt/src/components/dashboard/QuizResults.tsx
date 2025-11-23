@@ -177,7 +177,7 @@ export default function QuizResults({
             </button>
 
             {showFilterDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg shadow-lg z-10 max-h-80 overflow-y-scroll scrollbar-hide">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg shadow-lg z-10 max-h-80 overflow-y-scroll">
                 {/* General Filters */}
                 <div className="p-2">
                   <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-2 py-1">

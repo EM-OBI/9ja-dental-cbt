@@ -2,9 +2,8 @@ import { getDb } from "@/db";
 import {
   user,
   userProgress,
-  userPreferences,
+  userProfiles,
   userStreaks,
-  userAchievements,
   quizzes,
   questions,
   quizSessions,
@@ -13,17 +12,126 @@ import {
   studySessions,
   dailyActivity,
   bookmarks,
-  achievements,
   specialties,
 } from "@/db/schema";
-import { eq, desc, sql, and, or, gte, lte, like, inArray } from "drizzle-orm";
+import { eq, desc, sql, and, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import type { UserPreferences as PreferenceShape } from "@/store/types";
 
 // Helper function for error handling
 function handleDatabaseError(error: Error | unknown, context: string): never {
   console.error(`Database Error (${context}):`, error);
   const message = error instanceof Error ? error.message : "Unknown error";
   throw new Error(`Failed to ${context}: ${message}`);
+}
+
+const DEFAULT_USER_PREFERENCES: PreferenceShape = {
+  theme: "system",
+  notifications: {
+    studyReminders: true,
+    streakAlerts: true,
+    progressReports: true,
+    achievements: true,
+  },
+  quiz: {
+    defaultMode: "study",
+    showExplanations: true,
+    timePerQuestion: 60,
+    autoSubmit: false,
+  },
+  study: {
+    defaultFocusTime: 25,
+    breakTime: 5,
+    soundEffects: true,
+  },
+};
+
+type PreferenceUpdate = Partial<PreferenceShape> & {
+  notifications?: Partial<PreferenceShape["notifications"]>;
+  quiz?: Partial<PreferenceShape["quiz"]>;
+  study?: Partial<PreferenceShape["study"]>;
+};
+
+const serializePreferences = (prefs: PreferenceShape): string =>
+  JSON.stringify(prefs);
+
+const parsePreferences = (raw: string | null | undefined): PreferenceShape => {
+  if (!raw) {
+    return { ...DEFAULT_USER_PREFERENCES };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as PreferenceShape;
+    return {
+      ...DEFAULT_USER_PREFERENCES,
+      ...parsed,
+      notifications: {
+        ...DEFAULT_USER_PREFERENCES.notifications,
+        ...(parsed?.notifications ?? {}),
+      },
+      quiz: {
+        ...DEFAULT_USER_PREFERENCES.quiz,
+        ...(parsed?.quiz ?? {}),
+      },
+      study: {
+        ...DEFAULT_USER_PREFERENCES.study,
+        ...(parsed?.study ?? {}),
+      },
+    };
+  } catch (error) {
+    console.warn(
+      "Failed to parse user preferences, falling back to defaults",
+      error
+    );
+    return { ...DEFAULT_USER_PREFERENCES };
+  }
+};
+
+const mergePreferences = (
+  current: PreferenceShape,
+  updates: PreferenceUpdate
+): PreferenceShape => ({
+  ...current,
+  ...updates,
+  notifications: {
+    ...current.notifications,
+    ...(updates.notifications ?? {}),
+  },
+  quiz: {
+    ...current.quiz,
+    ...(updates.quiz ?? {}),
+  },
+  study: {
+    ...current.study,
+    ...(updates.study ?? {}),
+  },
+});
+
+async function ensureUserProfile(
+  db: Awaited<ReturnType<typeof getDb>>,
+  userId: string
+) {
+  const existing = await db
+    .select()
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  const [created] = await db
+    .insert(userProfiles)
+    .values({
+      userId,
+      preferences: serializePreferences(DEFAULT_USER_PREFERENCES),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  return created;
 }
 
 // ============================================
@@ -43,7 +151,13 @@ export async function getUserById(id: string) {
       throw new Error("User not found");
     }
 
-    return userData[0];
+    const profile = await ensureUserProfile(db, id);
+
+    return {
+      ...userData[0],
+      profile,
+      preferences: parsePreferences(profile.preferences),
+    };
   } catch (error) {
     return handleDatabaseError(error, "fetch user");
   }
@@ -98,12 +212,24 @@ export async function getUserProgress(userId: string) {
   try {
     const db = await getDb();
 
-    // Get user progress data
-    const progressData = await db
-      .select()
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId))
-      .limit(1);
+    // Aggregate progress metrics from daily activity snapshots
+    const [activitySummary] = await db
+      .select({
+        totalQuizzes: sql<number>`coalesce(sum(${dailyActivity.quizzesCompleted}), 0)`,
+        totalQuestionsAnswered: sql<number>`coalesce(sum(${dailyActivity.questionsAnswered}), 0)`,
+        correctAnswers: sql<number>`coalesce(sum(${dailyActivity.correctAnswers}), 0)`,
+        totalStudyMinutes: sql<number>`coalesce(sum(${dailyActivity.studyMinutes}), 0)`,
+        loginCount: sql<number>`coalesce(sum(${dailyActivity.loginCount}), 0)`,
+        pointsEarned: sql<number>`coalesce(sum(${dailyActivity.pointsEarned}), 0)`,
+        xpEarned: sql<number>`coalesce(sum(${dailyActivity.xpEarned}), 0)`,
+        streakDaysMaintained: sql<number>`coalesce(sum(${dailyActivity.streakMaintained}), 0)`,
+        lastActivityDate: sql<
+          string | null
+        >`max(${dailyActivity.activityDate})`,
+        activeDays: sql<number>`count(distinct ${dailyActivity.activityDate})`,
+      })
+      .from(dailyActivity)
+      .where(eq(dailyActivity.userId, userId));
 
     // Get quiz results statistics
     const quizStats = await db
@@ -131,8 +257,59 @@ export async function getUserProgress(userId: string) {
       .orderBy(desc(dailyActivity.activityDate))
       .limit(7);
 
+    const aggregatedMetrics = {
+      totalQuizzes: Number(activitySummary?.totalQuizzes ?? 0),
+      totalQuestionsAnswered: Number(
+        activitySummary?.totalQuestionsAnswered ?? 0
+      ),
+      correctAnswers: Number(activitySummary?.correctAnswers ?? 0),
+      totalStudyMinutes: Number(activitySummary?.totalStudyMinutes ?? 0),
+      loginCount: Number(activitySummary?.loginCount ?? 0),
+      pointsEarned: Number(activitySummary?.pointsEarned ?? 0),
+      xpEarned: Number(activitySummary?.xpEarned ?? 0),
+      streakDaysMaintained: Number(activitySummary?.streakDaysMaintained ?? 0),
+      activeDays: Number(activitySummary?.activeDays ?? 0),
+      lastActivityDate: activitySummary?.lastActivityDate ?? null,
+    };
+
+    const totalQuestions = aggregatedMetrics.totalQuestionsAnswered;
+    const correctAnswers = aggregatedMetrics.correctAnswers;
+    const averageScore =
+      totalQuestions > 0
+        ? Math.round((correctAnswers / totalQuestions) * 100)
+        : 0;
+
+    const focusSessions = aggregatedMetrics.activeDays;
+    const totalStudyMinutes = aggregatedMetrics.totalStudyMinutes;
+
+    const progressSummary = {
+      id: `daily-aggregate-${userId}`,
+      userId,
+      totalQuizzes: aggregatedMetrics.totalQuizzes,
+      completedQuizzes: aggregatedMetrics.totalQuizzes,
+      averageScore,
+      bestScore: averageScore,
+      totalQuestionsAnswered: aggregatedMetrics.totalQuestionsAnswered,
+      correctAnswers: aggregatedMetrics.correctAnswers,
+      totalTimeSpent: totalStudyMinutes,
+      totalStudyMinutes,
+      materialsCompleted: 0,
+      notesCreated: 0,
+      focusSessions,
+      averageFocusTime:
+        focusSessions > 0 ? Math.round(totalStudyMinutes / focusSessions) : 0,
+      specialtyStats: "{}",
+      recentActivity: JSON.stringify(recentActivity),
+      lastActivityDate: aggregatedMetrics.lastActivityDate,
+      pointsEarned: aggregatedMetrics.pointsEarned,
+      xpEarned: aggregatedMetrics.xpEarned,
+      loginCount: aggregatedMetrics.loginCount,
+      streakDaysMaintained: aggregatedMetrics.streakDaysMaintained,
+      activeDays: aggregatedMetrics.activeDays,
+    };
+
     return {
-      progressData: progressData[0] || null,
+      progressData: progressSummary,
       quizStats: quizStats[0] || null,
       currentStreak: currentStreak[0] || null,
       recentActivity,
@@ -144,51 +321,38 @@ export async function getUserProgress(userId: string) {
 
 export async function updateUserProgress(
   userId: string,
-  specialtyId: string,
   updates: Partial<typeof userProgress.$inferInsert>
 ) {
   try {
     const db = await getDb();
 
-    // Check if progress record exists
     const existing = await db
       .select()
       .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.specialtyId, specialtyId)
-        )
-      )
+      .where(eq(userProgress.userId, userId))
       .limit(1);
 
     if (existing.length > 0) {
-      // Update existing record
       return await db
         .update(userProgress)
         .set({
           ...updates,
           updatedAt: new Date(),
         })
-        .where(
-          and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.specialtyId, specialtyId)
-          )
-        )
-        .returning();
-    } else {
-      // Create new record
-      return await db
-        .insert(userProgress)
-        .values({
-          id: nanoid(),
-          userId,
-          specialtyId,
-          ...updates,
-        })
+        .where(eq(userProgress.userId, userId))
         .returning();
     }
+
+    return await db
+      .insert(userProgress)
+      .values({
+        id: nanoid(),
+        userId,
+        ...updates,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
   } catch (error) {
     return handleDatabaseError(error, "update user progress");
   }
@@ -201,13 +365,8 @@ export async function updateUserProgress(
 export async function getUserPreferences(userId: string) {
   try {
     const db = await getDb();
-    const preferences = await db
-      .select()
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, userId))
-      .limit(1);
-
-    return preferences[0] || null;
+    const profile = await ensureUserProfile(db, userId);
+    return parsePreferences(profile.preferences);
   } catch (error) {
     return handleDatabaseError(error, "fetch user preferences");
   }
@@ -215,39 +374,23 @@ export async function getUserPreferences(userId: string) {
 
 export async function updateUserPreferences(
   userId: string,
-  updates: Partial<typeof userPreferences.$inferInsert>
+  updates: PreferenceUpdate
 ) {
   try {
     const db = await getDb();
+    const profile = await ensureUserProfile(db, userId);
+    const currentPreferences = parsePreferences(profile.preferences);
+    const mergedPreferences = mergePreferences(currentPreferences, updates);
 
-    // Check if preferences exist
-    const existing = await db
-      .select()
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, userId))
-      .limit(1);
+    await db
+      .update(userProfiles)
+      .set({
+        preferences: serializePreferences(mergedPreferences),
+        updatedAt: new Date(),
+      })
+      .where(eq(userProfiles.userId, userId));
 
-    if (existing.length > 0) {
-      // Update existing preferences
-      return await db
-        .update(userPreferences)
-        .set({
-          ...updates,
-          updatedAt: new Date(),
-        })
-        .where(eq(userPreferences.userId, userId))
-        .returning();
-    } else {
-      // Create new preferences
-      return await db
-        .insert(userPreferences)
-        .values({
-          id: nanoid(),
-          userId,
-          ...updates,
-        })
-        .returning();
-    }
+    return mergedPreferences;
   } catch (error) {
     return handleDatabaseError(error, "update user preferences");
   }
@@ -455,25 +598,6 @@ export async function getQuizSession(id: string) {
   }
 }
 
-export async function updateQuizSession(
-  id: string,
-  updates: Partial<typeof quizSessions.$inferInsert>
-) {
-  try {
-    const db = await getDb();
-    return await db
-      .update(quizSessions)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
-      .where(eq(quizSessions.id, id))
-      .returning();
-  } catch (error) {
-    return handleDatabaseError(error, "update quiz session");
-  }
-}
-
 export async function getUserQuizSessions(
   userId: string,
   options: {
@@ -484,15 +608,14 @@ export async function getUserQuizSessions(
 ) {
   try {
     const db = await getDb();
-    const { page = 1, limit = 10 } = options;
+    const { page = 1, limit = 10, status } = options;
     const offset = (page - 1) * limit;
 
-    // Build conditions array
     const conditions = [eq(quizSessions.userId, userId)];
 
-    if (options.status === "completed") {
+    if (status === "completed") {
       conditions.push(eq(quizSessions.isCompleted, true));
-    } else if (options.status === "active") {
+    } else if (status === "active") {
       conditions.push(eq(quizSessions.isCompleted, false));
     }
 
@@ -777,7 +900,38 @@ export async function getSpecialtyById(id: string) {
     return handleDatabaseError(error, "fetch specialty");
   }
 }
+export async function createSpecialty(
+  specialtyData: typeof specialties.$inferInsert
+) {
+  try {
+    const db = await getDb();
 
+    // Check if specialty with same slug already exists
+    if (specialtyData.slug) {
+      const existingSpecialty = await db
+        .select()
+        .from(specialties)
+        .where(eq(specialties.slug, specialtyData.slug))
+        .limit(1);
+
+      if (existingSpecialty.length > 0) {
+        throw new Error("Specialty with this slug already exists");
+      }
+    }
+
+    const [newSpecialty] = await db
+      .insert(specialties)
+      .values({
+        ...specialtyData,
+        id: specialtyData.id || nanoid(),
+      })
+      .returning();
+
+    return newSpecialty;
+  } catch (error) {
+    return handleDatabaseError(error, "create specialty");
+  }
+}
 // ============================================
 // QUESTIONS OPERATIONS
 // ============================================

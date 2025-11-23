@@ -1,21 +1,21 @@
 export default function Features() {
   return (
-    <section id="features" className="w-full py-24 bg-gray-200 dark:bg-black">
-      <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight gradient-text text-gray-900 ">
+    <section id="features" className="w-full py-16 bg-gray-200 dark:bg-black">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="max-w-4xl mx-auto text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight text-gray-900 dark:text-white">
             Our Features
           </h2>
-          <p className="dark:text-gray-400 text-gray-900 text-lg md:text-xl max-w-2xl mx-auto text-center whitespace-break-spaces mb-1 leading-[1.5]">
+          <p className="dark:text-gray-400 text-gray-700 text-lg md:text-xl max-w-2xl mx-auto">
             Prepare smarter for your dental exams with tools built for speed,
             accuracy, and confidence.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {/* Feature 1 */}
-          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
-            <div className="mb-6">
-              <div className="bg-gradient-to-tr from-blue-500 to-pink-500 p-4 rounded-full">
+          <div className="dark:bg-white/5 bg-white border border-gray-200 dark:border-white/10 rounded-lg p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition">
+            <div className="mb-4">
+              <div className="bg-gradient-to-tr from-blue-500 to-pink-500 p-3 rounded-full">
                 <svg
                   className="h-8 w-8 text-white"
                   fill="none"
@@ -41,19 +41,19 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
               Full Question Bank
             </h3>
-            <p className="dark:text-gray-400 text-black text-base text-left whitespace-break-spaces">
+            <p className="dark:text-gray-400 text-gray-600 text-sm">
               Practice dentistry MCQs from all specialties. Start free with
               sample questions or unlock the full bank for complete exam prep.
             </p>
           </div>
 
           {/* Feature 2 */}
-          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
-            <div className="mb-6">
-              <div className="bg-gradient-to-tr from-blue-500 to-green-400 p-4 rounded-full">
+          <div className="dark:bg-white/5 bg-white border border-gray-200 dark:border-white/10 rounded-lg p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition">
+            <div className="mb-4">
+              <div className="bg-gradient-to-tr from-blue-500 to-green-400 p-3 rounded-full">
                 <svg
                   className="h-8 w-8 text-white"
                   fill="none"
@@ -73,19 +73,19 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
               Smart Learning Modes
             </h3>
-            <p className="dark:text-gray-400 text-black text-base text-left whitespace-break-spaces">
+            <p className="dark:text-gray-400 text-gray-600 text-sm">
               Switch to quiz mode for speed or study mode for depth. Premium
               gives you AI insights to fix weak spots fast.
             </p>
           </div>
 
           {/* Feature 3 */}
-          <div className="dark:bg-white/5 bg-white border border-white/10 rounded-2xl py-12 px-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition">
-            <div className="mb-6">
-              <div className="bg-gradient-to-tr from-pink-500 to-yellow-400 p-4 rounded-full">
+          <div className="dark:bg-white/5 bg-white border border-gray-200 dark:border-white/10 rounded-lg p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition">
+            <div className="mb-4">
+              <div className="bg-gradient-to-tr from-pink-500 to-yellow-400 p-3 rounded-full">
                 <svg
                   className="h-8 w-8 text-white"
                   fill="none"
@@ -104,10 +104,10 @@ export default function Features() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3 tracking-wide text-gray-500">
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
               Progress Tracking & Leaderboard
             </h3>
-            <p className="dark:text-gray-400 text-black text-left whitespace-break-spaces text-base">
+            <p className="dark:text-gray-400 text-gray-600 text-sm">
               Track your progress, stay motivated, and climb the leaderboard
               with a personalized dashboard.
             </p>

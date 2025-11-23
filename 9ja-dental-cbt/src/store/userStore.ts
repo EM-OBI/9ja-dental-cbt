@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { User, UserActions, UserPreferences } from "./types";
 import { databaseService } from "@/services/database";
 import { authClient } from "@/modules/auth/utils/auth-client";
+import { calculateLevelFromXp, calculateXpForLevel } from "@/lib/leveling";
+import { clearUserStores } from "./storeUtils";
 
 interface UserState {
   user: User | null;
@@ -76,6 +78,13 @@ export const useUserStore = create<UserStore>()(
       },
 
       logout: () => {
+        const userId = get().user?.id;
+
+        // Clear user-specific stores
+        if (userId) {
+          clearUserStores(userId);
+        }
+
         set({
           user: null,
           isAuthenticated: false,
@@ -97,7 +106,8 @@ export const useUserStore = create<UserStore>()(
 // Helper functions
 export const initializeUser = async () => {
   // Check for authentication tokens and load user data from API
-  const { setUser, logout } = useUserStore.getState();
+  const { setUser, logout, user: existingUser } = useUserStore.getState();
+  const previousUserId = existingUser?.id ?? null;
 
   const cloneDefaultPreferences = (): UserPreferences => ({
     theme: defaultPreferences.theme,
@@ -194,6 +204,7 @@ export const initializeUser = async () => {
       email: string;
       name?: string | null;
       image?: string | null;
+      role?: string | null;
     },
     backendUser?: Record<string, unknown> | null
   ): User => {
@@ -223,6 +234,13 @@ export const initializeUser = async () => {
     )
       ? (rawSubscription as User["subscription"])
       : "free";
+
+    // Get role from backend or session, defaulting to "user"
+    const allowedRoles: User["role"][] = ["user", "admin", "superadmin"];
+    const rawRole = (backend && backend.role) || sessionUser.role || "user";
+    const role = allowedRoles.includes(rawRole as User["role"])
+      ? (rawRole as User["role"])
+      : "user";
 
     const rawLevel = backend ? backend.level : undefined;
     const level =
@@ -255,6 +273,7 @@ export const initializeUser = async () => {
         (typeof rawAvatar === "string" ? rawAvatar : undefined) ||
         sessionUser.image ||
         undefined,
+      role, // Include role in the returned user object
       subscription,
       level,
       xp,
@@ -274,10 +293,26 @@ export const initializeUser = async () => {
       return;
     }
 
+    // Type assertion for custom fields (role) that may exist on the session user
+    const sessionUserWithRole = sessionUser as typeof sessionUser & {
+      role?: string | null;
+    };
+
+    // If the authenticated user changed, clear user-specific storage before rehydrating
+    if (previousUserId && previousUserId !== sessionUser.id) {
+      try {
+        clearUserStores(previousUserId);
+        const { useProgressStore } = await import("./progressStore");
+        useProgressStore.getState().resetProgress();
+      } catch (cleanupError) {
+        console.warn("Failed to reset stores for previous user", cleanupError);
+      }
+    }
+
     let backendUser: Record<string, unknown> | null = null;
     try {
       backendUser = (await databaseService.getUserById(
-        sessionUser.id
+        sessionUserWithRole.id
       )) as Record<string, unknown> | null;
     } catch (error) {
       console.warn(
@@ -286,7 +321,7 @@ export const initializeUser = async () => {
       );
     }
 
-    const user = buildUserFromSources(sessionUser, backendUser);
+    const user = buildUserFromSources(sessionUserWithRole, backendUser);
     setUser(user);
   } catch (error) {
     console.error("Failed to initialize user:", error);
@@ -301,19 +336,19 @@ export const getCurrentUserId = (): string | null => {
 };
 
 export const getUserLevel = (xp: number): number => {
-  // XP requirements: Level 1 = 0, Level 2 = 100, Level 3 = 250, etc.
-  return Math.floor(Math.sqrt(xp / 25)) + 1;
+  return calculateLevelFromXp(xp);
 };
 
 export const getXpForNextLevel = (currentLevel: number): number => {
-  return Math.pow(currentLevel, 2) * 25;
+  const nextLevel = Math.max(1, Math.floor(currentLevel)) + 1;
+  return calculateXpForLevel(nextLevel);
 };
 
 export const addXp = (points: number) => {
   const { user, updateUser } = useUserStore.getState();
   if (user) {
     const newXp = user.xp + points;
-    const newLevel = getUserLevel(newXp);
+  const newLevel = calculateLevelFromXp(newXp);
 
     updateUser({
       xp: newXp,
@@ -326,4 +361,12 @@ export const addXp = (points: number) => {
       console.log(`Level up! You are now level ${newLevel}`);
     }
   }
+};
+
+/**
+ * Refresh user data from the backend
+ * Useful when user data has been updated (e.g., role change in database)
+ */
+export const refreshUserData = async () => {
+  await initializeUser();
 };

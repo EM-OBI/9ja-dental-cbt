@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthInstance as getAuth } from "@/modules/auth/utils/auth-utils";
 import { getDb } from "@/db";
 import {
+  studyPackages,
   studySummaries,
   studyFlashcards,
   studyQuizzes,
@@ -11,7 +12,7 @@ import { eq, desc } from "drizzle-orm";
 
 /**
  * GET /api/study/materials
- * Fetch user's study materials from the database
+ * Fetch user's study materials (packages) from the database
  */
 export async function GET(req: NextRequest) {
   try {
@@ -29,75 +30,83 @@ export async function GET(req: NextRequest) {
     const userId = session.user.id;
     const db = await getDb();
 
-    // 2. Fetch all study progress entries for this user
-    const userStudyProgress = await db
+    // 2. Fetch all study packages for this user
+    const userPackages = await db
       .select()
-      .from(studyProgress)
-      .where(eq(studyProgress.userId, userId))
-      .orderBy(desc(studyProgress.updatedAt));
+      .from(studyPackages)
+      .where(eq(studyPackages.userId, userId))
+      .orderBy(desc(studyPackages.createdAt));
 
-    // 3. For each progress entry, fetch associated materials
-    const materialsWithDetails = await Promise.all(
-      userStudyProgress.map(async (progress) => {
-        const [summaries, flashcards, quizzes] = await Promise.all([
+    // 3. For each package, fetch associated materials count
+    const packagesWithDetails = await Promise.all(
+      userPackages.map(async (pkg) => {
+        const [summaries, flashcards, quizzes, progress] = await Promise.all([
           db
             .select()
             .from(studySummaries)
-            .where(eq(studySummaries.topicSlug, progress.topicSlug))
+            .where(eq(studySummaries.packageId, pkg.id))
             .limit(1),
           db
             .select()
             .from(studyFlashcards)
-            .where(eq(studyFlashcards.topicSlug, progress.topicSlug)),
+            .where(eq(studyFlashcards.packageId, pkg.id))
+            .limit(1),
           db
             .select()
             .from(studyQuizzes)
-            .where(eq(studyQuizzes.topicSlug, progress.topicSlug))
+            .where(eq(studyQuizzes.packageId, pkg.id))
+            .limit(1),
+          db
+            .select()
+            .from(studyProgress)
+            .where(eq(studyProgress.packageId, pkg.id))
             .limit(1),
         ]);
 
         const summary = summaries[0];
+        const flashcard = flashcards[0];
         const quiz = quizzes[0];
+        const prog = progress[0];
 
         // Transform to StudyMaterial format
         return {
-          id: progress.id,
-          title: progress.topic,
-          type: summary ? "pdf" : "article",
-          url: summary?.path || `/study/${progress.topicSlug}`,
-          specialty: progress.topic, // Could map to actual specialty if needed
-          difficulty: "medium" as const, // Default difficulty
-          uploadDate: new Date(progress.updatedAt).toISOString().split("T")[0],
-          size: 0, // Not tracked currently
-          pages: 0, // Not tracked in current schema
-          isBookmarked: false, // TODO: Implement bookmarks
+          id: pkg.id,
+          title: pkg.topic,
+          type: "pdf" as const,
+          url: summary?.r2Path || `/study/${pkg.topicSlug}`,
+          specialty: pkg.topic,
+          difficulty: "medium" as const,
+          uploadDate: new Date(pkg.createdAt).toISOString().split("T")[0],
+          size: 0,
+          pages: 0,
+          isBookmarked: false,
           progress:
-            progress.summaryDone && progress.flashcardsDone
+            prog?.summaryViewed && prog?.flashcardsCompleted
               ? 100
-              : progress.summaryDone || progress.flashcardsDone
+              : prog?.summaryViewed || prog?.flashcardsCompleted
               ? 50
               : 0,
-          lastAccessed: new Date(progress.updatedAt)
-            .toISOString()
-            .split("T")[0],
+          lastAccessed: prog?.lastAccessedAt
+            ? new Date(prog.lastAccessedAt).toISOString().split("T")[0]
+            : new Date(pkg.createdAt).toISOString().split("T")[0],
           notes: [],
-          tags: [progress.topicSlug],
+          tags: [pkg.topicSlug],
           // Additional metadata
           hasSummary: !!summary,
-          hasFlashcards: flashcards.length > 0,
-          flashcardCount: flashcards.length > 0 ? flashcards[0].count : 0,
+          hasFlashcards: !!flashcard,
+          flashcardCount: flashcard?.count || 0,
           hasQuiz: !!quiz,
-          quizScore: progress.quizScore || 0,
+          quizScore: prog?.quizScore || 0,
           masteryLevel:
-            progress.summaryDone && progress.flashcardsDone ? 1.0 : 0.5,
+            prog?.summaryViewed && prog?.flashcardsCompleted ? 1.0 : 0.5,
         };
       })
     );
 
     return NextResponse.json({
       success: true,
-      data: materialsWithDetails,
-      count: materialsWithDetails.length,
+      data: packagesWithDetails,
+      count: packagesWithDetails.length,
     });
   } catch (error) {
     console.error("Error fetching study materials:", error);

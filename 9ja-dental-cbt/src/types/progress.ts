@@ -63,6 +63,13 @@ export interface PerformanceChart {
   timeSpent: number;
 }
 
+export interface WeeklyProgressSummary {
+  date: string;
+  quizzesTaken: number;
+  studyMinutes: number;
+  averageScore: number;
+}
+
 // Legacy interface for backward compatibility
 export interface ProgressData {
   userId: string;
@@ -118,6 +125,8 @@ export interface UnifiedProgressData {
   bookmarkedQuestions: BookmarkedQuestion[];
   performanceCharts: PerformanceChart[];
   badges: Badge[];
+
+  weeklyProgress: WeeklyProgressSummary[];
 }
 
 // Study session interface for unified data

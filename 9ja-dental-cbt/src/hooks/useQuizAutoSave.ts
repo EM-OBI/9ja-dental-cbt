@@ -34,6 +34,9 @@ export function useQuizAutoSave({
       if (!enabled || !sessionId) return;
 
       try {
+        // Only save if there are answers
+        if (data.answers.length === 0) return;
+
         // Save answer progress
         const response = await fetch(`/api/quiz-sessions/${sessionId}`, {
           method: "PUT",
@@ -46,21 +49,19 @@ export function useQuizAutoSave({
           }),
         });
 
-        if (response.ok) {
-          console.log("✅ Quiz progress auto-saved");
-        } else {
+        if (!response.ok) {
           console.warn("⚠️ Failed to auto-save quiz progress");
         }
       } catch (error) {
         console.error("❌ Error auto-saving quiz:", error);
       }
     },
-    [enabled, sessionId]
+    [enabled, sessionId] // Only these should trigger recreation
   );
 
   // Auto-save when answers change
   useEffect(() => {
-    if (!enabled || !isActive) return;
+    if (!enabled || !isActive || answers.length === 0) return;
 
     const currentState = JSON.stringify({
       answers,
@@ -92,6 +93,7 @@ export function useQuizAutoSave({
         clearTimeout(saveTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     answers,
     currentQuestionIndex,
@@ -99,7 +101,7 @@ export function useQuizAutoSave({
     isActive,
     enabled,
     debounceMs,
-    saveToAPI,
+    // saveToAPI intentionally omitted - stable due to useCallback dependencies
   ]);
 
   return {

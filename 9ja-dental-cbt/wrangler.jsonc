@@ -22,15 +22,39 @@
       "preview_id": "e7756c0c03874429bc4bcf680a9fea7c"
     }
   ],
-
-  // "r2_buckets": [
-  //   {
-  //     "binding": "STUDY_BUCKET",
-  //     "bucket_name": "dental-study"
-  //   }
-  // ],
-
+  "r2_buckets": [
+    {
+      "binding": "MY_BUCKET",
+      "bucket_name": "studybucket"
+    }
+  ],
   "ai": {
     "binding": "AI"
   }
+  // 👇 Add your staging environment here
+  // "env": {
+  //   "staging": {
+  //     "name": "dental-cbt-staging",
+  //     "d1_databases": [
+  //       {
+  //         "binding": "dental_data_staging",
+  //         "database_name": "dental-data-staging",
+  //         "database_id": "64d33686-e096-4776-b4d3-67ae330fd555",
+  //         "remote": true
+  //       }
+  //     ],
+  //     "kv_namespaces": [
+  //       {
+  //         "binding": "KV_DENTAL",
+  //         "id": "e7756c0c03874429bc4bcf680a9fea7c"
+  //       }
+  //     ],
+  //     "r2_buckets": [
+  //       {
+  //         "binding": "MY_BUCKET",
+  //         "bucket_name": "studybucket-staging"
+  //       }
+  //     ]
+  //   }
+  // }
 }

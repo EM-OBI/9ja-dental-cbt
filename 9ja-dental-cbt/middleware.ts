@@ -14,20 +14,16 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check if accessing admin routes
-    const isAdminRoute =
-      request.nextUrl.pathname.startsWith("/dashboard/admin");
+    const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
 
     if (isAdminRoute) {
       // Check if user has admin role
-      const user = session.user as { role?: string; email?: string };
-      const isAdmin =
-        user.role === "admin" ||
-        user.role === "superadmin" ||
-        user.email?.includes("admin"); // Temporary fallback
+      const user = session.user as { role?: string };
+      const isAdmin = user.role === "admin" || user.role === "superadmin";
 
       if (!isAdmin) {
         // Not an admin, redirect to regular dashboard with error message
-        const url = new URL("/dashboard", request.url);
+        const url = new URL("/", request.url);
         url.searchParams.set("error", "admin_required");
         return NextResponse.redirect(url);
       }
@@ -43,6 +39,12 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*", // Protects /dashboard and all sub-routes
+    "/quiz/:path*",
+    "/study/:path*",
+    "/leaderboard/:path*",
+    "/profile/:path*",
+    "/progress/:path*",
+    "/admin/:path*",
+    "/test-db/:path*",
   ],
 };

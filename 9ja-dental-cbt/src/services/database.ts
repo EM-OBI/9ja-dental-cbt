@@ -1,47 +1,221 @@
 import {
-  DatabaseAdapter,
   DashboardStats,
-  User,
-  Quiz,
-  QuizAttempt,
-  QuizFilters,
-  UserStreak,
   LeaderboardEntry,
-  StudySession,
+  Quiz,
+  QuizFilters,
+  User,
+  UserStreak,
   PaginatedResponse,
+  WeeklyProgress,
+  RecentActivity,
+  Goal,
 } from "@/types/dashboard";
-import { Question, UserPreferences } from "@/types/backendTypes";
-import { apiClient } from "./api";
 
-// Extended Database Service with full authentication and quiz session support
-export class DatabaseService implements DatabaseAdapter {
-  async getCurrentUser(): Promise<User | null> {
+import type { UserPreferences } from "@/store/types";
+
+const jsonFetch = async <T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<T> => {
+  const response = await fetch(input, {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+    ...init,
+  });
+
+  if (!response.ok) {
+    let message = `${response.status} ${response.statusText}`;
     try {
-      return await apiClient.getCurrentUser();
-    } catch (error) {
-      console.error("Failed to get current user:", error);
-      return null;
+      const body = (await response.json()) as {
+        error?: string;
+        message?: string;
+      };
+      message = body.error ?? body.message ?? message;
+    } catch {
+      // ignore JSON parse errors and fall back to default message
     }
+    throw new Error(message);
   }
 
-  async updateUserPreferences(
-    id: string,
-    preferences: UserPreferences
-  ): Promise<User> {
-    try {
-      return await apiClient.updateUserPreferences(id, preferences);
-    } catch (error) {
-      console.error("Failed to update user preferences:", error);
-      throw error;
-    }
+  return (await response.json()) as T;
+};
+
+type ApiSuccess<T> = { success: true; data: T };
+
+const parseISODate = (value: string | null | undefined): Date => {
+  if (!value) return new Date();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
+const ensureNumber = (value: unknown, fallback = 0): number => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const mapUser = (user: Partial<User>): User => ({
+  id: user.id ?? "",
+  email: user.email ?? "",
+  name: user.name ?? "",
+  avatar: user.avatar ?? undefined,
+  createdAt: parseISODate(
+    typeof user.createdAt === "string"
+      ? user.createdAt
+      : user.createdAt?.toISOString()
+  ),
+  updatedAt: parseISODate(
+    typeof user.updatedAt === "string"
+      ? user.updatedAt
+      : user.updatedAt?.toISOString()
+  ),
+});
+
+const mapQuiz = (
+  quiz: Partial<Quiz> & {
+    specialty?: string | null;
+    createdAt?: string | Date;
+    updatedAt?: string | Date;
+    timeLimit?: number | string | null;
   }
+): Quiz => ({
+  id: quiz.id ?? "",
+  title: quiz.title ?? "Untitled Quiz",
+  description: quiz.description ?? undefined,
+  totalQuestions: ensureNumber(quiz.totalQuestions, 0),
+  timeLimit:
+    quiz.timeLimit === null || quiz.timeLimit === undefined
+      ? undefined
+      : ensureNumber(quiz.timeLimit),
+  difficulty: (quiz.difficulty ?? "medium") as Quiz["difficulty"],
+  category: quiz.category ?? quiz.specialty ?? "General",
+  createdAt: parseISODate(
+    typeof quiz.createdAt === "string"
+      ? quiz.createdAt
+      : quiz.createdAt?.toISOString()
+  ),
+  updatedAt: parseISODate(
+    typeof quiz.updatedAt === "string"
+      ? quiz.updatedAt
+      : quiz.updatedAt?.toISOString()
+  ),
+});
 
-  // ========== USER METHODS ==========
-  // ========== USER METHODS ==========
+const mapLeaderboardEntry = (
+  entry: Partial<LeaderboardEntry> & {
+    userAvatar?: string | null;
+    totalScore?: number | string | null;
+    averageScore?: number | string | null;
+    quizzesCompleted?: number | string | null;
+    level?: number | string | null;
+    rank?: number | string | null;
+    totalXp?: number | string | null;
+  }
+): LeaderboardEntry => {
+  const id = entry.id ?? entry.userId ?? `leaderboard-${Date.now()}`;
+  const rank = Math.max(1, ensureNumber(entry.rank, 1));
 
+  return {
+    id,
+    userId: entry.userId ?? id,
+    userName: entry.userName ?? "Anonymous",
+    userAvatar: entry.userAvatar ?? undefined,
+    totalScore: ensureNumber(entry.totalScore),
+    quizzesCompleted: ensureNumber(entry.quizzesCompleted),
+    averageScore: ensureNumber(entry.averageScore),
+    rank,
+    level: Math.max(1, ensureNumber(entry.level, 1)),
+    totalXp:
+      entry.totalXp === null || entry.totalXp === undefined
+        ? undefined
+        : ensureNumber(entry.totalXp),
+  } satisfies LeaderboardEntry;
+};
+
+const mapWeeklyProgress = (
+  items: Array<{
+    day?: string;
+    score?: number;
+    time?: number;
+    quizzesCompleted?: number;
+    quizzes?: number;
+  }> = []
+): WeeklyProgress[] => {
+  const today = new Date();
+  return items.map((item, index) => {
+    const progressDate = new Date(today);
+    progressDate.setDate(today.getDate() - (items.length - 1 - index));
+    return {
+      date: progressDate,
+      quizzesTaken: ensureNumber(item.quizzesCompleted ?? item.quizzes ?? 0),
+      studyMinutes: ensureNumber(item.time),
+      averageScore: ensureNumber(item.score),
+    } satisfies WeeklyProgress;
+  });
+};
+
+const mapRecentActivity = (
+  items: Array<{
+    id?: string;
+    title?: string;
+    description?: string;
+    timestamp?: string | Date;
+    type?: string;
+    metadata?: Record<string, unknown>;
+  }> = []
+): RecentActivity[] =>
+  items.map((item, index) => ({
+    id: item.id ?? `activity-${index}`,
+    type:
+      (item.type as RecentActivity["type"]) ??
+      (item.description?.toLowerCase().includes("quiz")
+        ? "quiz_completed"
+        : "study_session"),
+    title: item.title ?? "Activity",
+    description: item.description ?? "",
+    timestamp: parseISODate(
+      typeof item.timestamp === "string"
+        ? item.timestamp
+        : item.timestamp?.toISOString()
+    ),
+    metadata: item.metadata ?? {},
+  }));
+
+const mapGoals = (
+  items: Array<{
+    id?: string;
+    title?: string;
+    description?: string;
+    progress?: number;
+    target?: number;
+    deadline?: string | Date;
+  }> = []
+): Goal[] =>
+  items.map((item, index) => ({
+    id: item.id ?? `goal-${index}`,
+    title: item.title ?? "Goal",
+    description: item.description ?? "",
+    targetValue: ensureNumber(item.target, 0),
+    currentValue: ensureNumber(item.progress, 0),
+    unit: "points",
+    deadline: parseISODate(
+      typeof item.deadline === "string"
+        ? item.deadline
+        : item.deadline?.toISOString()
+    ),
+    isCompleted: ensureNumber(item.progress, 0) >= ensureNumber(item.target, 0),
+  }));
+
+const unwrap = <T>(payload: ApiSuccess<T>): T => payload.data;
+
+export class DatabaseService {
   async getUserById(id: string): Promise<User | null> {
     try {
-      return await apiClient.getUserById(id);
+      const response = await jsonFetch<ApiSuccess<User>>(`/api/users/${id}`);
+      return mapUser(unwrap(response));
     } catch (error) {
       console.error("Failed to fetch user:", error);
       return null;
@@ -49,509 +223,216 @@ export class DatabaseService implements DatabaseAdapter {
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User> {
-    try {
-      return await apiClient.updateUser(id, data);
-    } catch (error) {
-      console.error("Failed to update user:", error);
-      throw error;
-    }
+    const response = await jsonFetch<ApiSuccess<User>>(`/api/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return mapUser(unwrap(response));
   }
 
-  // ========== QUIZ METHODS ==========
+  async updateUserPreferences(
+    id: string,
+    preferences: UserPreferences
+  ): Promise<UserPreferences> {
+    const response = await jsonFetch<ApiSuccess<UserPreferences>>(
+      `/api/users/${id}/preferences`,
+      {
+        method: "PUT",
+        body: JSON.stringify(preferences),
+      }
+    );
+
+    return unwrap(response);
+  }
 
   async getQuizzes(filters?: QuizFilters): Promise<PaginatedResponse<Quiz>> {
-    try {
-      const result = await apiClient.getQuizzes(filters);
-      return {
-        data: result.quizzes,
-        pagination: {
-          page: result.page,
-          limit: result.limit,
-          total: result.total,
-          totalPages: Math.ceil(result.total / result.limit),
-        },
-      };
-    } catch (error) {
-      console.error("Failed to fetch quizzes:", error);
-      // Return empty result with default pagination
-      return {
-        data: [],
-        pagination: {
-          page: 1,
-          limit: 10,
-          total: 0,
-          totalPages: 0,
-        },
-      };
+    const query = new URLSearchParams();
+    if (filters) {
+      const specialty = filters.specialty ?? filters.category;
+      if (specialty) query.set("specialty", specialty);
+      if (filters.difficulty) query.set("difficulty", filters.difficulty);
+      if (filters.limit) query.set("limit", String(filters.limit));
+      if (filters.offset) query.set("offset", String(filters.offset));
+      if (filters.page) query.set("page", String(filters.page));
+      if (filters.search) query.set("search", filters.search);
     }
-  }
 
-  async getQuizById(id: string): Promise<Quiz | null> {
-    try {
-      return await apiClient.getQuizById(id);
-    } catch (error) {
-      console.error("Failed to fetch quiz:", error);
-      return null;
-    }
-  }
+    const response = await jsonFetch<
+      ApiSuccess<{
+        quizzes: Array<
+          Quiz & {
+            specialty?: string | null;
+            createdAt?: string | Date;
+            updatedAt?: string | Date;
+            timeLimit?: number | string | null;
+          }
+        >;
+        total: number;
+        page: number;
+        limit: number;
+      }>
+    >(`/api/quizzes${query.size ? `?${query.toString()}` : ""}`);
 
-  // ========== QUIZ SESSION METHODS ==========
-
-  async startQuizSession(
-    quizId: string,
-    mode: "practice" | "challenge" | "exam"
-  ): Promise<{
-    sessionId: string;
-    questions: Question[];
-    timeLimit?: number;
-  } | null> {
-    try {
-      return await apiClient.startQuizSession(quizId, mode);
-    } catch (error) {
-      console.error("Failed to start quiz session:", error);
-      return null;
-    }
-  }
-
-  async submitQuizAnswer(
-    sessionId: string,
-    questionId: string,
-    answer: string | number
-  ): Promise<{ correct: boolean; explanation?: string } | null> {
-    try {
-      return await apiClient.submitQuizAnswer(sessionId, questionId, answer);
-    } catch (error) {
-      console.error("Failed to submit quiz answer:", error);
-      return null;
-    }
-  }
-
-  async completeQuizSession(sessionId: string): Promise<{
-    score: number;
-    totalQuestions: number;
-    correctAnswers: number;
-    timeSpent: number;
-    results: QuizAttempt[];
-  } | null> {
-    try {
-      return await apiClient.completeQuizSession(sessionId);
-    } catch (error) {
-      console.error("Failed to complete quiz session:", error);
-      return null;
-    }
-  }
-
-  // ========== QUIZ ATTEMPTS METHODS ==========
-
-  async getQuizAttempts(userId: string, limit = 10): Promise<QuizAttempt[]> {
-    try {
-      // TODO: Implement when quiz attempts endpoint is available in backend
-      // For now, we can derive this from dashboard stats or user progress
-      const userProgress = await this.getUserProgress(userId);
-
-      // Convert recent activity to quiz attempts as a temporary solution
-      const quizAttempts: QuizAttempt[] = userProgress.recentActivity
-        .filter((activity) => activity.type === "quiz_completed")
-        .slice(0, limit)
-        .map((activity, index) => ({
-          id: activity.id,
-          userId,
-          quizId: `quiz-${activity.id}`,
-          score: Math.floor(Math.random() * 100), // TODO: Get real score from metadata
-          totalQuestions: 20, // TODO: Get real value
-          timeSpent: Math.floor(Math.random() * 1800) + 300, // 5-35 minutes
-          completedAt: activity.timestamp,
-          answers: [], // TODO: Implement when answer details are available
-        }));
-
-      return quizAttempts;
-    } catch (error) {
-      console.error("Failed to fetch quiz attempts:", error);
-      return [];
-    }
-  }
-
-  async createQuizAttempt(
-    attempt: Omit<QuizAttempt, "id" | "completedAt">
-  ): Promise<QuizAttempt> {
-    try {
-      // TODO: Implement actual API call when backend supports quiz attempt creation
-      // For now, create a local attempt record
-      const newAttempt: QuizAttempt = {
-        id: `attempt-${Date.now()}`,
-        completedAt: new Date(),
-        ...attempt,
-      };
-
-      // In a real implementation, this would also update user progress
-      // and potentially trigger leaderboard updates
-
-      return newAttempt;
-    } catch (error) {
-      console.error("Failed to create quiz attempt:", error);
-      throw error;
-    }
+    const data = unwrap(response);
+    return {
+      data: data.quizzes.map(mapQuiz),
+      pagination: {
+        page: data.page,
+        limit: data.limit,
+        total: data.total,
+        totalPages: data.limit > 0 ? Math.ceil(data.total / data.limit) : 0,
+      },
+    };
   }
 
   async getDashboardStats(userId: string): Promise<DashboardStats> {
-    try {
-      return await apiClient.getDashboardStats();
-    } catch (error) {
-      console.error("Failed to fetch dashboard stats:", error);
-      // Return default stats if API call fails
+    void userId;
+    if (userId === "platform") {
+      const response = await jsonFetch<
+        ApiSuccess<{
+          users: { total: number; active: number };
+          quizzes: { total: number; averageScore: number };
+          studySessions: { total: number; totalMinutes: number };
+          content: { questions: number; specialties: number };
+        }>
+      >("/api/dashboard/stats");
+
+      const data = unwrap(response);
+      const now = new Date();
       return {
-        totalQuizzes: 0,
-        completedQuizzes: 0,
-        averageScore: 0,
-        totalStudyTime: 0,
+        totalQuizzes: ensureNumber(data.quizzes.total),
+        completedQuizzes: ensureNumber(data.quizzes.total),
+        averageScore: ensureNumber(data.quizzes.averageScore),
+        totalStudyTime: ensureNumber(data.studySessions.totalMinutes),
         currentStreak: 0,
         longestStreak: 0,
         currentLevel: 1,
         pointsToNextLevel: 100,
         weeklyProgress: [],
-        recentActivity: [],
+        recentActivity: [
+          {
+            id: "platform-summary",
+            type: "achievement_unlocked",
+            title: "Platform Stats",
+            description: `${data.users.total} learners • ${data.content.questions} questions`,
+            timestamp: now,
+            metadata: {},
+          },
+        ],
         upcomingGoals: [],
-      };
+      } satisfies DashboardStats;
     }
+
+    return await this.getUserProgress(userId);
   }
 
   async getUserStreak(userId: string): Promise<UserStreak> {
-    try {
-      return await apiClient.getUserStreaks(userId);
-    } catch (error) {
-      console.error("Failed to fetch user streak:", error);
-      return {
-        id: `streak-${userId}`,
-        userId,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastActivityDate: new Date(),
-        streakData: [],
-      };
-    }
+    const response = await jsonFetch<
+      ApiSuccess<{
+        currentStreak: number;
+        longestStreak: number;
+        lastActivityDate: string | null;
+        streakCalendar?: Array<{
+          date: string;
+          active: boolean;
+          activityCount: number;
+          activityTypes: string[];
+        }>;
+      }>
+    >(`/api/users/${userId}/streaks`);
+
+    const data = unwrap(response);
+    const streakHistory = (data.streakCalendar ?? []).map((entry) => ({
+      date: parseISODate(entry.date),
+      completed: entry.active,
+      activityCount: entry.activityCount,
+      activityTypes:
+        entry.activityTypes as UserStreak["streakData"][number]["activityTypes"],
+    }));
+
+    return {
+      id: `streak-${userId}`,
+      userId,
+      currentStreak: ensureNumber(data.currentStreak),
+      longestStreak: ensureNumber(data.longestStreak),
+      lastActivityDate: parseISODate(data.lastActivityDate),
+      streakData: streakHistory,
+    };
   }
 
   async getLeaderboard(
     limit = 10,
-    period: "daily" | "weekly" | "monthly" = "weekly"
+    period: "daily" | "weekly" | "monthly" | "all-time" = "weekly"
   ): Promise<LeaderboardEntry[]> {
-    try {
-      const leaderboardData = await apiClient.getLeaderboard(period);
+    const response = await jsonFetch<
+      ApiSuccess<{
+        entries: Array<
+          LeaderboardEntry & {
+            rank?: number;
+          }
+        >;
+      }>
+    >(`/api/leaderboard?period=${period}`);
 
-      // Transform API response (RecentActivity[]) to LeaderboardEntry format
-      // This is a temporary solution until the backend provides proper leaderboard data
-      const mockLeaderboardEntries: LeaderboardEntry[] = leaderboardData
-        .slice(0, limit)
-        .map((activity, index) => ({
-          id: activity.id,
-          userId: `user-${activity.id}`,
-          userName: activity.title || `User ${index + 1}`,
-          userAvatar: undefined,
-          totalScore: Math.floor(Math.random() * 5000) + 1000, // Mock score
-          quizzesCompleted: Math.floor(Math.random() * 50) + 10, // Mock count
-          averageScore: Math.floor(Math.random() * 40) + 60, // 60-100% average
-          rank: index + 1,
-          level: Math.floor(Math.random() * 10) + 1, // Mock level
-        }));
-
-      return mockLeaderboardEntries;
-    } catch (error) {
-      console.error("Failed to fetch leaderboard:", error);
-      // Return mock leaderboard data as fallback
-      return Array.from({ length: Math.min(limit, 5) }, (_, index) => ({
-        id: `mock-leader-${index}`,
-        userId: `user-${index}`,
-        userName: `Top Student ${index + 1}`,
-        userAvatar: undefined,
-        totalScore: 5000 - index * 500,
-        quizzesCompleted: 50 - index * 5,
-        averageScore: 95 - index * 3,
-        rank: index + 1,
-        level: 10 - index,
-      }));
-    }
-  }
-
-  async getStudySessions(userId: string, limit = 10): Promise<StudySession[]> {
-    try {
-      return await apiClient.getStudySessions(userId);
-    } catch (error) {
-      console.error("Failed to fetch study sessions:", error);
-      return [];
-    }
-  }
-
-  async createStudySession(
-    session: Omit<StudySession, "id" | "completedAt">
-  ): Promise<StudySession> {
-    try {
-      // Call the API but ignore the DashboardStats return type for now
-      await apiClient.createStudySession({
-        specialty: session.topic, // Map topic to specialty for backend
-        duration: session.duration,
-        topics: [session.topic], // Convert single topic to array
-      });
-
-      // Return the expected StudySession format
-      return {
-        id: `session-${Date.now()}`,
-        userId: session.userId,
-        topic: session.topic,
-        duration: session.duration,
-        completedAt: new Date(),
-      };
-    } catch (error) {
-      console.error("Failed to create study session:", error);
-      return {
-        id: `session-${Date.now()}`,
-        userId: session.userId,
-        topic: session.topic,
-        duration: session.duration,
-        completedAt: new Date(),
-        notes: session.notes,
-      };
-    }
-  }
-
-  // ========== SEARCH AND UTILITY METHODS ==========
-
-  async searchQuestions(
-    query: string,
-    filters?: {
-      specialty?: string;
-      difficulty?: string;
-      limit?: number;
-    }
-  ): Promise<Question[]> {
-    try {
-      // TODO: Implement when question search endpoint is available in backend
-      // For now, use quiz search as a fallback and extract questions
-      const quizFilters = {
-        search: query,
-        category: filters?.specialty,
-        difficulty: filters?.difficulty as "easy" | "medium" | "hard",
-        limit: filters?.limit || 20,
-      };
-
-      const quizResults = await this.getQuizzes(quizFilters);
-
-      // Mock question data based on quiz results
-      // In a real implementation, this would call a dedicated question search endpoint
-      const mockQuestions: Question[] = quizResults.data
-        .flatMap((quiz) =>
-          Array.from(
-            { length: Math.min(quiz.totalQuestions, 5) },
-            (_, index) => ({
-              id: `q-${quiz.id}-${index}`,
-              text: `Question ${index + 1} from ${quiz.title}`,
-              options: ["Option A", "Option B", "Option C", "Option D"],
-              correct_answer: 0, // First option is correct
-              explanation: `This is the explanation for question ${index + 1}`,
-              specialty: quiz.category,
-              difficulty: quiz.difficulty,
-              type: "mcq" as const,
-              time_estimate: 60,
-              tags: [quiz.category.toLowerCase()],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-          )
-        )
-        .slice(0, filters?.limit || 20);
-
-      return mockQuestions;
-    } catch (error) {
-      console.error("Failed to search questions:", error);
-      return [];
-    }
-  }
-
-  async getQuestionById(id: string): Promise<Question | null> {
-    try {
-      // TODO: Implement when individual question endpoint is available
-      // For now, search through cached questions or return mock data
-      return {
-        id,
-        text: `Mock question with ID: ${id}`,
-        options: ["Option A", "Option B", "Option C", "Option D"],
-        correct_answer: 0, // First option is correct
-        explanation: "This is a mock explanation.",
-        specialty: "General",
-        difficulty: "medium",
-        type: "mcq",
-        time_estimate: 60,
-        tags: ["mock"],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error("Failed to fetch question:", error);
-      return null;
-    }
-  }
-
-  // ========== ANALYTICS AND REPORTING ==========
-
-  async getUserAnalytics(
-    userId: string,
-    timeRange: "week" | "month" | "year" = "month"
-  ): Promise<{
-    performanceChart: Array<{ date: string; score: number; quizzes: number }>;
-    categoryBreakdown: Array<{
-      category: string;
-      averageScore: number;
-      attempts: number;
-    }>;
-    streakHistory: Array<{ date: string; streakLength: number }>;
-    studyTimeDistribution: Array<{ hour: number; minutes: number }>;
-  }> {
-    try {
-      const [dashboardStats, userStreak] = await Promise.all([
-        this.getDashboardStats(userId),
-        this.getUserStreak(userId),
-      ]);
-
-      // Generate mock analytics based on available data
-      const performanceChart = Array.from({ length: 30 }, (_, i) => ({
-        date: new Date(Date.now() - i * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        score: Math.floor(Math.random() * 40) + 60,
-        quizzes: Math.floor(Math.random() * 5) + 1,
-      }));
-
-      const categoryBreakdown = [
-        { category: "Conservative Dentistry", averageScore: 85, attempts: 15 },
-        { category: "Prosthodontics", averageScore: 78, attempts: 12 },
-        { category: "Oral Surgery", averageScore: 82, attempts: 10 },
-        { category: "Orthodontics", averageScore: 75, attempts: 8 },
-      ];
-
-      const streakHistory = userStreak.streakData.map((day) => ({
-        date: day.date.toISOString().split("T")[0],
-        streakLength: day.completed ? day.activityCount : 0,
-      }));
-
-      const studyTimeDistribution = Array.from({ length: 24 }, (_, hour) => ({
-        hour,
-        minutes: Math.floor(Math.random() * 120), // 0-2 hours per hour slot
-      }));
-
-      return {
-        performanceChart,
-        categoryBreakdown,
-        streakHistory,
-        studyTimeDistribution,
-      };
-    } catch (error) {
-      console.error("Failed to fetch user analytics:", error);
-      return {
-        performanceChart: [],
-        categoryBreakdown: [],
-        streakHistory: [],
-        studyTimeDistribution: [],
-      };
-    }
+    return unwrap(response)
+      .entries.slice(0, limit)
+      .map((entry, index) =>
+        mapLeaderboardEntry({
+          ...entry,
+          id: entry.id ?? entry.userId ?? `leaderboard-${index}`,
+          rank: entry.rank ?? index + 1,
+        })
+      );
   }
 
   async getUserProgress(userId: string): Promise<DashboardStats> {
-    try {
-      return await apiClient.getUserProgress(userId);
-    } catch (error) {
-      console.error("Failed to fetch user progress:", error);
-      // Return a default DashboardStats object instead of null
-      return {
-        totalQuizzes: 0,
-        completedQuizzes: 0,
-        averageScore: 0,
-        totalStudyTime: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        currentLevel: 1,
-        pointsToNextLevel: 1000,
-        weeklyProgress: [],
-        recentActivity: [],
-        upcomingGoals: [],
-      };
-    }
-  }
+    const response = await jsonFetch<
+      ApiSuccess<{
+        totalQuizzes: number;
+        completedQuizzes: number;
+        averageScore: number;
+        totalStudyTime: number;
+        currentStreak: number;
+        longestStreak: number;
+        currentLevel: number;
+        pointsToNextLevel: number;
+        weeklyProgress: Array<{ day?: string; score?: number; time?: number }>;
+        recentActivity: Array<{
+          id?: string;
+          title?: string;
+          description?: string;
+          timestamp?: string | Date;
+          type?: string;
+          metadata?: Record<string, unknown>;
+        }>;
+        upcomingGoals: Array<{
+          id?: string;
+          title?: string;
+          description?: string;
+          progress?: number;
+          target?: number;
+          deadline?: string | Date;
+        }>;
+      }>
+    >(`/api/users/${userId}/progress`);
+    const data = unwrap(response);
 
-  // ========== BOOKMARK METHODS ==========
-
-  async addBookmark(
-    itemType: string,
-    itemId: string,
-    notes?: string
-  ): Promise<{ success: boolean; bookmarkId?: string }> {
-    try {
-      // API returns StudySession but we handle it properly
-      const result = await apiClient.addBookmark(itemType, itemId, notes);
-
-      // Return success with the session ID as bookmark ID
-      return {
-        success: true,
-        bookmarkId: result.id,
-      };
-    } catch (error) {
-      console.error("Failed to add bookmark:", error);
-      return { success: false };
-    }
-  }
-
-  async getUserBookmarks(
-    userId: string
-  ): Promise<{ id: string; questionId: string; createdAt: Date }[]> {
-    try {
-      const bookmarks = await apiClient.getBookmarks(userId);
-
-      // Ensure dates are properly converted
-      return bookmarks.map((bookmark) => ({
-        ...bookmark,
-        createdAt: new Date(bookmark.createdAt),
-      }));
-    } catch (error) {
-      console.error("Failed to fetch bookmarks:", error);
-      return [];
-    }
-  }
-
-  async removeBookmark(bookmarkId: string): Promise<boolean> {
-    try {
-      await apiClient.removeBookmark(bookmarkId);
-      return true;
-    } catch (error) {
-      console.error("Failed to remove bookmark:", error);
-      return false;
-    }
-  }
-
-  // ========== HEALTH CHECK AND CONNECTIVITY ==========
-
-  // ========== HEALTH CHECK AND CONNECTIVITY ==========
-
-  async healthCheck(): Promise<boolean> {
-    try {
-      await apiClient.healthCheck();
-      return true;
-    } catch (error) {
-      console.error("API health check failed:", error);
-      return false;
-    }
-  }
-
-  // ========== UTILITY METHODS ==========
-
-  /**
-   * Test the connection to the backend API
-   * @returns Promise<boolean> - true if connected, false otherwise
-   */
-  async testConnection(): Promise<boolean> {
-    return await this.healthCheck();
+    return {
+      totalQuizzes: ensureNumber(data.totalQuizzes),
+      completedQuizzes: ensureNumber(data.completedQuizzes),
+      averageScore: ensureNumber(data.averageScore),
+      totalStudyTime: ensureNumber(data.totalStudyTime),
+      currentStreak: ensureNumber(data.currentStreak),
+      longestStreak: ensureNumber(data.longestStreak),
+      currentLevel: ensureNumber(data.currentLevel, 1),
+      pointsToNextLevel: ensureNumber(data.pointsToNextLevel, 100),
+      weeklyProgress: mapWeeklyProgress(data.weeklyProgress),
+      recentActivity: mapRecentActivity(data.recentActivity),
+      upcomingGoals: mapGoals(data.upcomingGoals),
+    } satisfies DashboardStats;
   }
 }
 
-// Create singleton instance
 export const databaseService = new DatabaseService();
 
-// Export as default for compatibility
 export default databaseService;

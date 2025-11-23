@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useUserStore } from "@/store/userStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useStudyStore } from "@/store/studyStore";
-import { useQuizStore } from "@/store/quizStore";
+// import { useQuizStore } from "@/store/quizStore"; // Removed - use API hooks
+import { trackLoginActivity } from "@/utils/activityTracker";
 
 /**
  * Custom hook to load all user data from the database
@@ -37,10 +38,11 @@ export function useLoadUserData() {
   const loadStudySessionsFromDatabase = useStudyStore(
     (state) => state.loadStudySessionsFromDatabase
   );
-  const loadQuizHistory = useQuizStore((state) => state.loadQuizHistory);
-  const loadQuestions = useQuizStore(
-    (state) => state.loadQuestionsFromDatabase
-  );
+  // const loadQuizHistory = useQuizStore((state) => state.loadQuizHistory);
+  // const loadQuestions = useQuizStore(
+  //   (state) => state.loadQuestionsFromDatabase
+  // );
+  // Quiz history and questions removed from store - use API hooks instead
 
   // Get last fetched timestamp to implement caching
   const lastFetched = useProgressStore((state) => state.lastFetched);
@@ -52,7 +54,6 @@ export function useLoadUserData() {
   const loadAllData = useCallback(
     async (force = false) => {
       if (!userId) {
-        console.log("[useLoadUserData] No user ID, skipping data load");
         return;
       }
 
@@ -61,11 +62,6 @@ export function useLoadUserData() {
       const now = Date.now();
 
       if (!force && lastFetched && now - lastFetched < CACHE_DURATION) {
-        console.log(
-          "[useLoadUserData] Using cached data (last fetched:",
-          new Date(lastFetched).toLocaleTimeString(),
-          ")"
-        );
         return;
       }
 
@@ -73,61 +69,30 @@ export function useLoadUserData() {
       setError(null);
 
       try {
-        console.log(
-          "[useLoadUserData] Loading all user data for user:",
-          userId
-        );
+        // Track login activity first (important for streaks)
+        await trackLoginActivity(userId);
 
         // Load all data in parallel for better performance
         await Promise.all([
           // Load progress data (streaks, achievements, level, XP)
-          loadProgressFromDatabase(userId)
-            .then(() =>
-              console.log("[useLoadUserData] ✅ Progress data loaded")
-            )
-            .catch((err: Error) =>
-              console.error(
-                "[useLoadUserData] ❌ Failed to load progress:",
-                err
-              )
-            ),
+          loadProgressFromDatabase(userId).catch((err: Error) =>
+            console.error("[useLoadUserData] ❌ Failed to load progress:", err)
+          ),
 
           // Load study sessions
-          loadStudySessionsFromDatabase(userId)
-            .then(() =>
-              console.log("[useLoadUserData] ✅ Study sessions loaded")
+          loadStudySessionsFromDatabase(userId).catch((err: Error) =>
+            console.error(
+              "[useLoadUserData] ❌ Failed to load study sessions:",
+              err
             )
-            .catch((err: Error) =>
-              console.error(
-                "[useLoadUserData] ❌ Failed to load study sessions:",
-                err
-              )
-            ),
+          ),
 
-          // Load quiz history (simple void function)
-          Promise.resolve(loadQuizHistory())
-            .then(() => console.log("[useLoadUserData] ✅ Quiz history loaded"))
-            .catch((err: Error) =>
-              console.error(
-                "[useLoadUserData] ❌ Failed to load quiz history:",
-                err
-              )
-            ),
+          // Load quiz history - REMOVED (use API hooks)
+          // Quiz data now fetched on-demand from API endpoints
 
-          // Load available quizzes
-          loadQuestions()
-            .then(() =>
-              console.log("[useLoadUserData] ✅ Quiz questions loaded")
-            )
-            .catch((err: Error) =>
-              console.error(
-                "[useLoadUserData] ❌ Failed to load questions:",
-                err
-              )
-            ),
+          // Load available quizzes - REMOVED (use API hooks)
+          // Quizzes and questions now fetched when needed
         ]);
-
-        console.log("[useLoadUserData] ✅ All data loaded successfully");
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load user data";
@@ -142,8 +107,7 @@ export function useLoadUserData() {
       lastFetched,
       loadProgressFromDatabase,
       loadStudySessionsFromDatabase,
-      loadQuizHistory,
-      loadQuestions,
+      // loadQuizHistory and loadQuestions removed - use API hooks instead
     ]
   );
 
@@ -151,17 +115,39 @@ export function useLoadUserData() {
    * Manually refresh all data (bypasses cache)
    */
   const refresh = useCallback(() => {
-    console.log("[useLoadUserData] Manual refresh triggered");
     loadAllData(true);
   }, [loadAllData]);
 
   // Load data on mount or when user ID changes
   useEffect(() => {
-    if (userId) {
-      console.log("[useLoadUserData] User ID changed, loading data...");
-      loadAllData();
+    if (!userId) {
+      setIsLoading(false);
+      return;
     }
-  }, [userId, loadAllData]);
+
+    // Create abort controller for cleanup
+    const abortController = new AbortController();
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        await loadAllData();
+      } catch (error) {
+        // Only set error if component is still mounted
+        if (isMounted && !abortController.signal.aborted) {
+          console.error("[useLoadUserData] Load failed:", error);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+      abortController.abort(); // Cancel any pending requests
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]); // Only depend on userId, loadAllData is stable via useCallback
 
   return {
     isLoading,
@@ -200,14 +186,11 @@ export function useRefreshUserData() {
   const refreshUserData = async () => {
     if (!userId) return;
 
-    console.log("[useRefreshUserData] Refreshing user data after action...");
-
     try {
       await Promise.all([
         loadProgressFromDatabase(userId),
         loadStudySessionsFromDatabase(userId),
       ]);
-      console.log("[useRefreshUserData] ✅ Data refreshed");
     } catch (error) {
       console.error("[useRefreshUserData] ❌ Failed to refresh data:", error);
     }

@@ -77,6 +77,7 @@ export interface LeaderboardEntry {
   averageScore: number;
   rank: number;
   level: number;
+  totalXp?: number;
 }
 
 // Dashboard analytics types
@@ -151,29 +152,25 @@ export interface DatabaseAdapter {
 
   // Quiz operations
   getQuizzes(filters?: QuizFilters): Promise<PaginatedResponse<Quiz>>;
-  getQuizAttempts(userId: string, limit?: number): Promise<QuizAttempt[]>;
-  createQuizAttempt(
-    attempt: Omit<QuizAttempt, "id" | "completedAt">
-  ): Promise<QuizAttempt>;
 
   // Dashboard data
   getDashboardStats(userId: string): Promise<DashboardStats>;
   getUserStreak(userId: string): Promise<UserStreak>;
-  getLeaderboard(limit?: number): Promise<LeaderboardEntry[]>;
-
-  // Study sessions
-  getStudySessions(userId: string, limit?: number): Promise<StudySession[]>;
-  createStudySession(
-    session: Omit<StudySession, "id" | "completedAt">
-  ): Promise<StudySession>;
+  getLeaderboard(
+    limit?: number,
+    period?: "daily" | "weekly" | "monthly" | "all-time"
+  ): Promise<LeaderboardEntry[]>;
+  getUserProgress(userId: string): Promise<DashboardStats>;
 }
 
 export interface QuizFilters {
   category?: string;
+  specialty?: string;
   difficulty?: Quiz["difficulty"];
   search?: string;
   limit?: number;
   offset?: number;
+  page?: number;
 }
 
 // Component props types

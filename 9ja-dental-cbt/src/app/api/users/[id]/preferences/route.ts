@@ -4,6 +4,13 @@ import {
   getUserPreferences,
   updateUserPreferences,
 } from "@/services/serverData";
+import type { UserPreferences } from "@/store/types";
+
+type PreferenceUpdate = Partial<UserPreferences> & {
+  notifications?: Partial<UserPreferences["notifications"]>;
+  quiz?: Partial<UserPreferences["quiz"]>;
+  study?: Partial<UserPreferences["study"]>;
+};
 
 // GET /api/users/[id]/preferences - Get user preferences (with KV fallback)
 export async function GET(
@@ -93,15 +100,7 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const preferences = (await request.json()) as Partial<{
-      theme: "light" | "dark" | "system";
-      notifications: boolean;
-      emailNotifications: boolean;
-      soundEffects: boolean;
-      difficulty: "easy" | "medium" | "hard";
-      studyReminders: boolean;
-      dailyGoal: number;
-    }>;
+    const preferences = (await request.json()) as PreferenceUpdate;
 
     // Check if user is updating their own preferences
     if (session.user.id !== id) {
@@ -115,10 +114,10 @@ export async function PUT(
     try {
       const env = process.env as unknown as { KV_DENTAL: KVNamespace };
       const kv = env.KV_DENTAL;
-      if (kv && updatedPreferences[0]) {
+      if (kv && updatedPreferences) {
         await kv.put(
           `user:${id}:preferences`,
-          JSON.stringify(updatedPreferences[0]),
+          JSON.stringify(updatedPreferences),
           { expirationTtl: 60 * 60 * 24 } // 24 hours
         );
       }
@@ -128,7 +127,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      data: updatedPreferences[0],
+      data: updatedPreferences,
     });
   } catch (error) {
     console.error("Error updating user preferences:", error);

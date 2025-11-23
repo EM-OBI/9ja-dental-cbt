@@ -180,7 +180,7 @@ export interface Achievement {
 export interface LeaderboardEntry {
   id: string;
   user_id: string;
-  timeframe: "daily" | "weekly" | "monthly";
+  timeframe: "daily" | "weekly" | "monthly" | "all-time";
   score: number;
   rank: number;
   entry_date: string;
@@ -193,6 +193,7 @@ export interface LeaderboardEntry {
   quizzesCompleted?: number;
   averageScore?: number;
   level?: number;
+  totalXp?: number;
 }
 
 // Notification types (aligned with backend schema)
@@ -306,31 +307,6 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
-}
-
-// Updated Database adapter interface
-export interface DatabaseAdapter {
-  // User operations
-  getUserById(id: string): Promise<User | null>;
-  updateUser(id: string, data: Partial<User>): Promise<User>;
-
-  // Quiz operations
-  getQuizzes(filters?: QuizFilters): Promise<PaginatedResponse<Quiz>>;
-  getQuizAttempts(userId: string, limit?: number): Promise<QuizAttempt[]>;
-  createQuizAttempt(
-    attempt: Omit<QuizAttempt, "id" | "completedAt">
-  ): Promise<QuizAttempt>;
-
-  // Dashboard data
-  getDashboardStats(userId: string): Promise<DashboardStats>;
-  getUserStreak(userId: string): Promise<UserStreak>;
-  getLeaderboard(limit?: number): Promise<LeaderboardEntry[]>;
-
-  // Study sessions
-  getStudySessions(userId: string, limit?: number): Promise<StudySession[]>;
-  createStudySession(
-    session: Omit<StudySession, "id" | "created_at">
-  ): Promise<StudySession>;
 }
 
 export interface QuizFilters {

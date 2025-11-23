@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuizEngineStore } from "@/store/quizEngineStore";
 import { useQuizAutoSave } from "@/hooks/useQuizAutoSave";
-import { useQuizResultsSaver } from "@/hooks/useQuizResultsSaver";
 import { useUserStore } from "@/store/userStore";
 import { QuizConfig } from "@/types/definitions";
 import {
@@ -28,7 +27,6 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   const [showExplanation, setShowExplanation] = useState(false);
 
   const { user } = useUserStore();
-  const { saveResults } = useQuizResultsSaver();
 
   const {
     shuffledQuestions,
@@ -38,6 +36,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
     timeRemaining,
     isActive,
     isSubmitting,
+    isFinishing,
+    hasSubmittedResults,
     bookmarkedQuestions,
     startQuiz,
     submitAnswer,
@@ -59,6 +59,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   });
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
+  const displaySpecialty = config.specialtyName || config.specialtyId;
+  const progressBarRef = useRef<HTMLDivElement>(null);
   const existingAnswer = answers.find(
     (a) => a.questionId === currentQuestion?.id
   );
@@ -95,7 +97,16 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
         clearInterval(interval);
       }
     };
-  }, [isActive]); // Only depend on isActive to avoid recreating interval constantly
+  }, [isActive, timeRemaining]);
+
+  useEffect(() => {
+    if (!progressBarRef.current || shuffledQuestions.length === 0) return;
+
+    const progress =
+      ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
+
+    progressBarRef.current.style.width = `${progress}%`;
+  }, [currentQuestionIndex, shuffledQuestions.length]);
 
   const handleAnswerSelect = (optionIndex: number) => {
     if (existingAnswer || !isActive) return;
@@ -133,23 +144,11 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
     }
   };
 
-  const handleFinishQuiz = async () => {
-    // Save results to API before finishing
-    if (user?.id && config.sessionId) {
-      const totalTimeSpent =
-        Date.now() - (useQuizEngineStore.getState().startTime || Date.now());
-      await saveResults({
-        sessionId: config.sessionId,
-        userId: user.id,
-        answers,
-        score,
-        totalQuestions: shuffledQuestions.length,
-        timeSpent: Math.floor(totalTimeSpent / 1000),
-        specialtyId: config.specialty,
-      });
+  const handleFinishQuiz = () => {
+    if (isFinishing || hasSubmittedResults) {
+      return;
     }
 
-    // Then finish the quiz in the store
     finishQuiz();
   };
 
@@ -179,7 +178,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   const getOptionClassName = (optionIndex: number) => {
     const baseClasses = `
       w-full p-4 text-left border-2 rounded-lg transition-all
-      hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-100
+      hover:border-slate-300 dark:hover:border-border focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-ring
     `;
 
     if (existingAnswer) {
@@ -187,18 +186,18 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
       const isSelected = optionIndex === existingAnswer.selectedOption;
 
       if (isCorrect) {
-        return `${baseClasses} border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-foreground`;
+        return `${baseClasses} border-slate-900 dark:border-ring bg-slate-50 dark:bg-card text-slate-900 dark:text-foreground`;
       }
 
       if (isSelected && !isCorrect) {
-        return `${baseClasses} border-slate-400 dark:border-slate-500 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400`;
+        return `${baseClasses} border-slate-400 dark:border-border bg-slate-50 dark:bg-card/80 text-slate-600 dark:text-muted-foreground`;
       }
 
-      return `${baseClasses} border-slate-200 dark:border-border text-slate-500 dark:text-slate-400`;
+      return `${baseClasses} border-slate-200 dark:border-border text-slate-500 dark:text-muted-foreground`;
     }
 
     if (selectedAnswer === optionIndex) {
-      return `${baseClasses} border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-foreground`;
+      return `${baseClasses} border-slate-900 dark:border-ring bg-slate-50 dark:bg-card text-slate-900 dark:text-foreground`;
     }
 
     return `${baseClasses} border-slate-200 dark:border-border text-slate-900 dark:text-foreground bg-white dark:bg-card`;
@@ -206,7 +205,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-transparent p-4">
+      <div className="min-h-full bg-transparent p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="text-sm text-slate-600 dark:text-slate-400">
@@ -221,7 +220,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   // Start quiz if not active
   if (!isActive && currentQuestionIndex === 0) {
     return (
-      <div className="min-h-screen bg-transparent p-4">
+      <div className="min-h-full bg-transparent p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-8">
             <div className="text-center space-y-6">
@@ -231,7 +230,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               </h1>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-border">
+                <div className="bg-slate-50 dark:bg-card/80 p-4 rounded-lg border border-slate-200 dark:border-border">
                   <div className="text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
                     Questions
                   </div>
@@ -240,17 +239,17 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                   </div>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-border">
+                <div className="bg-slate-50 dark:bg-card/80 p-4 rounded-lg border border-slate-200 dark:border-border">
                   <div className="text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
                     Specialty
                   </div>
                   <div className="text-xl font-semibold text-slate-900 dark:text-foreground">
-                    {config.specialty}
+                    {displaySpecialty}
                   </div>
                 </div>
 
                 {config.timeLimit && (
-                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-border">
+                  <div className="bg-slate-50 dark:bg-card/80 p-4 rounded-lg border border-slate-200 dark:border-border">
                     <div className="text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
                       Time Limit
                     </div>
@@ -263,7 +262,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
               <button
                 onClick={startQuiz}
-                className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+                className="bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
               >
                 <Play className="w-4 h-4" />
                 <span>Start Quiz</span>
@@ -276,7 +275,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   }
 
   return (
-    <div className="min-h-screen bg-transparent p-4">
+    <div className="min-h-full bg-transparent p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-4">
@@ -287,7 +286,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                 Mode
               </h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {config.specialty}
+                {displaySpecialty}
               </p>
             </div>
 
@@ -304,7 +303,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               <div className="flex gap-2">
                 <button
                   onClick={isActive ? pauseQuiz : resumeQuiz}
-                  className="p-2 rounded-lg border border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-card transition-colors"
                 >
                   {isActive ? (
                     <Pause className="w-4 h-4" />
@@ -318,7 +317,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                   title="Exit Quiz"
                   aria-labelledby="exit-quiz-button"
                   onClick={onExit}
-                  className="p-2 rounded-lg border border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-card transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -328,22 +327,17 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
           {/* Progress Bar */}
           <div className="mt-4">
-            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
               <span>
                 Question {currentQuestionIndex + 1} of{" "}
                 {shuffledQuestions.length}
               </span>
               <span>Score: {score}</span>
             </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+            <div className="w-full bg-muted rounded-full h-1.5">
               <div
-                className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full transition-all"
-                style={{
-                  width: `${
-                    ((currentQuestionIndex + 1) / shuffledQuestions.length) *
-                    100
-                  }%`,
-                }}
+                ref={progressBarRef}
+                className="bg-primary h-1.5 rounded-full transition-all"
               />
             </div>
           </div>
@@ -354,11 +348,11 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full">
+                <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">
                   Question {currentQuestionIndex + 1} of{" "}
                   {shuffledQuestions.length}
                 </span>
-                <span className="text-xs px-2.5 py-1 rounded-full border border-slate-200 dark:border-border text-slate-600 dark:text-slate-400">
+                <span className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground">
                   {currentQuestion.difficulty}
                 </span>
               </div>
@@ -372,8 +366,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               onClick={handleBookmark}
               className={`ml-4 p-2 rounded-lg border transition-colors ${
                 isBookmarked
-                  ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800"
-                  : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600"
+                  ? "border-slate-900 dark:border-ring bg-slate-50 dark:bg-card"
+                  : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-ring"
               }`}
             >
               {isBookmarked ? (
@@ -390,7 +384,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               <Image
                 src={currentQuestion.imageUrl}
                 alt="Question illustration"
-                className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
+                className="max-w-full h-auto rounded-lg border border-border"
               />
             </div>
           )}
@@ -423,7 +417,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
               <button
                 onClick={handleSubmitAnswer}
                 disabled={isSubmitting}
-                className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                className="bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground disabled:bg-slate-300 dark:disabled:bg-muted text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
               >
                 {isSubmitting ? "Submitting..." : "Submit Answer"}
               </button>
@@ -432,7 +426,7 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
           {/* Explanation */}
           {showExplanation && existingAnswer && currentQuestion.explanation && (
-            <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-border">
+            <div className="mb-6 p-4 bg-slate-50 dark:bg-card/80 rounded-lg border border-slate-200 dark:border-border">
               <h4 className="text-sm font-semibold text-slate-900 dark:text-foreground mb-2">
                 {existingAnswer.isCorrect ? "Correct" : "Incorrect"}
               </h4>
@@ -454,11 +448,20 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
           {config.mode === "practice" && existingAnswer && showExplanation && (
             <div className="flex justify-center mb-6">
               <button
-                onClick={handleNextQuestion}
-                className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                onClick={
+                  currentQuestionIndex === shuffledQuestions.length - 1
+                    ? handleFinishQuiz
+                    : handleNextQuestion
+                }
+                disabled={isFinishing || hasSubmittedResults}
+                className="bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground disabled:bg-slate-300 dark:disabled:bg-muted text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
               >
                 {currentQuestionIndex === shuffledQuestions.length - 1
-                  ? "Finish Quiz"
+                  ? isFinishing
+                    ? "Finishing..."
+                    : hasSubmittedResults
+                    ? "Finished"
+                    : "Finish Quiz"
                   : "Next Question"}
               </button>
             </div>
@@ -482,12 +485,16 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                     ? handleFinishQuiz
                     : handleNextQuestion
                 }
-                disabled={!existingAnswer}
-                className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-1.5"
+                disabled={!existingAnswer || isFinishing || hasSubmittedResults}
+                className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground disabled:bg-slate-300 dark:disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <span>
                   {currentQuestionIndex === shuffledQuestions.length - 1
-                    ? "Finish"
+                    ? isFinishing
+                      ? "Finishing..."
+                      : hasSubmittedResults
+                      ? "Finished"
+                      : "Finish"
                     : "Next"}
                 </span>
                 <ChevronRight className="w-4 h-4" />

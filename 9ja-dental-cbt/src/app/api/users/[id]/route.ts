@@ -19,6 +19,20 @@ export async function GET(
 
     // Get user from database
     const userData = await getUserById(id);
+    const profile = userData.profile ?? null;
+
+    const subscription =
+      typeof profile?.subscription === "string" && profile.subscription
+        ? profile.subscription
+        : "free";
+
+    const level = Number.isFinite(profile?.level)
+      ? Number(profile?.level)
+      : Number(profile?.level ?? 1) || 1;
+
+    const xp = Number.isFinite(profile?.xp)
+      ? Number(profile?.xp)
+      : Number(profile?.xp ?? 0) || 0;
 
     return NextResponse.json({
       success: true,
@@ -27,10 +41,12 @@ export async function GET(
         name: userData.name,
         email: userData.email,
         avatar: userData.image,
-        subscription: "free", // Default subscription
-        level: 1, // Default level
-        xp: 0, // Default XP
-        points: 0, // Default points
+        role: userData.role, // ✅ Include role field
+        bio: userData.bio, // ✅ Include bio field
+        subscription,
+        level,
+        xp,
+        points: xp,
         streak_count: 0, // Default streak
         created_at: userData.createdAt.toISOString(),
         updated_at: userData.updatedAt.toISOString(),
@@ -70,25 +86,43 @@ export async function PUT(
     }
 
     // Update user in database
-    const updatedUser = await updateUser(id, {
+    await updateUser(id, {
       name: updateData.name,
       image: updateData.avatar,
     });
 
+    const userData = await getUserById(id);
+    const profile = userData.profile ?? null;
+
+    const subscription =
+      typeof profile?.subscription === "string" && profile.subscription
+        ? profile.subscription
+        : "free";
+
+    const level = Number.isFinite(profile?.level)
+      ? Number(profile?.level)
+      : Number(profile?.level ?? 1) || 1;
+
+    const xp = Number.isFinite(profile?.xp)
+      ? Number(profile?.xp)
+      : Number(profile?.xp ?? 0) || 0;
+
     return NextResponse.json({
       success: true,
       data: {
-        id: updatedUser.id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        avatar: updatedUser.image,
-        subscription: "free",
-        level: 1,
-        xp: 0,
-        points: 0,
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        avatar: userData.image,
+        role: userData.role, // ✅ Include role field
+        bio: userData.bio, // ✅ Include bio field
+        subscription,
+        level,
+        xp,
+        points: xp,
         streak_count: 0,
-        created_at: updatedUser.createdAt.toISOString(),
-        updated_at: updatedUser.updatedAt.toISOString(),
+        created_at: userData.createdAt.toISOString(),
+        updated_at: userData.updatedAt.toISOString(),
       },
     });
   } catch (error) {

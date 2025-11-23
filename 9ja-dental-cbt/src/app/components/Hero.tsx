@@ -7,7 +7,7 @@ export default function Hero() {
   return (
     <div
       id="aboutUs"
-      className="relative z-10 flex flex-col items-center justify-center px-6 pt-32 pb-32 md:pt-40 md:pb-40 text-center min-h-screen bg-gray-200  dark:bg-black dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)] overflow-hidden"
+      className="relative z-10 flex flex-col items-center justify-center px-4 py-16 md:px-6 md:py-20 text-center min-h-screen bg-gray-200 dark:bg-black dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)] overflow-hidden"
     >
       {/* Left floating dental icons */}
       {/* <div className="absolute left-5 md:left-10 top-1/4 animate-float">
@@ -60,9 +60,6 @@ export default function Hero() {
       </div> */}
 
       {/* Content */}
-      <span className="px-3 py-1 text-xs font-medium text-white glass-effect rounded-full mb-4 border border-white border-opacity-20 relative z-20">
-        Testing Software
-      </span>
 
       <h1 className="max-w-4xl text-4xl md:text-6xl font-medium leading-tight tracking-tighter text-gray-900 dark:text-white relative z-20">
         Ace Your Dental Exams with{" "}
@@ -75,59 +72,27 @@ export default function Hero() {
         Learn, compete, and grow with Nigeria&apos;s most comprehensive dental
         CBT prep platform.
       </p>
-      <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-5 whitespace-normal relative z-20">
+      <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-4 whitespace-normal relative z-20">
         Learning tool created for dentists by dentists
       </p>
 
-      <div className="mt-12 flex flex-row sm:flex-row gap-4 relative z-20">
+      <div className="mt-8 flex flex-col sm:flex-row gap-4 relative z-20">
         <Link
           href="/login"
-          className="group relative px-5 sm:px-7 py-3.5 font-medium text-white bg-blue-600/70  hover:bg-blue-800 rounded-md transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
+          className="group relative min-w-[120px] px-6 py-3 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            <span>Get started</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              data-lucide="arrow-right"
-              className="lucide lucide-arrow-right w-4 h-4 group-hover:translate-x-1 transition-transform"
-              strokeWidth={1.5}
-            >
-              <path d="M5 12h14"></path>
-              <path d="m12 5 7 7-7 7"></path>
-            </svg>
+            Get started
           </span>
-          <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>
 
         <Link
           href="#features"
-          className="group relative px-5 sm:px-7 py-3.5 font-medium text-gray-800 dark:text-gray-200 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 overflow-hidden"
+          className="group relative min-w-[120px] px-6 py-3 font-medium text-gray-800 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
         >
-          <span className="relative z-10 flex items-center justify-center gap-2 ">
-            <span>Learn more</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-chevron-down transition-transform duration-300 group-hover:translate-y-0.5"
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            Learn more
           </span>
-          <span className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
         </Link>
       </div>
       <SocialProof />

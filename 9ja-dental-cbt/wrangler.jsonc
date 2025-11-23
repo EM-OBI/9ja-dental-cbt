@@ -2,7 +2,9 @@
   "main": ".open-next/worker.js",
   "name": "dental-cbt",
   "compatibility_date": "2025-03-25",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -30,6 +32,14 @@
   ],
   "ai": {
     "binding": "AI"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
   }
   // 👇 Add your staging environment here
   // "env": {

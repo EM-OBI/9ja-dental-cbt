@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Brain, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -37,10 +38,10 @@ type RawQuizItem = {
 type RawQuizContent =
   | RawQuizItem[]
   | {
-      questions?: RawQuizItem[];
-      multipleChoice?: RawQuizItem[];
-      trueFalse?: RawQuizItem[];
-    };
+    questions?: RawQuizItem[];
+    multipleChoice?: RawQuizItem[];
+    trueFalse?: RawQuizItem[];
+  };
 
 interface StudyMaterial {
   summary?: string;
@@ -144,6 +145,7 @@ interface JobStatus {
 }
 
 export function StudyEngine({ config }: StudyEngineProps) {
+  const router = useRouter();
   const isViewMode = config.mode === "view";
   const [isGenerating, setIsGenerating] = useState(!isViewMode);
   const [isLoadingExisting, setIsLoadingExisting] = useState(isViewMode);
@@ -188,15 +190,15 @@ export function StudyEngine({ config }: StudyEngineProps) {
 
     const progressState = data.progress
       ? {
-          summaryViewed: Boolean(data.progress.summaryViewed),
-          flashcardsCompleted: Boolean(data.progress.flashcardsCompleted),
-          quizScore:
-            typeof data.progress.quizScore === "number"
-              ? data.progress.quizScore
-              : null,
-          quizAttempts: data.progress.quizAttempts,
-          lastAccessedAt: data.progress.lastAccessedAt ?? null,
-        }
+        summaryViewed: Boolean(data.progress.summaryViewed),
+        flashcardsCompleted: Boolean(data.progress.flashcardsCompleted),
+        quizScore:
+          typeof data.progress.quizScore === "number"
+            ? data.progress.quizScore
+            : null,
+        quizAttempts: data.progress.quizAttempts,
+        lastAccessedAt: data.progress.lastAccessedAt ?? null,
+      }
       : null;
 
     return {
@@ -399,6 +401,11 @@ export function StudyEngine({ config }: StudyEngineProps) {
       setProgress(100);
       setIsGenerating(false);
       setCurrentPhase("Complete!");
+
+      // Redirect to library after successful generation
+      setTimeout(() => {
+        router.push("/study/library");
+      }, 1500);
     } catch (err) {
       console.error("Generation error:", err);
       setError(
@@ -406,7 +413,7 @@ export function StudyEngine({ config }: StudyEngineProps) {
       );
       setIsGenerating(false);
     }
-  }, [config, loadMaterialsById, pollJobStatus]);
+  }, [config, loadMaterialsById, pollJobStatus, router]);
 
   const handleRetry = useCallback(() => {
     if (isViewMode) {
@@ -489,7 +496,7 @@ export function StudyEngine({ config }: StudyEngineProps) {
     }
     const hasQuiz =
       (materials.quiz?.multipleChoice.length || 0) +
-        (materials.quiz?.trueFalse.length || 0) >
+      (materials.quiz?.trueFalse.length || 0) >
       0;
     if (hasQuiz && config.materialTypes.includes("quiz")) {
       options.push("quiz");
@@ -742,14 +749,14 @@ function normalizeQuizContent(
 
   let multipleChoice = Array.isArray(content.multipleChoice)
     ? content.multipleChoice
-        .map((item) => mapRawQuizItem(item))
-        .filter((item): item is QuizQuestion => Boolean(item))
+      .map((item) => mapRawQuizItem(item))
+      .filter((item): item is QuizQuestion => Boolean(item))
     : [];
 
   const trueFalse = Array.isArray(content.trueFalse)
     ? content.trueFalse
-        .map((item) => mapRawQuizItem(item, { allowBoolean: true }))
-        .filter((item): item is QuizQuestion => Boolean(item))
+      .map((item) => mapRawQuizItem(item, { allowBoolean: true }))
+      .filter((item): item is QuizQuestion => Boolean(item))
     : [];
 
   if (!multipleChoice.length && Array.isArray(content.questions)) {

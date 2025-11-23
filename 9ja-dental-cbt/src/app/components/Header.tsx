@@ -72,7 +72,7 @@ export default function Header() {
   return (
     <>
       <motion.header
-        className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-sm rounded-full"
+        className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-full"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
@@ -91,7 +91,7 @@ export default function Header() {
             >
               <Link
                 href="/welcome"
-                className="text-2xl font-bold dark:bg-gray-50 bg-gray-900 bg-clip-text text-transparent flex items-center"
+                className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center heading-font tracking-tight"
               >
                 DentalCBT
               </Link>
@@ -107,7 +107,7 @@ export default function Header() {
               <motion.a
                 key={link.href}
                 href={link.href}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 rounded-md transition-colors relative overflow-hidden group"
+                className="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-blue-600 rounded-md transition-colors relative overflow-hidden group"
                 variants={itemVariants}
                 whileHover={{
                   scale: 1.05,
@@ -117,7 +117,7 @@ export default function Header() {
               >
                 <span className="relative z-10">{link.label}</span>
                 <motion.span
-                  className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-md opacity-0 group-hover:opacity-100"
+                  className="absolute inset-0 bg-blue-100 rounded-md opacity-0 group-hover:opacity-100"
                   initial={{ scale: 0 }}
                   whileHover={{ scale: 1 }}
                   transition={{ duration: 0.2 }}
@@ -134,16 +134,16 @@ export default function Header() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/overview"
-                className="hidden md:flex items-center space-x-2 px-4 py-2 bg-blue-600/70 text-white rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
+                className="hidden md:flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg font-semibold text-sm"
               >
-                <span className="text-sm font-medium">Dashboard</span>
+                <span>Dashboard</span>
               </Link>
             </motion.div>
 
             {/* Mobile menu button */}
             <motion.button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-foreground hover:text-primary transition-colors"
+              className="md:hidden p-2 text-gray-900 hover:text-blue-600 transition-colors"
               variants={itemVariants}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

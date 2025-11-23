@@ -1,13 +1,10 @@
 "use client";
 
-import { initializeUser } from "@/store";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { trackLoginActivity } from "@/utils/activityTracker";
 
 export const hydrateClientAfterAuth = async () => {
-  await initializeUser();
-
   const userId = useUserStore.getState().user?.id;
 
   if (!userId) {
@@ -24,11 +21,8 @@ export const hydrateClientAfterAuth = async () => {
 
   const progressStore = useProgressStore.getState();
   progressStore.resetProgress();
-  await progressStore.loadProgressFromDatabase(userId);
 
   if (loginRecorded) {
     progressStore.updateStreak("login");
   }
-
-  progressStore.updateStats();
 };

@@ -1,20 +1,14 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { QuizSession, QuizActions } from "./types";
+import { QuizSession, QuizActions, Question } from "./types";
 import { addXp, getCurrentUserId } from "./userStore";
 
 interface QuizState {
   currentSession: QuizSession | null;
-  // questions removed - fetched when quiz starts
-  // quizHistory removed - now fetched from API
-  // availableSpecialties removed - fetch from API
   isLoading: boolean;
 }
 
 type QuizStore = QuizState & QuizActions;
-
-// Questions will be loaded from the API instead of mock data
-// Specialties will be loaded from the API
 
 // Create a user-specific storage key
 const getStorageKey = () => {
@@ -27,38 +21,19 @@ export const useQuizStore = create<QuizStore>()(
     (set, get) => ({
       // Initial state
       currentSession: null,
-      // questions removed - fetched when quiz starts
-      // quizHistory removed - now fetched from API
-      // availableSpecialties removed - fetch from API
       isLoading: false,
 
       // Actions
-      // fetchSpecialties removed - fetch from /api/specialties instead
-      fetchSpecialties: async () => {
-        // Deprecated - use API hook instead
-        console.warn("fetchSpecialties is deprecated - use /api/specialties");
-      },
+
 
       startQuiz: async (
         specialty: string,
         mode: "study" | "exam",
-        questionCount: number = 10 // Will be used in API call
+        questions: Question[] = []
       ) => {
         set({ isLoading: true });
 
         try {
-          // TODO: Fetch questions from API instead of from store
-          // Call /api/quiz/start with specialty, mode, questionCount
-          // For now, create empty session
-          console.warn(
-            "startQuiz needs to call API - questions no longer in store",
-            {
-              specialty,
-              mode,
-              questionCount,
-            }
-          );
-
           const userId = getCurrentUserId();
           if (!userId) {
             console.warn(
@@ -68,13 +43,12 @@ export const useQuizStore = create<QuizStore>()(
             return;
           }
 
-          // Placeholder - replace with API call
           const newSession: QuizSession = {
             id: `quiz-${Date.now()}`,
             userId,
             mode,
             specialty,
-            questions: [], // Will be fetched from API
+            questions,
             currentQuestionIndex: 0,
             answers: {},
             startTime: new Date().toISOString(),
@@ -210,7 +184,6 @@ export const useQuizStore = create<QuizStore>()(
         // Update state
         set({
           currentSession: null,
-          // quizHistory removed - no longer stored in Zustand
         });
 
         return completedSession;
@@ -222,34 +195,18 @@ export const useQuizStore = create<QuizStore>()(
         });
       },
 
-      saveQuizSession: () => {
-        const session = get().currentSession;
-        if (!session) return;
 
-        // In a real app, this would save to a backend
-        localStorage.setItem(
-          `quiz-session-${session.id}`,
-          JSON.stringify(session)
-        );
-      },
-
-      // loadQuizHistory removed - use API hook instead
-      // History is now fetched from /api/quiz/history with pagination
-
-      // loadQuestionsFromDatabase removed - questions fetched when quiz starts
-      // loadQuizQuestionsById removed - use API instead
     }),
     {
       name: getStorageKey(),
       storage: createJSONStorage(() => localStorage),
-      partialize: () => ({
+      partialize: (state) => ({
         // Don't persist quiz history - fetched from API
         // Don't persist current session to avoid stale state
+        // Actually, we might want to persist current session for page reloads?
+        // The original code said "Don't persist current session".
+        // I'll stick to that.
       }),
     }
   )
 );
-
-// Helper functions removed - use API hooks instead
-// Use /api/quiz/history for quiz stats
-// Use /api/users/stats for user statistics

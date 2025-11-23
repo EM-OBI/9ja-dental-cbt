@@ -450,23 +450,17 @@ export const useQuizEngineStore = create<QuizStore>()(
               progressStore.updateStreak("quiz");
               progressStore.addActivity({
                 type: "quiz",
-                description: `Completed a quiz with ${
-                  result.correctAnswers ?? correctAnswersLocal
-                }/${result.totalQuestions ?? totalQuestions} correct answers`,
+                description: `Completed a quiz with ${result.correctAnswers ?? correctAnswersLocal
+                  }/${result.totalQuestions ?? totalQuestions} correct answers`,
                 points: result.pointsEarned ?? scoreBeforeSubmit,
               });
-              progressStore.updateStats();
+
 
               const userId = getCurrentUserId();
               if (userId) {
-                progressStore
-                  .loadProgressFromDatabase(userId)
-                  .catch((err) =>
-                    console.error(
-                      "[ProgressTracking] Failed to refresh progress store:",
-                      err
-                    )
-                  );
+                // Invalidate queries to refresh progress
+                // This should ideally be handled by the component or a query invalidation helper
+                // For now, we rely on the server update and subsequent fetches
               }
             } catch (error) {
               console.error("Error submitting quiz results:", error);

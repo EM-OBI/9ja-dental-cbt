@@ -206,16 +206,14 @@ export interface UserActions {
   logout: () => void;
 }
 
+export type Question = QuizQuestion;
+
 export interface QuizActions {
-  // Data fetching
-  fetchSpecialties: () => Promise<void>;
-  // loadQuestionsFromDatabase removed - questions fetched when quiz starts via API
-  // loadQuizQuestionsById removed - use API instead
-  // Quiz management
+
   startQuiz: (
     specialty: string,
     mode: "study" | "exam",
-    questionCount: number
+    questions: Question[]
   ) => void;
   answerQuestion: (
     questionId: string,
@@ -228,8 +226,7 @@ export interface QuizActions {
   resumeQuiz: () => void;
   submitQuiz: () => QuizSession | undefined;
   resetQuiz: () => void;
-  saveQuizSession: () => void;
-  // loadQuizHistory removed - use API hook instead
+
 }
 
 // AI-generated study materials
@@ -286,7 +283,7 @@ export interface StudyPageUIState {
 
 export interface StudyActions {
   // Data fetching
-  fetchStudyMaterials: () => Promise<void>;
+
   // Session management
   startStudySession: (materialId: string) => void;
   pauseStudySession: () => void;
@@ -295,9 +292,7 @@ export interface StudyActions {
   addNote: (note: Omit<StudyNote, "id" | "timestamp">) => void;
   updateNote: (noteId: string, updates: Partial<StudyNote>) => void;
   deleteNote: (noteId: string) => void;
-  bookmarkMaterial: (materialId: string) => void;
-  updateProgress: (materialId: string, progress: number) => void;
-  uploadMaterial: (material: Omit<StudyMaterial, "id" | "uploadDate">) => void;
+
   // AI-generated materials actions
   addAIPackage: (
     packageData: Omit<AIStudyPackage, "id" | "generatedAt">
@@ -313,13 +308,12 @@ export interface StudyActions {
   updateStudyPageUI: (updates: Partial<StudyPageUIState>) => void;
   resetStudyPageUI: () => void;
   // Database integration
-  loadStudySessionsFromDatabase: (userId: string) => Promise<void>;
-  saveStudySessionToDatabase: (session: StudySession) => Promise<void>;
+
 }
 
 export interface ProgressActions {
   initializeStreakData: () => void;
-  updateStats: () => void;
+
   updateStreak: (
     activityType: "quiz" | "study" | "review" | "login" | "streak"
   ) => void;
@@ -332,7 +326,7 @@ export interface ProgressActions {
   clearRecentActivity: () => void;
   resetProgress: () => void;
   // Database integration
-  loadProgressFromDatabase: (userId: string) => Promise<void>;
+
 }
 
 export interface NotificationActions {

@@ -7,8 +7,6 @@ import {
   ProgressActions,
 } from "./types";
 import { useUserStore, addXp, getCurrentUserId } from "./userStore";
-// import { getQuizStats, getSpecialtyStats } from "./quizStore"; // Removed - use API hooks
-import { getStudyStats } from "./studyStore";
 import { getUserStorageKey } from "./storeUtils";
 
 interface ProgressState {
@@ -169,93 +167,6 @@ const generateEmptyStreakHistory = () => {
   return history;
 };
 
-const normalizeStreakHistoryFromCalendar = (
-  calendar?: Array<{
-    date?: string;
-    active?: boolean;
-    activityTypes?: unknown;
-    activityCount?: unknown;
-    streakMaintained?: boolean;
-  }>
-): StreakData["streakHistory"] => {
-  const baseHistory = generateEmptyStreakHistory();
-
-  if (!Array.isArray(calendar) || calendar.length === 0) {
-    return baseHistory;
-  }
-
-  type StreakHistoryEntry = StreakData["streakHistory"][number];
-  type StreakActivityType = StreakHistoryEntry["activityTypes"][number];
-
-  const asActivityType = (value: unknown): StreakActivityType | null => {
-    if (typeof value !== "string") return null;
-
-    switch (value.toLowerCase().trim()) {
-      case "quiz":
-        return "quiz";
-      case "study":
-        return "study";
-      case "review":
-        return "review";
-      case "login":
-        return "login";
-      case "streak":
-        return "streak";
-      default:
-        return null;
-    }
-  };
-
-  const historyByDate = new Map<string, StreakHistoryEntry>(
-    baseHistory.map((entry) => [entry.date, { ...entry }])
-  );
-
-  for (const entry of calendar) {
-    if (!entry || typeof entry.date !== "string") continue;
-
-    const normalizedDate = entry.date.split("T")[0];
-    const rawActivityTypes = Array.isArray(entry.activityTypes)
-      ? entry.activityTypes
-      : [];
-    const activityTypes = Array.from(
-      new Set(
-        rawActivityTypes
-          .map(asActivityType)
-          .filter((type): type is StreakActivityType => Boolean(type))
-      )
-    );
-
-    const normalizedActive = Boolean(
-      entry.active || entry.streakMaintained || activityTypes.length > 0
-    );
-    const normalizedActivityCount = Math.max(
-      typeof entry.activityCount === "number"
-        ? entry.activityCount
-        : activityTypes.length,
-      normalizedActive ? 1 : 0
-    );
-
-    const safeActivityTypes: StreakHistoryEntry["activityTypes"] =
-      normalizedActive
-        ? activityTypes.length > 0
-          ? activityTypes
-          : ["login"]
-        : [];
-
-    historyByDate.set(normalizedDate, {
-      date: normalizedDate,
-      active: normalizedActive,
-      activityTypes: safeActivityTypes,
-      activityCount: normalizedActive ? normalizedActivityCount : 0,
-    });
-  }
-
-  return Array.from(historyByDate.entries())
-    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-    .slice(-30)
-    .map(([, value]) => value);
-};
-
 // Calculate current streak from history
 const calculateCurrentStreak = (history: StreakData["streakHistory"]) => {
   let streak = 0;
@@ -357,275 +268,7 @@ export const useProgressStore = create<ProgressStore>()(
         });
       },
       // Database integration actions
-      loadProgressFromDatabase: async (userId: string) => {
-        set({ isLoading: true });
-        try {
-          // Fetch progress and streaks data from API
-          const [progressRes, streaksRes] = await Promise.all([
-            fetch(`/api/users/${userId}/progress`, {
-              method: "GET",
-              cache: "no-store",
-            }),
-            fetch(`/api/users/${userId}/streaks`, {
-              method: "GET",
-              cache: "no-store",
-            }),
-          ]);
 
-          const progressData = (await progressRes.json()) as {
-            success: boolean;
-            data?: Record<string, unknown>;
-          };
-          const streaksData = (await streaksRes.json()) as {
-            success: boolean;
-            data?: {
-              currentStreak: number;
-              longestStreak: number;
-              lastActivityDate: string | null;
-              streaks: {
-                dailyQuiz?: {
-                  currentCount: number;
-                  bestCount: number;
-                  lastActivityDate: string | null;
-                };
-                study?: {
-                  currentCount: number;
-                  bestCount: number;
-                  lastActivityDate: string | null;
-                };
-                login?: {
-                  currentCount: number;
-                  bestCount: number;
-                  lastActivityDate: string | null;
-                };
-              };
-              streakCalendar?: Array<{
-                date?: string;
-                active?: boolean;
-                activityTypes?: string[];
-                activityCount?: number;
-                streakMaintained?: boolean;
-              }>;
-            };
-          };
-
-          if (progressData.success && streaksData.success && streaksData.data) {
-            type ProgressApiActivity = {
-              id?: string;
-              type?: string;
-              title?: string;
-              description?: string;
-              timestamp?: string | Date;
-              metadata?: {
-                score?: number;
-                duration?: number;
-                points?: number;
-                [key: string]: unknown;
-              };
-            };
-
-            type ProgressApiPayload = {
-              totalQuizzes?: number;
-              completedQuizzes?: number;
-              averageScore?: number;
-              bestScore?: number;
-              totalStudyTime?: number;
-              totalStudyMinutes?: number;
-              totalQuestionsAnswered?: number;
-              correctAnswers?: number;
-              pointsEarned?: number;
-              xpEarned?: number;
-              loginCount?: number;
-              streakDaysMaintained?: number;
-              activeDays?: number;
-              focusSessions?: number;
-              currentLevel?: number;
-              pointsToNextLevel?: number;
-              currentStreak?: number;
-              longestStreak?: number;
-              lastActivityDate?: string | null;
-              recentActivity?: ProgressApiActivity[];
-            };
-
-            const apiProgress = (progressData.data || {}) as ProgressApiPayload;
-            const apiStreaksData = streaksData.data;
-            const streakHistory = normalizeStreakHistoryFromCalendar(
-              apiStreaksData.streakCalendar
-            );
-            const derivedCurrentStreak = calculateCurrentStreak(streakHistory);
-            const derivedLongestStreak = calculateLongestStreak(streakHistory);
-
-            const totalStudyMinutes = Number(
-              apiProgress.totalStudyMinutes ?? apiProgress.totalStudyTime ?? 0
-            );
-            const totalStudyHours = Number((totalStudyMinutes / 60).toFixed(1));
-            const totalQuizzes = Number(apiProgress.totalQuizzes ?? 0);
-            const completedQuizzes = Number(
-              apiProgress.completedQuizzes ?? totalQuizzes
-            );
-            const averageScore = Number(apiProgress.averageScore ?? 0);
-            const rawActivity = Array.isArray(apiProgress.recentActivity)
-              ? apiProgress.recentActivity
-              : [];
-
-            const normalizedActivity = rawActivity
-              .map((activity, index) => {
-                const activityDate = activity.timestamp
-                  ? new Date(activity.timestamp)
-                  : new Date();
-                const timestamp = activityDate.toISOString();
-                const mappedType =
-                  activity.type === "quiz_completed"
-                    ? "quiz"
-                    : activity.type === "achievement_unlocked"
-                    ? "achievement"
-                    : activity.type === "streak_milestone"
-                    ? "streak"
-                    : activity.type === "study_session"
-                    ? "study"
-                    : "study";
-
-                const baseDescription =
-                  activity.description ||
-                  activity.title ||
-                  (mappedType === "quiz"
-                    ? "Quiz completed"
-                    : mappedType === "study"
-                    ? "Study session"
-                    : "Activity update");
-
-                let detailedDescription = baseDescription;
-                if (
-                  mappedType === "study" &&
-                  typeof activity.metadata?.duration === "number"
-                ) {
-                  detailedDescription = `${baseDescription} · ${activity.metadata.duration} min`;
-                }
-                if (
-                  mappedType === "quiz" &&
-                  typeof activity.metadata?.score === "number"
-                ) {
-                  detailedDescription = `${baseDescription} · Score ${activity.metadata.score}%`;
-                }
-
-                return {
-                  id: activity.id ?? `activity-${index}`,
-                  type: mappedType as ProgressStats["recentActivity"][number]["type"],
-                  description: detailedDescription,
-                  timestamp,
-                  points:
-                    activity.metadata?.score ??
-                    activity.metadata?.points ??
-                    undefined,
-                };
-              })
-              .sort(
-                (a, b) =>
-                  new Date(b.timestamp).getTime() -
-                  new Date(a.timestamp).getTime()
-              );
-
-            const focusSessions = Number(
-              apiProgress.focusSessions ??
-                apiProgress.activeDays ??
-                normalizedActivity.filter(
-                  (activity) => activity.type === "study"
-                ).length
-            );
-
-            // Update streak data with real data from database (KV-cached)
-            const updatedStreakData: StreakData = {
-              userId,
-              currentStreak: Number(
-                apiStreaksData.currentStreak ?? apiProgress.currentStreak ?? 0
-              ),
-              longestStreak: Number(
-                apiStreaksData.longestStreak ??
-                  apiProgress.longestStreak ??
-                  apiProgress.streakDaysMaintained ??
-                  0
-              ),
-              lastActivityDate:
-                apiProgress.lastActivityDate ||
-                apiStreaksData.lastActivityDate ||
-                new Date().toISOString().split("T")[0],
-              streakHistory,
-              weeklyGoal: 5,
-              monthlyGoal: 20,
-            };
-
-            updatedStreakData.currentStreak = Math.max(
-              updatedStreakData.currentStreak,
-              derivedCurrentStreak
-            );
-            updatedStreakData.longestStreak = Math.max(
-              updatedStreakData.longestStreak,
-              derivedLongestStreak
-            );
-            const mostRecentActiveDay = [...streakHistory]
-              .reverse()
-              .find((day) => day.active);
-            if (mostRecentActiveDay) {
-              updatedStreakData.lastActivityDate = mostRecentActiveDay.date;
-            }
-
-            // Update progress stats with real data
-            const updatedProgressStats: ProgressStats = {
-              quizzes: {
-                total: totalQuizzes,
-                completed: completedQuizzes,
-                averageScore,
-                bestScore: Number(apiProgress.bestScore ?? averageScore ?? 0),
-                timeSpent: totalStudyMinutes,
-                bySpecialty: {},
-              },
-              study: {
-                totalHours: totalStudyHours,
-                totalMinutes: totalStudyMinutes,
-                materialsCompleted: Number(
-                  (apiProgress as Record<string, unknown>).materialsCompleted ??
-                    0
-                ),
-                notesCreated: Number(
-                  (apiProgress as Record<string, unknown>).notesCreated ?? 0
-                ),
-                focusSessions,
-                averageFocusTime:
-                  focusSessions > 0
-                    ? Math.round(totalStudyMinutes / focusSessions)
-                    : 0,
-              },
-              streaks: {
-                ...updatedStreakData,
-                currentStreak: updatedStreakData.currentStreak,
-                longestStreak: updatedStreakData.longestStreak,
-              },
-              level: {
-                current: Number(apiProgress.currentLevel ?? 1),
-                xp: Number(apiProgress.xpEarned ?? 0),
-                xpToNext: Number(apiProgress.pointsToNextLevel ?? 100),
-                totalXp: Number(apiProgress.xpEarned ?? 0),
-              },
-              achievements: get().achievements,
-              recentActivity: normalizedActivity,
-            };
-
-            set({
-              streakData: updatedStreakData,
-              progressStats: updatedProgressStats,
-              recentActivity: normalizedActivity,
-              isLoading: false,
-              lastFetched: Date.now(),
-            });
-          } else {
-            console.error("Failed to load progress from database");
-            set({ isLoading: false });
-          }
-        } catch (error) {
-          console.error("Error loading progress from database:", error);
-          set({ isLoading: false });
-        }
-      },
 
       // Actions
       initializeStreakData: () => {
@@ -647,67 +290,7 @@ export const useProgressStore = create<ProgressStore>()(
         });
       },
 
-      updateStats: () => {
-        const user = useUserStore.getState().user;
-        // const quizStats = getQuizStats(); // Removed - use API hooks
-        // const specialtyStats = getSpecialtyStats(); // Removed - use API hooks
 
-        // Placeholder quiz stats - should fetch from API
-        const quizStats = {
-          totalQuizzes: 0,
-          averageScore: 0,
-          bestScore: 0,
-          totalTimeSpent: 0,
-          accuracyTrend: [],
-        };
-
-        const specialtyStats: Record<
-          string,
-          { attempted: number; accuracy: number; averageTime: number }
-        > = {};
-
-        const studyStats = getStudyStats();
-        const streakData = get().streakData;
-        const studyTotalMinutes =
-          typeof (studyStats as { totalMinutes?: number }).totalMinutes ===
-          "number"
-            ? Number((studyStats as { totalMinutes?: number }).totalMinutes)
-            : Math.round(studyStats.totalHours * 60);
-        const resolvedStreakData: StreakData = {
-          ...streakData,
-          userId: user?.id ?? streakData.userId,
-        };
-
-        const updatedStats: ProgressStats = {
-          quizzes: {
-            total: quizStats.totalQuizzes,
-            completed: quizStats.totalQuizzes,
-            averageScore: quizStats.averageScore,
-            bestScore: quizStats.bestScore,
-            timeSpent: quizStats.totalTimeSpent,
-            bySpecialty: specialtyStats,
-          },
-          study: {
-            totalHours: studyStats.totalHours,
-            totalMinutes: studyTotalMinutes,
-            materialsCompleted: studyStats.materialsCompleted,
-            notesCreated: studyStats.totalNotes,
-            focusSessions: 0, // Would be calculated from study sessions
-            averageFocusTime: 0, // Would be calculated from study sessions
-          },
-          streaks: resolvedStreakData,
-          level: {
-            current: user?.level || 1,
-            xp: user?.xp || 0,
-            xpToNext: Math.pow(user?.level || 1, 2) * 25,
-            totalXp: user?.xp || 0,
-          },
-          achievements: get().achievements,
-          recentActivity: get().recentActivity,
-        };
-
-        set({ progressStats: updatedStats, streakData: resolvedStreakData });
-      },
 
       updateStreak: (
         activityType: "quiz" | "study" | "review" | "login" | "streak"
@@ -804,30 +387,25 @@ export const useProgressStore = create<ProgressStore>()(
         }
       },
 
-      addActivity: (activity: {
-        type: "quiz" | "study" | "achievement" | "streak";
-        description: string;
-        points?: number;
-      }) => {
-        const newActivity = {
-          ...activity,
-          id: `activity-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-        };
-
-        const recentActivity = [newActivity, ...get().recentActivity].slice(
-          0,
-          20
-        );
-
-        set({ recentActivity });
+      addActivity: (activity) => {
+        set((state) => ({
+          recentActivity: [
+            {
+              id: `activity-${Date.now()}`,
+              type: activity.type,
+              description: activity.description,
+              timestamp: new Date().toISOString(),
+              points: activity.points,
+            },
+            ...state.recentActivity,
+          ].slice(0, 50), // Keep last 50 activities
+        }));
       },
 
       clearRecentActivity: () => {
         set({ recentActivity: [] });
       },
 
-      // Helper method to update achievement progress
       updateAchievementProgress: () => {
         const { progressStats, achievements } = get();
 
@@ -900,12 +478,13 @@ export const useProgressStore = create<ProgressStore>()(
       },
     }),
     {
-      name: "progress",
-      storage: createJSONStorage(getScopedStorage),
+      name: "progress-storage",
+      storage: createJSONStorage(() => getScopedStorage()),
       partialize: (state) => ({
         streakData: state.streakData,
         achievements: state.achievements,
-        // recentActivity is loaded from database, no need to persist in localStorage
+        recentActivity: state.recentActivity,
+        // Don't persist progressStats as it's derived/fetched
       }),
     }
   )

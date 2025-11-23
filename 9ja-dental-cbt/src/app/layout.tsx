@@ -7,7 +7,9 @@ import {
   Nunito_Sans,
 } from "next/font/google";
 import "../globals.css";
+import QueryProvider from "@/providers/QueryProvider";
 import ClientLayout from "@/components/ClientLayout";
+import { StoreSynchronizer } from "@/components/StoreSynchronizer";
 
 // Force dynamic rendering to avoid SSR issues
 export const dynamic = "force-dynamic";
@@ -54,7 +56,10 @@ export default function RootLayout({
       className={`${inter.variable} ${googleSans.variable} ${playfair.variable} ${allura.variable} ${dancing.variable} h-full`}
     >
       <body className="bg-background text-foreground h-full antialiased">
-        <ClientLayout>{children}</ClientLayout>
+        <QueryProvider>
+          <StoreSynchronizer />
+          <ClientLayout>{children}</ClientLayout>
+        </QueryProvider>
       </body>
     </html>
   );

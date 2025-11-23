@@ -1,13 +1,12 @@
 "use client";
 import Link from "next/link";
-import StatsSection from "./Stats";
 import SocialProof from "./SocialProof";
 
 export default function Hero() {
   return (
     <div
       id="aboutUs"
-      className="relative z-10 flex flex-col items-center justify-center px-4 py-16 md:px-6 md:py-20 text-center min-h-screen bg-gray-200 dark:bg-black dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)] overflow-hidden"
+      className="relative z-10 flex flex-col items-center justify-center px-4 py-12 md:px-6 md:py-16 text-center min-h-screen bg-gray-50 overflow-hidden"
     >
       {/* Left floating dental icons */}
       {/* <div className="absolute left-5 md:left-10 top-1/4 animate-float">
@@ -61,42 +60,38 @@ export default function Hero() {
 
       {/* Content */}
 
-      <h1 className="max-w-4xl text-4xl md:text-6xl font-medium leading-tight tracking-tighter text-gray-900 dark:text-white relative z-20">
+      <h1 className="max-w-4xl text-4xl md:text-6xl font-bold leading-tight tracking-tight text-gray-900 relative z-20 heading-font">
         Ace Your Dental Exams with{" "}
-        <span className="cursive-font-two text-6xl md:text-7xl">
+        <span className="cursive-font-two text-5xl md:text-7xl text-black">
           Confidence
         </span>
       </h1>
 
-      <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-6 whitespace-normal relative z-20">
+      <p className="md:text-xl max-w-2xl text-base text-gray-600 mt-6 leading-relaxed relative z-20 font-light">
         Learn, compete, and grow with Nigeria&apos;s most comprehensive dental
-        CBT prep platform.
-      </p>
-      <p className="md:text-xl max-w-2xl text-base dark:text-neutral-300 text-black mt-4 whitespace-normal relative z-20">
-        Learning tool created for dentists by dentists
+        CBT prep platform. Learning tool created for dentists by dentists
       </p>
 
-      <div className="mt-8 flex flex-col sm:flex-row gap-4 relative z-20">
+      <div className="mt-8 flex flex-row gap-4 relative z-20">
         <Link
           href="/login"
-          className="group relative min-w-[120px] px-6 py-3 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="group relative min-w-[120px] px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            Get started
+            Get Started
           </span>
         </Link>
 
         <Link
           href="#features"
-          className="group relative min-w-[120px] px-6 py-3 font-medium text-gray-800 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+          className="group relative min-w-[120px] px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 shadow-md hover:shadow-lg"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            Learn more
+            Learn More
           </span>
         </Link>
       </div>
       <SocialProof />
-      <StatsSection />
     </div>
   );
 }

@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { User, UserActions, UserPreferences } from "./types";
-import { databaseService } from "@/services/database";
-import { authClient } from "@/modules/auth/utils/auth-client";
 import { calculateLevelFromXp, calculateXpForLevel } from "@/lib/leveling";
 import { clearUserStores } from "./storeUtils";
 
@@ -13,28 +11,6 @@ interface UserState {
 }
 
 type UserStore = UserState & UserActions;
-
-// Default user preferences
-const defaultPreferences: UserPreferences = {
-  theme: "system",
-  notifications: {
-    studyReminders: true,
-    streakAlerts: true,
-    progressReports: true,
-    achievements: true,
-  },
-  quiz: {
-    defaultMode: "study",
-    showExplanations: true,
-    timePerQuestion: 60,
-    autoSubmit: false,
-  },
-  study: {
-    defaultFocusTime: 25,
-    breakTime: 5,
-    soundEffects: true,
-  },
-};
 
 export const useUserStore = create<UserStore>()(
   persist(
@@ -103,234 +79,6 @@ export const useUserStore = create<UserStore>()(
   )
 );
 
-// Helper functions
-export const initializeUser = async () => {
-  // Check for authentication tokens and load user data from API
-  const { setUser, logout, user: existingUser } = useUserStore.getState();
-  const previousUserId = existingUser?.id ?? null;
-
-  const cloneDefaultPreferences = (): UserPreferences => ({
-    theme: defaultPreferences.theme,
-    notifications: { ...defaultPreferences.notifications },
-    quiz: { ...defaultPreferences.quiz },
-    study: { ...defaultPreferences.study },
-  });
-
-  const mergeUserPreferences = (rawPreferences: unknown): UserPreferences => {
-    const merged = cloneDefaultPreferences();
-
-    if (!rawPreferences || typeof rawPreferences !== "object") {
-      return merged;
-    }
-
-    const prefs = rawPreferences as Record<string, unknown>;
-
-    if (
-      typeof prefs.theme === "string" &&
-      ["light", "dark", "system"].includes(prefs.theme)
-    ) {
-      merged.theme = prefs.theme as UserPreferences["theme"];
-    }
-
-    const notificationSource = prefs.notifications;
-    if (typeof notificationSource === "boolean") {
-      merged.notifications.studyReminders = notificationSource;
-      merged.notifications.streakAlerts = notificationSource;
-      merged.notifications.progressReports = notificationSource;
-      merged.notifications.achievements = notificationSource;
-    } else if (notificationSource && typeof notificationSource === "object") {
-      const notifications = notificationSource as Record<string, unknown>;
-      if (typeof notifications.studyReminders === "boolean") {
-        merged.notifications.studyReminders = notifications.studyReminders;
-      }
-      if (typeof notifications.streakAlerts === "boolean") {
-        merged.notifications.streakAlerts = notifications.streakAlerts;
-      }
-      if (typeof notifications.progressReports === "boolean") {
-        merged.notifications.progressReports = notifications.progressReports;
-      }
-      if (typeof notifications.achievements === "boolean") {
-        merged.notifications.achievements = notifications.achievements;
-      }
-      if (typeof notifications.study_reminders === "boolean") {
-        merged.notifications.studyReminders = notifications.study_reminders;
-      }
-    }
-
-    if (typeof prefs.study_reminders === "boolean") {
-      merged.notifications.studyReminders = prefs.study_reminders;
-    }
-
-    const quizSource = prefs.quiz;
-    if (quizSource && typeof quizSource === "object") {
-      const quizPrefs = quizSource as Record<string, unknown>;
-      if (
-        typeof quizPrefs.defaultMode === "string" &&
-        ["study", "exam"].includes(quizPrefs.defaultMode)
-      ) {
-        merged.quiz.defaultMode = quizPrefs.defaultMode as "study" | "exam";
-      }
-      if (typeof quizPrefs.showExplanations === "boolean") {
-        merged.quiz.showExplanations = quizPrefs.showExplanations;
-      }
-      if (typeof quizPrefs.timePerQuestion === "number") {
-        merged.quiz.timePerQuestion = quizPrefs.timePerQuestion;
-      }
-      if (typeof quizPrefs.autoSubmit === "boolean") {
-        merged.quiz.autoSubmit = quizPrefs.autoSubmit;
-      }
-    }
-
-    const studySource = prefs.study;
-    if (studySource && typeof studySource === "object") {
-      const studyPrefs = studySource as Record<string, unknown>;
-      if (typeof studyPrefs.defaultFocusTime === "number") {
-        merged.study.defaultFocusTime = studyPrefs.defaultFocusTime;
-      }
-      if (typeof studyPrefs.breakTime === "number") {
-        merged.study.breakTime = studyPrefs.breakTime;
-      }
-      if (typeof studyPrefs.soundEffects === "boolean") {
-        merged.study.soundEffects = studyPrefs.soundEffects;
-      }
-    }
-
-    return merged;
-  };
-
-  const buildUserFromSources = (
-    sessionUser: {
-      id: string;
-      email: string;
-      name?: string | null;
-      image?: string | null;
-      role?: string | null;
-    },
-    backendUser?: Record<string, unknown> | null
-  ): User => {
-    const backend = backendUser ?? null;
-
-    const nameFromBackend =
-      backend && typeof backend.name === "string"
-        ? (backend.name as string)
-        : undefined;
-    const nameFromSession =
-      typeof sessionUser.name === "string" && sessionUser.name.trim().length
-        ? sessionUser.name
-        : undefined;
-    const fallbackName = sessionUser.email.split("@")[0];
-
-    const allowedSubscriptions: User["subscription"][] = [
-      "free",
-      "premium",
-      "enterprise",
-    ];
-    const rawSubscription =
-      backend && typeof backend.subscription === "string"
-        ? (backend.subscription as string)
-        : undefined;
-    const subscription = allowedSubscriptions.includes(
-      rawSubscription as User["subscription"]
-    )
-      ? (rawSubscription as User["subscription"])
-      : "free";
-
-    // Get role from backend or session, defaulting to "user"
-    const allowedRoles: User["role"][] = ["user", "admin", "superadmin"];
-    const rawRole = (backend && backend.role) || sessionUser.role || "user";
-    const role = allowedRoles.includes(rawRole as User["role"])
-      ? (rawRole as User["role"])
-      : "user";
-
-    const rawLevel = backend ? backend.level : undefined;
-    const level =
-      typeof rawLevel === "number" ? rawLevel : Number(rawLevel ?? 1) || 1;
-
-    const rawXp = backend ? backend.xp : undefined;
-    const xp = typeof rawXp === "number" ? rawXp : Number(rawXp ?? 0) || 0;
-
-    const rawCreatedAt = backend
-      ? backend["created_at"] ?? backend["createdAt"]
-      : undefined;
-    const joinedDate =
-      typeof rawCreatedAt === "string"
-        ? rawCreatedAt
-        : rawCreatedAt instanceof Date
-        ? rawCreatedAt.toISOString()
-        : new Date().toISOString();
-
-    const preferences = mergeUserPreferences(
-      backend ? backend["preferences"] : undefined
-    );
-
-    const rawAvatar = backend ? backend.avatar : undefined;
-
-    return {
-      id: sessionUser.id,
-      name: nameFromBackend || nameFromSession || fallbackName,
-      email: sessionUser.email,
-      avatar:
-        (typeof rawAvatar === "string" ? rawAvatar : undefined) ||
-        sessionUser.image ||
-        undefined,
-      role, // Include role in the returned user object
-      subscription,
-      level,
-      xp,
-      joinedDate,
-      preferences,
-    };
-  };
-
-  try {
-    useUserStore.setState({ isLoading: true });
-
-    const session = await authClient.getSession();
-    const sessionUser = session?.data?.user;
-
-    if (!sessionUser) {
-      logout();
-      return;
-    }
-
-    // Type assertion for custom fields (role) that may exist on the session user
-    const sessionUserWithRole = sessionUser as typeof sessionUser & {
-      role?: string | null;
-    };
-
-    // If the authenticated user changed, clear user-specific storage before rehydrating
-    if (previousUserId && previousUserId !== sessionUser.id) {
-      try {
-        clearUserStores(previousUserId);
-        const { useProgressStore } = await import("./progressStore");
-        useProgressStore.getState().resetProgress();
-      } catch (cleanupError) {
-        console.warn("Failed to reset stores for previous user", cleanupError);
-      }
-    }
-
-    let backendUser: Record<string, unknown> | null = null;
-    try {
-      backendUser = (await databaseService.getUserById(
-        sessionUserWithRole.id
-      )) as Record<string, unknown> | null;
-    } catch (error) {
-      console.warn(
-        "Unable to fetch user from backend, using session data only",
-        error
-      );
-    }
-
-    const user = buildUserFromSources(sessionUserWithRole, backendUser);
-    setUser(user);
-  } catch (error) {
-    console.error("Failed to initialize user:", error);
-    logout();
-  } finally {
-    useUserStore.setState({ isLoading: false });
-  }
-};
-
 export const getCurrentUserId = (): string | null => {
   return useUserStore.getState().user?.id ?? null;
 };
@@ -348,7 +96,7 @@ export const addXp = (points: number) => {
   const { user, updateUser } = useUserStore.getState();
   if (user) {
     const newXp = user.xp + points;
-  const newLevel = calculateLevelFromXp(newXp);
+    const newLevel = calculateLevelFromXp(newXp);
 
     updateUser({
       xp: newXp,
@@ -357,16 +105,8 @@ export const addXp = (points: number) => {
 
     // If level increased, show achievement notification
     if (newLevel > user.level) {
-      // This would trigger a notification in the notification store
       console.log(`Level up! You are now level ${newLevel}`);
     }
   }
 };
 
-/**
- * Refresh user data from the backend
- * Useful when user data has been updated (e.g., role change in database)
- */
-export const refreshUserData = async () => {
-  await initializeUser();
-};

@@ -53,8 +53,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
   // Auto-save quiz progress
   useQuizAutoSave({
     userId: user?.id || "",
-    sessionId: config.sessionId || "",
-    enabled: true,
+    sessionId: config?.sessionId || `temp-${Date.now()}`,
+    enabled: !!config?.sessionId && !!user?.id,
     debounceMs: 2000,
   });
 
@@ -364,11 +364,10 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
 
             <button
               onClick={handleBookmark}
-              className={`ml-4 p-2 rounded-lg border transition-colors ${
-                isBookmarked
+              className={`ml-4 p-2 rounded-lg border transition-colors ${isBookmarked
                   ? "border-slate-900 dark:border-ring bg-slate-50 dark:bg-card"
                   : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-ring"
-              }`}
+                }`}
             >
               {isBookmarked ? (
                 <BookmarkCheck className="w-4 h-4" />
@@ -460,8 +459,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                   ? isFinishing
                     ? "Finishing..."
                     : hasSubmittedResults
-                    ? "Finished"
-                    : "Finish Quiz"
+                      ? "Finished"
+                      : "Finish Quiz"
                   : "Next Question"}
               </button>
             </div>
@@ -493,8 +492,8 @@ export function QuizEngine({ config, onExit }: QuizEngineProps) {
                     ? isFinishing
                       ? "Finishing..."
                       : hasSubmittedResults
-                      ? "Finished"
-                      : "Finish"
+                        ? "Finished"
+                        : "Finish"
                     : "Next"}
                 </span>
                 <ChevronRight className="w-4 h-4" />

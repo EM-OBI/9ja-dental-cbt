@@ -8,7 +8,7 @@ import { getDb } from "@/db";
 import type { AuthUser } from "@/modules/auth/models/user.model";
 
 /**
- * Cached auth instance singleton so we don't create a new instance every time
+ * Cached auth instance singleton
  */
 let cachedAuth: ReturnType<typeof betterAuth> | null = null;
 
@@ -31,6 +31,24 @@ async function getAuth() {
     }),
     emailAndPassword: {
       enabled: true,
+      requireEmailVerification: true,
+      autoSignIn: false,
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }: { user: { email: string; name: string; id: string }; url: string }) => {
+        try {
+          const { sendVerificationEmail } = await import("@/lib/email/email-service");
+          const result = await sendVerificationEmail(user.email, url);
+
+          if (!result.success) {
+            console.error("Email send failed:", result.error);
+          }
+        } catch (error) {
+          console.error("Error sending verification email:", error);
+        }
+      },
     },
     socialProviders: {
       google: {
@@ -40,11 +58,14 @@ async function getAuth() {
         clientSecret: env.GOOGLE_CLIENT_SECRET!,
       },
     },
-    plugins: [nextCookies()],
+    plugins: [
+      nextCookies(),
+    ],
   });
 
   return cachedAuth;
 }
+
 /**
  * Get the current authenticated user from the session
  * Returns null if no user is authenticated
@@ -60,7 +81,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return null;
     }
 
-    // Type assertion for custom fields (bio, role) added to user table
     const user = session.user as typeof session.user & {
       bio?: string;
       role?: "user" | "admin";
@@ -81,7 +101,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
 /**
  * Get the current authenticated user or throw an error
- * Use this when authentication is required
  */
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getCurrentUser();

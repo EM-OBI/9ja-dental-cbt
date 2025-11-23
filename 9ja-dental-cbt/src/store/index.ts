@@ -1,7 +1,7 @@
 // Main store exports and initialization
-import { useUserStore, initializeUser } from "./userStore";
+import { useUserStore } from "./userStore";
 import { useQuizStore } from "./quizStore";
-import { useStudyStore, getStudyStats } from "./studyStore";
+import { useStudyStore } from "./studyStore";
 import { useProgressStore } from "./progressStore";
 import { useThemeStore, initializeTheme } from "./themeStore";
 import {
@@ -13,17 +13,12 @@ import {
 // Re-export everything
 export {
   useUserStore,
-  initializeUser,
   addXp,
   getCurrentUserId,
 } from "./userStore";
 export { useQuizStore } from "./quizStore";
 export {
   useStudyStore,
-  getStudyStats,
-  getRecentMaterials,
-  getBookmarkedMaterials,
-  searchMaterials,
 } from "./studyStore";
 export {
   useProgressStore,
@@ -57,15 +52,8 @@ export type * from "./types";
 
 // Store initialization
 export const initializeStores = () => {
-  // Initialize user store
-  initializeUser();
-
   // Initialize theme system
   initializeTheme();
-
-  // Update progress stats
-  const { updateStats } = useProgressStore.getState();
-  updateStats();
 
   // Request notification permission
   requestNotificationPermission();
@@ -97,15 +85,15 @@ export const useAppState = () => {
 
 // Combined stats selector
 export const useCombinedStats = () => {
-  // getQuizStats removed - use useQuizHistory hook from API instead
-  const studyStats = getStudyStats();
+  // Deprecated: Stats are now fetched via TanStack Query hooks
+  // (useQuizQueries, useStudyQueries, useProgressQueries)
   const progressStats = useProgressStore((state) => state.progressStats);
   const achievements = useProgressStore((state) => state.achievements);
 
   return {
-    quiz: null, // Deprecated - use useQuizHistory hook
-    study: studyStats,
-    progress: progressStats,
+    quiz: null,
+    study: null,
+    progress: progressStats, // Local progress stats (might be stale/empty)
     achievements,
     unlockedAchievements: achievements.filter((a) => a.isUnlocked),
     pendingAchievements: achievements.filter(

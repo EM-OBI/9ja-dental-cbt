@@ -31,7 +31,8 @@ export function SignupForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [formData, setFormData] = useState<SignUpSchema>({
     username: "",
     email: "",
@@ -43,7 +44,7 @@ export function SignupForm({
 
   const signInWithGoogle = async () => {
     try {
-      setIsLoading(true);
+      setIsGoogleLoading(true);
       await authClient.signIn.social({
         provider: "google",
         callbackURL: dashboardRoutes.dashboard,
@@ -51,7 +52,7 @@ export function SignupForm({
     } catch (error) {
       console.error("Google sign-in error:", error);
       toast.error("Failed to sign in with Google");
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
@@ -66,7 +67,7 @@ export function SignupForm({
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsLoading(true);
+    setIsEmailLoading(true);
     setErrors({});
 
     // Validate with Zod
@@ -81,7 +82,7 @@ export function SignupForm({
         }
       });
       setErrors(fieldErrors);
-      setIsLoading(false);
+      setIsEmailLoading(false);
       return;
     }
 
@@ -94,12 +95,13 @@ export function SignupForm({
         console.error("Failed to hydrate state after sign-up", error);
       }
 
-      toast.success(message.toString());
-      router.push(dashboardRoutes.dashboard);
+      toast.success("Account created! Please check your email to verify your account.");
+      setFormData({ username: "", email: "", password: "" });
+      // Don't redirect, let them see the message
     } else {
       toast.error(message.toString());
     }
-    setIsLoading(false);
+    setIsEmailLoading(false);
   }
 
   return (
@@ -117,9 +119,9 @@ export function SignupForm({
                 variant="outline"
                 className="w-full"
                 onClick={signInWithGoogle}
-                disabled={isLoading}
+                disabled={isGoogleLoading || isEmailLoading}
               >
-                {isLoading ? (
+                {isGoogleLoading ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" label={null} />
                     Signing up...
@@ -191,8 +193,8 @@ export function SignupForm({
                     <p className="text-sm text-red-500">{errors.password}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isGoogleLoading || isEmailLoading}>
+                  {isEmailLoading ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" label={null} />
                       Loading...

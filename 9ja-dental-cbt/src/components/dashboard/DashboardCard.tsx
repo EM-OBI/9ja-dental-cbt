@@ -12,42 +12,44 @@ export default function DashboardCard({
   return (
     <div
       className={cn(
-        "bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border p-6 transition-all hover:border-slate-300 dark:hover:border-slate-600",
+        "bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 transition-all duration-300 hover:shadow-lg hover:border-gray-200 dark:hover:border-gray-700 group",
         className
       )}
     >
-      <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-muted-foreground">
-          {title}
-        </p>
-        <p className="text-4xl font-semibold text-slate-900 dark:text-foreground">
-          {value}
-        </p>
-        {subtitle && (
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            {subtitle}
+      <div className="space-y-4">
+        <div className="flex items-start justify-between">
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            {title}
           </p>
-        )}
+          {trend && (
+            <div className={cn(
+              "px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1",
+              trend.isPositive
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+            )}>
+              <span>{trend.value > 0 ? "+" : ""}{trend.value}%</span>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            {value}
+          </p>
+          {subtitle && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
 
       {trend && (
-        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-border/50">
-          <div className="flex items-baseline gap-2">
-            <span
-              className={cn(
-                "text-sm font-medium tabular-nums",
-                trend.isPositive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
-              )}
-            >
-              {trend.value > 0 ? "+" : ""}
-              {trend.value}%
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-500">
-              vs {trend.period}
-            </span>
-          </div>
+        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-gray-800/50 flex items-center gap-2">
+          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+            vs {trend.period}
+          </span>
         </div>
       )}
     </div>

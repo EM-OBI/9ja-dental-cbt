@@ -1,7 +1,7 @@
 "use client";
 
 import { useUserStore } from "@/store/userStore";
-import { refreshUserData } from "@/store/userStore";
+import { useRefreshUserData } from "@/hooks/useLoadUserData";
 import { useState } from "react";
 
 /**
@@ -10,6 +10,7 @@ import { useState } from "react";
  */
 export function UserRoleDebugger() {
   const { user } = useUserStore();
+  const { refreshUserData } = useRefreshUserData();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -49,13 +50,12 @@ export function UserRoleDebugger() {
         <p>
           <span className="font-semibold">Role:</span>{" "}
           <span
-            className={`px-2 py-0.5 rounded ${
-              user.role === "admin"
+            className={`px-2 py-0.5 rounded ${user.role === "admin"
                 ? "bg-green-600"
                 : user.role === "superadmin"
-                ? "bg-purple-600"
-                : "bg-gray-600"
-            }`}
+                  ? "bg-purple-600"
+                  : "bg-gray-600"
+              }`}
           >
             {user.role || "user"}
           </span>

@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/(dashboard)/components/Sidebar";
 import BottomNav from "./components/bottom-nav";
-import DesktopHeader from "./components/header/DesktopHeader";
-import MobileHeader from "./components/header/MobileHeader";
 import { StreakCalendarDrawer } from "@/components/StreakCalendarDrawer";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { authClient } from "@/modules/auth/utils/auth-client";
 import { useLoadUserData } from "@/hooks/useLoadUserData";
 import { cn } from "@/lib/utils";
+import { NotificationPopover } from "@/components/ui/NotificationPopover";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
@@ -79,20 +78,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Desktop Header - Hidden on mobile */}
-        <header className="hidden lg:block bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border z-10">
-          <DesktopHeader isDesktopCollapsed={isDesktopCollapsed} />
-        </header>
-
-        {/* Mobile Header - Hidden on desktop */}
-        <header className="lg:hidden bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border z-10">
-          <MobileHeader
-            isSidebarOpen={isMobileSidebarOpen}
-            onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
-            // onStreakCalendarOpen={() => setIsStreakCalendarOpen(true)}
-          />
-        </header>
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Notification Icon - Absolute Top Right */}
+        <div className="absolute top-4 right-4 z-20">
+          <NotificationPopover />
+        </div>
 
         {/* Page Content - Scrollable Area */}
         <main
@@ -101,8 +91,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             "flex-1 overflow-y-auto overflow-x-hidden min-h-0",
             "px-4 lg:px-6",
             "pb-24 lg:pb-6",
-            "pt-[5.5rem] supports-[padding:env(safe-area-inset-top)]:pt-[calc(env(safe-area-inset-top)+5rem)]",
-            "lg:pt-6",
+            "pt-16 lg:pt-6", // Added top padding for mobile menu button space
             null
           )}
         >
@@ -122,7 +111,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30">
         <BottomNav />
       </div>
 

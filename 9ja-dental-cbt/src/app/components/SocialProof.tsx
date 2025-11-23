@@ -118,7 +118,7 @@ export default function SocialProof({
                 {user.image ? (
                   <Image
                     src={user.image}
-                    alt={user.name}
+                    alt="user rounded cards"
                     width={36}
                     height={36}
                     className="w-9 h-9 rounded-full border-2 border-black object-cover"
@@ -128,10 +128,6 @@ export default function SocialProof({
                     {getInitials(user.name)}
                   </div>
                 )}
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  {user.name}
-                </div>
               </div>
             ))}
           </>
@@ -154,14 +150,12 @@ export default function SocialProof({
           {count >= 10000
             ? "10k+"
             : count >= 1000
-            ? `${Math.floor(count / 1000)}k+`
-            : `${count}+`}
+              ? `${Math.floor(count / 1000)}k+`
+              : `${count}+`}
         </div>
       </div>
       <div>
-        <p className="text-sm dark:text-gray-100 text-black">
-          Trusted by {formattedCount}+ Users
-        </p>
+        <p className="text-sm text-black">Trusted by {formattedCount}+ Users</p>
       </div>
     </div>
   );

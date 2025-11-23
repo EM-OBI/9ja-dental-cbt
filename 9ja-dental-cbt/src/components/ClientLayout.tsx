@@ -7,6 +7,13 @@ interface ClientLayoutProps {
   children: ReactNode;
 }
 
+import { Toaster } from "react-hot-toast";
+
 export default function ClientLayout({ children }: ClientLayoutProps) {
-  return <AppStateProvider>{children}</AppStateProvider>;
+  return (
+    <AppStateProvider>
+      {children}
+      <Toaster />
+    </AppStateProvider>
+  );
 }

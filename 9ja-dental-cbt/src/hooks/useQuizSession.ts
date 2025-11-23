@@ -1,11 +1,7 @@
-/**
- * useQuizSession Hook
- * Manages quiz session lifecycle with API integration
- * Handles quiz start, progress tracking, and submission
- */
-
 import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { QuizConfig, Question, Answer } from "@/types/definitions";
+import { databaseService } from "@/services/database";
 
 interface StartQuizResponse {
   sessionId: string;
@@ -64,143 +60,115 @@ interface UseQuizSessionReturn {
 }
 
 export function useQuizSession(): UseQuizSessionReturn {
-  const [isStarting, setIsStarting] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startQuiz = useCallback(
-    async (
-      config: QuizConfig & { userId?: string }
-    ): Promise<StartQuizResponse | null> => {
-      setIsStarting(true);
-      setError(null);
+  const startMutation = useMutation({
+    mutationFn: async (config: QuizConfig & { userId?: string }) => {
+      const payload = {
+        quizType: config.mode || "practice",
+        specialtyId: config.specialtyId,
+        questionCount: config.totalQuestions,
+        timeLimit: config.timeLimit,
+      };
 
-      try {
-        const response = await fetch("/api/quiz/start", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            quizType: config.mode || "practice", // Map mode to quizType
-            specialtyId: config.specialtyId, // Send specialty ID to backend
-            questionCount: config.totalQuestions,
-            timeLimit: config.timeLimit,
-          }),
-        });
+      // API returns data directly, not wrapped in {success, data}
+      const response = await fetch("/api/quiz/start", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-        if (!response.ok) {
-          const errorData = (await response
-            .json()
-            .catch(() => ({ error: "Unknown error" }))) as { error?: string };
-          throw new Error(errorData.error || "Failed to start quiz");
-        }
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(errorBody.error || `Failed to start quiz: ${response.statusText}`);
+      }
 
-        const data = (await response.json()) as {
-          sessionId: string;
-          questions: Question[];
-          seed?: string;
-          specialtyName?: string;
-        };
+      const data = await response.json() as {
+        sessionId: string;
+        questions: unknown[];
+        quizType?: string;
+        totalQuestions?: number;
+        timeLimit?: number;
+        specialtyName?: string;
+      };
 
-        return {
+      return {
+        sessionId: data.sessionId,
+        questions: data.questions as Question[],
+        config: {
+          ...config,
           sessionId: data.sessionId,
-          questions: data.questions,
-          config: {
-            ...config,
-            sessionId: data.sessionId,
-            seed: data.seed,
-            specialtyName: data.specialtyName || config.specialtyName,
-          },
-        };
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to start quiz";
-        setError(errorMessage);
-        console.error("[useQuizSession] Error starting quiz:", err);
+          specialtyName: data.specialtyName || config.specialtyName,
+        },
+      } as StartQuizResponse;
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to start quiz");
+    },
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (payload: SubmitQuizPayload) => {
+      // Convert answers array to Record<questionId, answerIndex>
+      const answersMap: Record<string, number> = {};
+      payload.answers.forEach((answer) => {
+        if (answer.selectedOption !== null) {
+          answersMap[answer.questionId] = answer.selectedOption;
+        }
+      });
+
+      const data = await databaseService.submitQuiz({
+        sessionId: payload.sessionId,
+        answers: answersMap,
+        timeTaken: payload.timeSpent,
+      });
+
+      return data as SubmitQuizResponse;
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to submit quiz");
+    },
+  });
+
+  const startQuiz = useCallback(
+    async (config: QuizConfig & { userId?: string }) => {
+      setError(null);
+      try {
+        return await startMutation.mutateAsync(config);
+      } catch {
+        // Error is handled in onError
         return null;
-      } finally {
-        setIsStarting(false);
       }
     },
-    []
+    [startMutation]
   );
 
   const submitQuiz = useCallback(
-    async (payload: SubmitQuizPayload): Promise<SubmitQuizResponse | null> => {
-      setIsSubmitting(true);
+    async (payload: SubmitQuizPayload) => {
       setError(null);
-
       try {
-        // Convert answers array to Record<questionId, answerIndex>
-        const answersMap: Record<string, number> = {};
-        payload.answers.forEach((answer) => {
-          if (answer.selectedOption !== null) {
-            answersMap[answer.questionId] = answer.selectedOption;
-          }
-        });
-
-        const response = await fetch("/api/quiz/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId: payload.sessionId,
-            answers: answersMap,
-            timeTaken: payload.timeSpent,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = (await response
-            .json()
-            .catch(() => ({ error: "Unknown error" }))) as { error?: string };
-          throw new Error(errorData.error || "Failed to submit quiz");
-        }
-
-        const data = (await response.json()) as {
-          sessionId: string;
-          score: number;
-          correctAnswers: number;
-          totalQuestions: number;
-          passed: boolean;
-          timeTaken: number;
-          results: Array<{
-            questionId: string;
-            userAnswer: number;
-            correctAnswer: number;
-            isCorrect: boolean;
-            explanation?: string;
-          }>;
-          pointsEarned: number;
-          xpEarned: number;
-        };
-
-        // Return full API response
-        return data;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to submit quiz";
-
-        setError(errorMessage);
-        console.error("[useQuizSession] Error submitting quiz:", err);
+        return await submitMutation.mutateAsync(payload);
+      } catch {
+        // Error is handled in onError
         return null;
-      } finally {
-        setIsSubmitting(false);
       }
     },
-    []
+    [submitMutation]
   );
 
   const clearError = useCallback(() => {
     setError(null);
-  }, []);
+    startMutation.reset();
+    submitMutation.reset();
+  }, [startMutation, submitMutation]);
 
   return {
-    isStarting,
-    isSubmitting,
-    error,
+    isStarting: startMutation.isPending,
+    isSubmitting: submitMutation.isPending,
+    error: error || (startMutation.error as Error)?.message || (submitMutation.error as Error)?.message || null,
     startQuiz,
     submitQuiz,
     clearError,

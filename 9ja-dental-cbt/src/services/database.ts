@@ -431,6 +431,100 @@ export class DatabaseService {
       upcomingGoals: mapGoals(data.upcomingGoals),
     } satisfies DashboardStats;
   }
+
+  async bookmarkMaterial(materialId: string): Promise<void> {
+    await jsonFetch(`/api/study/materials/${materialId}/bookmark`, {
+      method: "POST",
+    });
+  }
+
+  async updateMaterialProgress(
+    materialId: string,
+    progress: number
+  ): Promise<void> {
+    await jsonFetch(`/api/study/materials/${materialId}/progress`, {
+      method: "POST",
+      body: JSON.stringify({ progress }),
+    });
+  }
+
+  async uploadMaterial(material: Record<string, unknown>): Promise<unknown> {
+    const response = await jsonFetch<ApiSuccess<unknown>>("/api/study/materials", {
+      method: "POST",
+      body: JSON.stringify(material),
+    });
+    return unwrap(response);
+  }
+
+  async getStudyMaterials(): Promise<unknown[]> {
+    const response = await jsonFetch<ApiSuccess<unknown[]>>("/api/study/materials");
+    return unwrap(response);
+  }
+
+  async getStudyHistory(userId: string): Promise<unknown[]> {
+    const response = await jsonFetch<ApiSuccess<unknown[]>>(
+      `/api/users/${userId}/study-sessions`
+    );
+    return unwrap(response);
+  }
+
+  async saveStudySession(session: {
+    userId: string;
+    materialId: string;
+    startTime: string;
+    endTime?: string;
+    duration: number;
+    focusTime: number;
+    breaks: number;
+  }): Promise<unknown> {
+    const response = await jsonFetch<ApiSuccess<unknown>>(
+      `/api/users/${session.userId}/study-sessions`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          materialId: session.materialId,
+          startTime: session.startTime,
+          endTime: session.endTime,
+          duration: session.duration,
+          focusTime: session.focusTime,
+          breaks: session.breaks,
+        }),
+      }
+    );
+    return unwrap(response);
+  }
+
+  async submitQuiz(data: {
+    sessionId: string;
+    answers: Record<string, number>;
+    timeTaken: number;
+  }): Promise<{
+    sessionId: string;
+    score: number;
+    correctAnswers: number;
+    totalQuestions: number;
+    passed: boolean;
+    timeTaken: number;
+    results: unknown[];
+    pointsEarned: number;
+    xpEarned: number;
+  }> {
+    const response = await jsonFetch<ApiSuccess<{
+      sessionId: string;
+      score: number;
+      correctAnswers: number;
+      totalQuestions: number;
+      passed: boolean;
+      timeTaken: number;
+      results: unknown[];
+      pointsEarned: number;
+      xpEarned: number;
+    }>>("/api/quiz/submit", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return unwrap(response);
+  }
 }
 
 export const databaseService = new DatabaseService();

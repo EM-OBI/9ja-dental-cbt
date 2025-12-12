@@ -27,6 +27,9 @@ declare namespace Cloudflare {
 		ENABLE_CACHING: string;
 		ENABLE_RATE_LIMITING: string;
 		MOCK_EXTERNAL_SERVICES: string;
+		RESEND_API_KEY: string;
+		EMAIL_FROM: string;
+		EMAIL_FROM_NAME: string;
 		MY_BUCKET: R2Bucket;
 		dental_data: D1Database;
 		AI: Ai;
